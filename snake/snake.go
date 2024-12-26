@@ -67,22 +67,15 @@ func (g *Game) readKeys() {
 
 func (g *Game) Update() error {
 	g.readKeys()
-
 	if time.Since(g.lastUpdate) < gameSpeed {
 		return nil
 	}
 	g.lastUpdate = time.Now() // update lastUpdate
-
 	g.updateSnake(&g.snake, g.direction)
-
-	// set direction back to screen if outside
-	//if g.snake{Point{x}} <= 0 {
-	//}
-
 	return nil
 }
 
-// Update the memory of the snake (*snake) not the copy snake
+// Update the memory of the snake (*snake) not a copy of snake
 func (g *Game) updateSnake(snake *[]Point, dir Point) {
 	head := (*snake)[0]
 	newHead := Point{
@@ -95,9 +88,15 @@ func (g *Game) updateSnake(snake *[]Point, dir Point) {
 		g.spawnFood()
 		gameSpeed -= time.Second / 66 // get faster eatch food
 	} else {
-		// update the snake.5 Head + body-1
+		// update the snakes Head + body-1
 		*snake = append([]Point{newHead}, (*snake)[:len(*snake)-1]...)
 	}
+	//	// set snake back to screen if out of screen
+	//	if newHead.x <= 0 {
+	//		newHead.x = screenWidth/gridSize + dir.x
+	//
+	//	}
+	println(newHead.x)
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -172,7 +171,7 @@ func main() {
 	g := &Game{
 		snake: []Point{
 			{
-				x: screenWidth / gridSize / 255,
+				x: screenWidth / gridSize / 2,
 				y: screenHeight / gridSize / 2,
 			}},
 		direction: Point{x: 1, y: 0},
