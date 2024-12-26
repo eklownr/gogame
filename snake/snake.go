@@ -1,21 +1,31 @@
 package main
 
 import (
+	"bytes"
 	"image/color"
 	"log"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+
 	"golang.org/x/exp/rand"
 )
 
 var (
-	dirUp     = Point{x: 0, y: -1}
-	dirDown   = Point{x: 0, y: 1}
-	dirRight  = Point{x: 1, y: 0}
-	dirLeft   = Point{x: -1, y: 0}
-	gameSpeed = time.Second / 6
+	dirUp           = Point{x: 0, y: -1}
+	dirDown         = Point{x: 0, y: 1}
+	dirRight        = Point{x: 1, y: 0}
+	dirLeft         = Point{x: -1, y: 0}
+	gameSpeed       = time.Second / 6
+	mplusFaceSource *text.GoTextFaceSource
+	red             = color.RGBA{255, 0, 0, 255}
+	yellow          = color.RGBA{220, 200, 0, 255}
+	green           = color.RGBA{0, 220, 0, 255}
+	blue            = color.RGBA{0, 0, 0, 255}
+	purple          = color.RGBA{200, 0, 200, 255}
 )
 
 const (
@@ -33,6 +43,7 @@ type Game struct {
 	direction  Point
 	lastUpdate time.Time
 	food       Point
+	gameOver   bool
 }
 
 func (g *Game) spawnFood() {
@@ -107,9 +118,34 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		float32(g.food.y*gridSize),
 		gridSize,
 		gridSize,
-		color.RGBA{255, 0, 0, 255},
+		red,
 		true,
 	)
+
+	if g.gameOver {
+		face := &text.GoTextFace{
+			Source: mplusFaceSource,
+			Size:   48,
+		}
+
+		w, h := text.Measure(
+			"Gama Over!",
+			face,
+			face.Size,
+		)
+
+		op := &text.DrawOptions{}
+		op.GeoM.Translate(
+			screenWidth/2-w/2, screenHeight/2-h/2,
+		)
+		op.ColorScale.ScaleWithColor(yellow)
+		text.Draw(
+			screen,
+			"Game Over!",
+			face,
+			op,
+		)
+	}
 }
 
 func (g *Game) Layout(outsidewith, outsideheight int) (int, int) {
@@ -117,6 +153,18 @@ func (g *Game) Layout(outsidewith, outsideheight int) (int, int) {
 }
 
 func main() {
+	// game over
+	s, err := text.NewGoTextFaceSource(
+		bytes.NewReader(
+			fonts.MPlus1pRegular_ttf,
+		),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	mplusFaceSource = s
+
+	// setup window size nd title
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Go Snake")
 
@@ -124,13 +172,15 @@ func main() {
 	g := &Game{
 		snake: []Point{
 			{
-				x: screenWidth / gridSize / 2,
+				x: screenWidth / gridSize / 255,
 				y: screenHeight / gridSize / 2,
 			}},
 		direction: Point{x: 1, y: 0},
 	}
 
 	g.spawnFood()
+
+	g.gameOver = true
 
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
