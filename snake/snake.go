@@ -3,12 +3,21 @@ package main
 import (
 	"image/color"
 	"log"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+var (
+	dirUp    = Point{x: 0, y: -1}
+	dirDown  = Point{x: 0, y: 1}
+	dirRight = Point{x: 1, y: 0}
+	dirLeft  = Point{x: -1, y: 0}
+)
+
 const (
+	gameSpeed    = time.Second / 6
 	screenWidth  = 640
 	screenHeight = 480
 	gridSize     = 20
@@ -19,12 +28,38 @@ type Point struct {
 }
 
 type Game struct {
-	snake     []Point
-	direction Point
+	snake      []Point
+	direction  Point
+	lastUpdate time.Time
+	food       Point
+}
+
+func (g *Game) readKeys() {
+	if ebiten.IsKeyPressed(ebiten.KeyJ) || ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+		g.direction = dirDown
+	} else if ebiten.IsKeyPressed(ebiten.KeyK) || ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+		g.direction = dirUp
+	} else if ebiten.IsKeyPressed(ebiten.KeyH) || ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+		g.direction = dirLeft
+	} else if ebiten.IsKeyPressed(ebiten.KeyL) || ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+		g.direction = dirRight
+	}
 }
 
 func (g *Game) Update() error {
+	g.readKeys()
+
+	if time.Since(g.lastUpdate) < gameSpeed {
+		return nil
+	}
+	g.lastUpdate = time.Now() // update lastUpdate
+
 	g.updateSnake(&g.snake, g.direction)
+
+	// set direction back to screen if outside
+	//if g.snake{Point{x}} <= 0 {
+	//}
+
 	return nil
 }
 
@@ -68,7 +103,7 @@ func main() {
 				x: screenWidth / gridSize / 2,
 				y: screenHeight / gridSize / 2,
 			}},
-		direction: Point{x: -1, y: 0},
+		direction: Point{x: 1, y: 0},
 	}
 
 	if err := ebiten.RunGame(g); err != nil {
