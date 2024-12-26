@@ -82,8 +82,29 @@ func (g *Game) updateSnake(snake *[]Point, dir Point) {
 		x: head.x + dir.x,
 		y: head.y + dir.y,
 	}
-	//  collition detection
-	if newHead == g.food {
+	//  collision detection
+	//	if g.isCollision(newHead, *snake) {
+	//		g.gameOver = true
+	//		return // Stop the Game
+	//	}
+
+	if newHead.x < 0 {
+		newHead.x = screenWidth / gridSize
+		// update the snakes Head + body-1
+		*snake = append([]Point{newHead}, (*snake)[:len(*snake)-1]...)
+	} else if newHead.y < 0 {
+		newHead.y = screenHeight / gridSize
+		// update the snakes Head + body-1
+		*snake = append([]Point{newHead}, (*snake)[:len(*snake)-1]...)
+	} else if newHead.y >= screenHeight/gridSize {
+		newHead.y = 0
+		// update the snakes Head + body-1
+		*snake = append([]Point{newHead}, (*snake)[:len(*snake)-1]...)
+	} else if newHead.x >= screenWidth/gridSize {
+		newHead.x = 0
+		// update the snakes Head + body-1
+		*snake = append([]Point{newHead}, (*snake)[:len(*snake)-1]...)
+	} else if newHead == g.food {
 		*snake = append([]Point{newHead}, *snake...)
 		g.spawnFood()
 		gameSpeed -= time.Second / 66 // get faster eatch food
@@ -91,12 +112,19 @@ func (g *Game) updateSnake(snake *[]Point, dir Point) {
 		// update the snakes Head + body-1
 		*snake = append([]Point{newHead}, (*snake)[:len(*snake)-1]...)
 	}
-	//	// set snake back to screen if out of screen
-	//	if newHead.x <= 0 {
-	//		newHead.x = screenWidth/gridSize + dir.x
-	//
-	//	}
-	println(newHead.x)
+}
+func (g *Game) isCollision(p Point, snake []Point) bool {
+	// set snake back to screen if out of screen
+	if p.x < 0 || p.y < 0 || p.x >= screenWidth/gridSize || p.y >= screenHeight/gridSize {
+		return true
+	}
+	// check snake body collide with self body
+	for _, sp := range snake {
+		if sp == p {
+			return true
+		}
+	}
+	return false
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -127,8 +155,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			Size:   48,
 		}
 
+		t := "Game Over!"
 		w, h := text.Measure(
-			"Gama Over!",
+			t,
 			face,
 			face.Size,
 		)
@@ -140,7 +169,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		op.ColorScale.ScaleWithColor(yellow)
 		text.Draw(
 			screen,
-			"Game Over!",
+			t,
 			face,
 			op,
 		)
@@ -176,10 +205,8 @@ func main() {
 			}},
 		direction: Point{x: 1, y: 0},
 	}
-
+	// init food to the game
 	g.spawnFood()
-
-	g.gameOver = true
 
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
