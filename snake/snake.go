@@ -32,6 +32,7 @@ const (
 	screenWidth  = 640
 	screenHeight = 480
 	gridSize     = 20
+	maxGameSpeed = time.Second / 12
 )
 
 type Point struct {
@@ -67,6 +68,7 @@ func (g *Game) readKeys() {
 
 func (g *Game) Update() error {
 	g.readKeys()
+	// update speed
 	if time.Since(g.lastUpdate) < gameSpeed {
 		return nil
 	}
@@ -104,7 +106,9 @@ func (g *Game) updateSnake(snake *[]Point, dir Point) {
 	} else if newHead == g.food {
 		*snake = append([]Point{newHead}, *snake...)
 		g.spawnFood()
-		gameSpeed -= time.Second / 66 // get faster eatch food
+		if gameSpeed > maxGameSpeed {
+			gameSpeed -= time.Second / 66 // get faster eatch food
+		}
 	} else {
 		// Move and update the snakes Head + body-1
 		*snake = append([]Point{newHead}, (*snake)[:len(*snake)-1]...)
