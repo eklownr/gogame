@@ -7,6 +7,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"golang.org/x/exp/rand"
 )
 
 var (
@@ -32,6 +33,13 @@ type Game struct {
 	direction  Point
 	lastUpdate time.Time
 	food       Point
+}
+
+func (g *Game) spawnFood() {
+	g.food = Point{
+		rand.Intn(screenWidth / gridSize),
+		rand.Intn(screenHeight / gridSize),
+	}
 }
 
 func (g *Game) readKeys() {
@@ -86,6 +94,15 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			true,
 		)
 	}
+	vector.DrawFilledRect(
+		screen,
+		float32(g.food.x*gridSize),
+		float32(g.food.y*gridSize),
+		gridSize,
+		gridSize,
+		color.RGBA{255, 0, 0, 255},
+		true,
+	)
 }
 
 func (g *Game) Layout(outsidewith, outsideheight int) (int, int) {
@@ -105,6 +122,8 @@ func main() {
 			}},
 		direction: Point{x: 1, y: 0},
 	}
+
+	g.spawnFood()
 
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
