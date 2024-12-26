@@ -11,14 +11,14 @@ import (
 )
 
 var (
-	dirUp    = Point{x: 0, y: -1}
-	dirDown  = Point{x: 0, y: 1}
-	dirRight = Point{x: 1, y: 0}
-	dirLeft  = Point{x: -1, y: 0}
+	dirUp     = Point{x: 0, y: -1}
+	dirDown   = Point{x: 0, y: 1}
+	dirRight  = Point{x: 1, y: 0}
+	dirLeft   = Point{x: -1, y: 0}
+	gameSpeed = time.Second / 6
 )
 
 const (
-	gameSpeed    = time.Second / 6
 	screenWidth  = 640
 	screenHeight = 480
 	gridSize     = 20
@@ -78,8 +78,15 @@ func (g *Game) updateSnake(snake *[]Point, dir Point) {
 		x: head.x + dir.x,
 		y: head.y + dir.y,
 	}
-	// update the snake. Head + body-1
-	*snake = append([]Point{newHead}, (*snake)[:len(*snake)-1]...)
+	//  collition detection
+	if newHead == g.food {
+		*snake = append([]Point{newHead}, *snake...)
+		g.spawnFood()
+		gameSpeed -= time.Second / 66 // get faster eatch food
+	} else {
+		// update the snake.5 Head + body-1
+		*snake = append([]Point{newHead}, (*snake)[:len(*snake)-1]...)
+	}
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
