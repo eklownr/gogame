@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"image/color"
 	"log"
+	"runtime"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -13,6 +14,15 @@ import (
 
 	"golang.org/x/exp/rand"
 )
+
+func printMemStats() {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	println("Mem stat in Mb: ", bToMb(m.Alloc))
+}
+func bToMb(b uint64) uint64 {
+	return b / 1000 / 1000
+}
 
 var (
 	dirUp           = Point{x: 0, y: -1}
@@ -183,6 +193,10 @@ func (g *Game) Layout(outsidewith, outsideheight int) (int, int) {
 }
 
 func main() {
+	// print memStats
+	println("Mem before")
+	printMemStats()
+
 	// game over
 	s, err := text.NewGoTextFaceSource(
 		bytes.NewReader(
@@ -198,7 +212,7 @@ func main() {
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Go Snake")
 
-	// initial the snake in to the game
+	// initial the snake in the center the game
 	g := &Game{
 		snake: []Point{
 			{
@@ -210,7 +224,16 @@ func main() {
 	// init food to the game
 	g.spawnFood()
 
+	// print memStat
+	println("Mem just before ebiten.RunGame(&Game)")
+	printMemStats()
+
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
 	}
+
+	// print memStat
+	println("Mem after")
+	printMemStats()
+
 }
