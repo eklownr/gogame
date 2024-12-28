@@ -18,7 +18,8 @@ import (
 func printMemStats() {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-	println("Mem stat in Mb: ", bToMb(m.Alloc))
+	println("Alloc Mem stat in Mb: ", bToMb(m.Alloc))
+	println("Total Alloc Mem stat in Mb: ", bToMb(m.TotalAlloc))
 }
 func bToMb(b uint64) uint64 {
 	return b / 1000 / 1000
