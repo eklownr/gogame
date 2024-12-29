@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"image/color"
 	"log"
-	"runtime"
 	"time"
 
-	"github.com/eklownr/pretty"
+	_ "github.com/eklownr/pretty"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -230,21 +229,26 @@ func main() {
 
 }
 
-// This section below is only for Testing... Memory and other stuff
-func printMemStats() {
-	var m runtime.MemStats
-	runtime.ReadMemStats(&m)
-	println("Alloc Heap Memory stat in Mb: ", bToMb(m.Alloc))
-	println("Total Alloc Memory stat in Mb: ", bToMb(m.TotalAlloc))
-	println("Total SYS Heap and stack - memory in Mb: ", bToMb(m.Sys))
-	println("Garbage collector times: ", m.NumGC)
-	println("*************************")
-}
-func bToMb(b uint64) uint64 {
-	return b / 1000 / 1000
-}
+// replace this line with below section to test memory
+func printMemStats() {}
 
-// Some colors to print
-func println(arg ...interface{}) {
-	pretty.Pl(arg...)
-}
+//
+// // This section below is only for Testing... Memory and other stuff
+// func printMemStats() {
+// 	var m runtime.MemStats
+// 	runtime.ReadMemStats(&m)
+// 	println("Alloc Heap Memory stat in Mb: ", bToMb(m.Alloc))
+// 	println("Total Alloc Memory stat in Mb: ", bToMb(m.TotalAlloc))
+// 	println("Total SYS Heap and stack - memory in Mb: ", bToMb(m.Sys))
+// 	println("Garbage collector times: ", m.NumGC)
+// 	println("*************************")
+// }
+// func bToMb(b uint64) uint64 {
+// 	return b / 1000 / 1000
+// }
+//
+// // Some colors to print
+// func println(arg ...interface{}) {
+// 	pretty.Pl(arg...)
+// }
+//
