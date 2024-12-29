@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/eklownr/pretty"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -14,16 +15,6 @@ import (
 
 	"golang.org/x/exp/rand"
 )
-
-func printMemStats() {
-	var m runtime.MemStats
-	runtime.ReadMemStats(&m)
-	println("Alloc Mem stat in Mb: ", bToMb(m.Alloc))
-	println("Total Alloc Mem stat in Mb: ", bToMb(m.TotalAlloc))
-}
-func bToMb(b uint64) uint64 {
-	return b / 1000 / 1000
-}
 
 var (
 	dirUp           = Point{x: 0, y: -1}
@@ -195,7 +186,7 @@ func (g *Game) Layout(outsidewith, outsideheight int) (int, int) {
 
 func main() {
 	// print memStats
-	println("Mem before")
+	println("*** Mem before, first in Main() ***")
 	printMemStats()
 
 	// game over
@@ -226,7 +217,7 @@ func main() {
 	g.spawnFood()
 
 	// print memStat
-	println("Mem just before ebiten.RunGame(&Game)")
+	println("*** Mem just before ebiten.RunGame(&Game) ***")
 	printMemStats()
 
 	if err := ebiten.RunGame(g); err != nil {
@@ -234,7 +225,26 @@ func main() {
 	}
 
 	// print memStat
-	println("Mem after")
+	println("*** Mem after, last of main() ***")
 	printMemStats()
 
+}
+
+// This section below is only for Testing... Memory and other stuff
+func printMemStats() {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	println("Alloc Heap Memory stat in Mb: ", bToMb(m.Alloc))
+	println("Total Alloc Memory stat in Mb: ", bToMb(m.TotalAlloc))
+	println("Total SYS Heap and stack - memory in Mb: ", bToMb(m.Sys))
+	println("Garbage collector times: ", m.NumGC)
+	println("*************************")
+}
+func bToMb(b uint64) uint64 {
+	return b / 1000 / 1000
+}
+
+// Some colors to print
+func println(arg ...interface{}) {
+	pretty.Pl(arg...)
 }
