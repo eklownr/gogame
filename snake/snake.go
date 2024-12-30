@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"image/color"
 	"log"
+	"runtime"
 	"time"
 
+	"github.com/eklownr/pretty"
 	_ "github.com/eklownr/pretty"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
@@ -16,6 +18,7 @@ import (
 )
 
 var (
+	snake           = [growth]Point{}
 	dirUp           = Point{x: 0, y: -1}
 	dirDown         = Point{x: 0, y: 1}
 	dirRight        = Point{x: 1, y: 0}
@@ -34,6 +37,7 @@ const (
 	screenHeight = 480
 	gridSize     = 20
 	maxGameSpeed = time.Second / 12
+	growth       = 10
 )
 
 type Point struct {
@@ -55,14 +59,16 @@ func (g *Game) spawnFood() {
 	}
 }
 
+// vim-keys to move "hjkl" or arrowkeys
+// if g.direction is Up you can´t move Down. Same for all direction
 func (g *Game) readKeys() {
-	if ebiten.IsKeyPressed(ebiten.KeyJ) || ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+	if ebiten.IsKeyPressed(ebiten.KeyJ) || ebiten.IsKeyPressed(ebiten.KeyArrowDown) && g.direction != dirUp {
 		g.direction = dirDown
-	} else if ebiten.IsKeyPressed(ebiten.KeyK) || ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+	} else if ebiten.IsKeyPressed(ebiten.KeyK) || ebiten.IsKeyPressed(ebiten.KeyArrowUp) && g.direction != dirDown {
 		g.direction = dirUp
-	} else if ebiten.IsKeyPressed(ebiten.KeyH) || ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+	} else if ebiten.IsKeyPressed(ebiten.KeyH) || ebiten.IsKeyPressed(ebiten.KeyArrowLeft) && g.direction != dirRight {
 		g.direction = dirLeft
-	} else if ebiten.IsKeyPressed(ebiten.KeyL) || ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+	} else if ebiten.IsKeyPressed(ebiten.KeyL) || ebiten.IsKeyPressed(ebiten.KeyArrowRight) && g.direction != dirLeft {
 		g.direction = dirRight
 	}
 }
@@ -78,7 +84,7 @@ func (g *Game) Update() error {
 	return nil
 }
 
-// Update the memory of the snake (*snake) not a copy of snake
+// Update the memory of the snake (*snake) not a copy of the snake
 func (g *Game) updateSnake(snake *[]Point, dir Point) {
 	head := (*snake)[0]
 	newHead := Point{
@@ -92,6 +98,7 @@ func (g *Game) updateSnake(snake *[]Point, dir Point) {
 	}
 
 	// set snake back to screen if out of screen
+	// Grow the snake
 	if newHead.x < 0 {
 		newHead.x = screenWidth / gridSize
 		*snake = append([]Point{newHead}, (*snake)[:len(*snake)-1]...)
@@ -117,9 +124,7 @@ func (g *Game) updateSnake(snake *[]Point, dir Point) {
 }
 func (g *Game) isBadCollision(p Point, snake []Point) bool {
 	//// check if snake is out of sceen
-	//if p.x < 0 || p.y < 0 || p.x >= screenWidth/gridSize || p.y >= screenHeight/gridSize {
-	//	return true
-	//}
+	//if p.x < 0 || p.y < 0 || p.x >= screenWidth/gridSize || p.y >= screenHeight/gridSize {return true }
 
 	// check snake body collide with self body
 	for _, sp := range snake {
@@ -230,25 +235,23 @@ func main() {
 }
 
 // replace this line with below section to test memory
-func printMemStats() {}
+//func printMemStats() {}
 
-//
-// // This section below is only for Testing... Memory and other stuff
-// func printMemStats() {
-// 	var m runtime.MemStats
-// 	runtime.ReadMemStats(&m)
-// 	println("Alloc Heap Memory stat in Mb: ", bToMb(m.Alloc))
-// 	println("Total Alloc Memory stat in Mb: ", bToMb(m.TotalAlloc))
-// 	println("Total SYS Heap and stack - memory in Mb: ", bToMb(m.Sys))
-// 	println("Garbage collector times: ", m.NumGC)
-// 	println("*************************")
-// }
-// func bToMb(b uint64) uint64 {
-// 	return b / 1000 / 1000
-// }
-//
-// // Some colors to print
-// func println(arg ...interface{}) {
-// 	pretty.Pl(arg...)
-// }
-//
+// This section below is only for Testing... Memory and other stuff
+func printMemStats() {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	println("Alloc Heap Memory stat in Mb: ", bToMb(m.Alloc))
+	println("Total Alloc Memory stat in Mb: ", bToMb(m.TotalAlloc))
+	println("Total SYS Heap and stack - memory in Mb: ", bToMb(m.Sys))
+	println("Garbage collector times: ", m.NumGC)
+	println("*************************")
+}
+func bToMb(b uint64) uint64 {
+	return b / 1000 / 1000
+}
+
+// Some colors to print
+func println(arg ...interface{}) {
+	pretty.Pl(arg...)
+}
