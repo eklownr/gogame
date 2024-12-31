@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"image/color"
 	"log"
 	"runtime"
@@ -18,7 +19,6 @@ import (
 )
 
 var (
-	snake           = [growth]Point{}
 	dirUp           = Point{x: 0, y: -1}
 	dirDown         = Point{x: 0, y: 1}
 	dirRight        = Point{x: 1, y: 0}
@@ -30,6 +30,7 @@ var (
 	green           = color.RGBA{0, 220, 0, 255}
 	blue            = color.RGBA{0, 0, 0, 255}
 	purple          = color.RGBA{200, 0, 200, 255}
+	score           = 0
 )
 
 const (
@@ -37,7 +38,7 @@ const (
 	screenHeight = 480
 	gridSize     = 20
 	maxGameSpeed = time.Second / 12
-	growth       = 10
+	SPEED        = time.Second / 6
 )
 
 type Point struct {
@@ -70,6 +71,9 @@ func (g *Game) readKeys() {
 		g.direction = dirLeft
 	} else if ebiten.IsKeyPressed(ebiten.KeyL) || ebiten.IsKeyPressed(ebiten.KeyArrowRight) && g.direction != dirLeft {
 		g.direction = dirRight
+	} else if ebiten.IsKeyPressed(ebiten.KeyEnter) && g.gameOver == true {
+		g.restartGame(&g.snake) // move snake to start position and remove body
+		g.gameOver = false      // Start the game with Enter-key if GameOver.
 	}
 }
 
@@ -111,9 +115,10 @@ func (g *Game) updateSnake(snake *[]Point, dir Point) {
 	} else if newHead.x >= screenWidth/gridSize {
 		newHead.x = 0
 		*snake = append([]Point{newHead}, (*snake)[:len(*snake)-1]...)
-	} else if newHead == g.food {
+	} else if newHead == g.food { // Eat Food
 		*snake = append([]Point{newHead}, *snake...)
 		g.spawnFood()
+		score += 10
 		if gameSpeed > maxGameSpeed {
 			gameSpeed -= time.Second / 66 // get faster eatch food
 		}
@@ -157,12 +162,29 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		true,
 	)
 
+	s := fmt.Sprint(score)
+	// Add text Score: ... to the screen
+	addText(screen, 18, "Score: ", green, 120, 20)
+	addText(screen, 18, s, green, 200, 20)
+
 	if g.gameOver {
+		addText(screen, 48, "Hit Enter to play", yellow, screenWidth, screenHeight/3)
+		//addText(screen, "Game Over!", yellow, screenWidth/2, screenHeight/2)
+
+		vector.DrawFilledRect(
+			screen,
+			float32(screenWidth/4),  // x position
+			float32(screenHeight/3), // y position
+			screenWidth/2,           // width size
+			screenHeight/3,          // Height size
+			red,
+			true,
+		)
+
 		face := &text.GoTextFace{
 			Source: mplusFaceSource,
 			Size:   48,
 		}
-
 		t := "Game Over!"
 		w, h := text.Measure(
 			t,
@@ -184,8 +206,51 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 }
 
+func addText(screen *ebiten.Image, textSize int, t string, color color.Color, width, height float64) {
+	face := &text.GoTextFace{
+		Source: mplusFaceSource,
+		Size:   float64(textSize),
+	}
+
+	// t := "YOURE TEXT"
+	w, h := text.Measure(
+		t,
+		face,
+		face.Size,
+	)
+
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(
+		width/2-w/2, height/2-h/2,
+	)
+	op.ColorScale.ScaleWithColor(color)
+	text.Draw(
+		screen,
+		t,
+		face,
+		op,
+	)
+}
+
 func (g *Game) Layout(outsidewith, outsideheight int) (int, int) {
 	return screenWidth, screenHeight
+}
+
+// Key-Enter restarts the Game
+func (g *Game) restartGame(snake *[]Point) {
+	newHead := Point{ // Place new head at center of the screen
+		x: screenWidth / gridSize / 2,
+		y: screenHeight / gridSize / 2,
+	}
+	*snake = (*snake)[:0]            // remove snake body
+	*snake = append(*snake, newHead) // add a new head
+
+	// move snake to the right
+	g = &Game{
+		direction: Point{x: 1, y: 0},
+	}
+	gameSpeed = SPEED // set game-speed back to start-speed
+	score = 0         // set back score to 0
 }
 
 func main() {
