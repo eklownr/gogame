@@ -101,8 +101,7 @@ func (g *Game) updateSnake(snake *[]Point, dir Point) {
 		return // Stop the Game
 	}
 
-	// set snake back to screen if out of screen
-	// Grow the snake
+	//// check if snake is out of sceen, set snake back to screen
 	if newHead.x < 0 {
 		newHead.x = screenWidth / gridSize
 		*snake = append([]Point{newHead}, (*snake)[:len(*snake)-1]...)
@@ -116,7 +115,7 @@ func (g *Game) updateSnake(snake *[]Point, dir Point) {
 		newHead.x = 0
 		*snake = append([]Point{newHead}, (*snake)[:len(*snake)-1]...)
 	} else if newHead == g.food { // Eat Food
-		*snake = append([]Point{newHead}, *snake...)
+		*snake = append([]Point{newHead}, *snake...) // Grow the snake
 		g.spawnFood()
 		score += 10
 		if gameSpeed > maxGameSpeed {
@@ -141,31 +140,32 @@ func (g *Game) isBadCollision(p Point, snake []Point) bool {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	for _, p := range g.snake {
+	if !g.gameOver {
+		for _, p := range g.snake {
+			vector.DrawFilledRect(
+				screen,
+				float32(p.x*gridSize),
+				float32(p.y*gridSize),
+				gridSize,
+				gridSize,
+				color.White,
+				true,
+			)
+		}
 		vector.DrawFilledRect(
 			screen,
-			float32(p.x*gridSize),
-			float32(p.y*gridSize),
+			float32(g.food.x*gridSize),
+			float32(g.food.y*gridSize),
 			gridSize,
 			gridSize,
-			color.White,
+			red,
 			true,
 		)
+		// Add text Score: ... to the screen
+		s := fmt.Sprint(score)
+		addText(screen, 18, "Score: ", green, 120, 20)
+		addText(screen, 18, s, green, 200, 20)
 	}
-	vector.DrawFilledRect(
-		screen,
-		float32(g.food.x*gridSize),
-		float32(g.food.y*gridSize),
-		gridSize,
-		gridSize,
-		red,
-		true,
-	)
-
-	s := fmt.Sprint(score)
-	// Add text Score: ... to the screen
-	addText(screen, 18, "Score: ", green, 120, 20)
-	addText(screen, 18, s, green, 200, 20)
 
 	if g.gameOver {
 		addText(screen, 48, "Hit Enter to play", yellow, screenWidth, screenHeight/3)
@@ -203,6 +203,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			face,
 			op,
 		)
+		// Add text Score: ... to the screen
+		s := fmt.Sprint(score)
+		addText(screen, 18, "Score: ", green, 120, 20)
+		addText(screen, 18, s, green, 200, 20)
 	}
 }
 
