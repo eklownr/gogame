@@ -13,6 +13,7 @@ import (
 	_ "github.com/eklownr/pretty"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 
@@ -84,7 +85,7 @@ func (g *Game) readKeys() {
 	} else if ebiten.IsKeyPressed(ebiten.KeyEnter) && g.gameOver == true {
 		g.restartGame(&g.snake) // move snake to start position and remove body
 		g.gameOver = false      // Start the game with Enter-key if GameOver.
-	} else if ebiten.IsKeyPressed(ebiten.KeyEscape) { // Pause the game
+	} else if inpututil.IsKeyJustPressed(ebiten.KeyEscape) { // Pause the game
 		g.pauseGame()
 	} else if ebiten.IsKeyPressed(ebiten.KeyQ) { // Quit the Game!
 		g.quitGame()
@@ -232,14 +233,15 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		s := fmt.Sprint(score)
 		addText(screen, 18, "Score: ", green, 120, 20)
 		addText(screen, 18, s, green, 200, 20)
+		// Pause the game
 	} else if g.gamePause {
 		addText(screen, 48, "Pause the Game", yellow, screenWidth, screenHeight/3)
 		//addText(screen, "Game Over!", yellow, screenWidth/2, screenHeight/2)
 
 		vector.DrawFilledRect(
 			screen,
-			float32(screenWidth/4),  // x position
-			float32(screenHeight/3), // y position
+			float32(screenWidth/3),  // x position
+			float32(screenHeight/2), // y position
 			screenWidth/2,           // width size
 			screenHeight/3,          // Height size
 			blue,
@@ -274,7 +276,7 @@ func addText(screen *ebiten.Image, textSize int, t string, color color.Color, wi
 	)
 }
 
-// Key-Enter restarts the Game
+// Enter key to restart the Game
 func (g *Game) restartGame(snake *[]Point) {
 	newHead := Point{ // Place new head at center of the screen
 		x: screenWidth / gridSize / 2,
@@ -289,17 +291,18 @@ func (g *Game) restartGame(snake *[]Point) {
 	}
 	gameSpeed = SPEED // set game-speed back to start-speed
 	score = 0         // set back score to 0
-	g.gamePause = false
+	//g.gamePause = false // set pause back to false
 }
 
-// Key-Escape Pause the game
+// Escape key to Pause the game
 func (g *Game) pauseGame() {
 	if !g.gamePause {
 		ebiten.SetFullscreen(true)
 		g.gamePause = true
-		return
+	} else {
+		g.gamePause = false
 	}
-	g.gamePause = false
+
 }
 
 func main() {
