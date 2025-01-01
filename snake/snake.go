@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image/color"
 	"log"
+	"os"
 	"runtime"
 	"time"
 
@@ -83,9 +84,19 @@ func (g *Game) readKeys() {
 	} else if ebiten.IsKeyPressed(ebiten.KeyEnter) && g.gameOver == true {
 		g.restartGame(&g.snake) // move snake to start position and remove body
 		g.gameOver = false      // Start the game with Enter-key if GameOver.
-	} else if ebiten.IsKeyPressed(ebiten.KeyEscape) { // Pause te game
+	} else if ebiten.IsKeyPressed(ebiten.KeyEscape) && !g.gamePause { // Pause the game
 		g.pauseGame()
+	} else if ebiten.IsKeyPressed(ebiten.KeyEscape) && g.gamePause { // if pause is on
+		g.gamePause = false // Start the Game with Escape-key if paused
+	} else if ebiten.IsKeyPressed(ebiten.KeyQ) { // Quit the Game!
+		g.quitGame()
 	}
+}
+
+func (g *Game) quitGame() {
+	println("Warning quit the game!")
+	ebiten.SetRunnableOnUnfocused(false)
+	os.Exit(1)
 }
 
 func (g *Game) Update() error {
@@ -137,6 +148,7 @@ func (g *Game) updateSnake(snake *[]Point, dir Point) {
 		*snake = append([]Point{newHead}, (*snake)[:len(*snake)-1]...)
 	}
 }
+
 func (g *Game) isBadCollision(p Point, snake []Point) bool {
 	//// check if snake is out of sceen
 	//if p.x < 0 || p.y < 0 || p.x >= screenWidth/gridSize || p.y >= screenHeight/gridSize {return true }
@@ -282,14 +294,9 @@ func (g *Game) restartGame(snake *[]Point) {
 
 // Key-Escape Pause the game
 func (g *Game) pauseGame() {
-	if g.gamePause {
-		println("pause is on") // TEST
-		g.gamePause = false
-		return
+	if !g.gamePause {
+		g.gamePause = true
 	}
-	println("***Not pause....") // TEST
-	g.gamePause = true
-
 }
 
 func main() {
