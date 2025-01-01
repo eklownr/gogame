@@ -84,10 +84,8 @@ func (g *Game) readKeys() {
 	} else if ebiten.IsKeyPressed(ebiten.KeyEnter) && g.gameOver == true {
 		g.restartGame(&g.snake) // move snake to start position and remove body
 		g.gameOver = false      // Start the game with Enter-key if GameOver.
-	} else if ebiten.IsKeyPressed(ebiten.KeyEscape) && !g.gamePause { // Pause the game
+	} else if ebiten.IsKeyPressed(ebiten.KeyEscape) { // Pause the game
 		g.pauseGame()
-	} else if ebiten.IsKeyPressed(ebiten.KeyEscape) && g.gamePause { // if pause is on
-		g.gamePause = false // Start the Game with Escape-key if paused
 	} else if ebiten.IsKeyPressed(ebiten.KeyQ) { // Quit the Game!
 		g.quitGame()
 	}
@@ -110,7 +108,7 @@ func (g *Game) Update() error {
 	return nil
 }
 
-// Update the memory of the snake (*snake) not a copy of snake
+// update snak, check collision and pause
 func (g *Game) updateSnake(snake *[]Point, dir Point) {
 	head := (*snake)[0]
 	newHead := Point{
@@ -121,6 +119,9 @@ func (g *Game) updateSnake(snake *[]Point, dir Point) {
 	if g.isBadCollision(newHead, *snake) {
 		g.gameOver = true
 		return // Stop the Game
+	}
+	if g.gamePause {
+		return // pause the game
 	}
 
 	//// check if snake is out of sceen, set snake back to screen
@@ -231,9 +232,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		s := fmt.Sprint(score)
 		addText(screen, 18, "Score: ", green, 120, 20)
 		addText(screen, 18, s, green, 200, 20)
-	}
-	///////////// Game Pause ///////////
-	if g.gamePause {
+	} else if g.gamePause {
 		addText(screen, 48, "Pause the Game", yellow, screenWidth, screenHeight/3)
 		//addText(screen, "Game Over!", yellow, screenWidth/2, screenHeight/2)
 
@@ -290,13 +289,17 @@ func (g *Game) restartGame(snake *[]Point) {
 	}
 	gameSpeed = SPEED // set game-speed back to start-speed
 	score = 0         // set back score to 0
+	g.gamePause = false
 }
 
 // Key-Escape Pause the game
 func (g *Game) pauseGame() {
 	if !g.gamePause {
+		ebiten.SetFullscreen(true)
 		g.gamePause = true
+		return
 	}
+	g.gamePause = false
 }
 
 func main() {
@@ -318,6 +321,7 @@ func main() {
 	// setup window size nd title
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Go Snake")
+	ebiten.SetWindowResizingMode(ebiten.WindowResizingMode())
 
 	// initial the snake in the center the game
 	g := &Game{
