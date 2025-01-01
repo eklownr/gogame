@@ -23,14 +23,17 @@ var (
 	dirDown         = Point{x: 0, y: 1}
 	dirRight        = Point{x: 1, y: 0}
 	dirLeft         = Point{x: -1, y: 0}
-	gameSpeed       = time.Second / 6
+	gameSpeed       = SPEED
 	mplusFaceSource *text.GoTextFaceSource
+	score           = 0
 	red             = color.RGBA{255, 0, 0, 255}
 	yellow          = color.RGBA{220, 200, 0, 255}
 	green           = color.RGBA{0, 220, 0, 255}
-	blue            = color.RGBA{0, 0, 0, 255}
+	blue            = color.RGBA{0, 0, 220, 255}
 	purple          = color.RGBA{200, 0, 200, 255}
-	score           = 0
+	orange          = color.RGBA{180, 160, 0, 255}
+	white           = color.RGBA{255, 255, 255, 255}
+	black           = color.RGBA{0, 0, 0, 255}
 )
 
 const (
@@ -47,10 +50,16 @@ type Point struct {
 
 type Game struct {
 	snake      []Point
+	snakeColor color.Color
 	direction  Point
 	lastUpdate time.Time
 	food       Point
 	gameOver   bool
+	gamePause  bool
+}
+
+func (g *Game) Layout(outsidewith, outsideheight int) (int, int) {
+	return screenWidth, screenHeight
 }
 
 func (g *Game) spawnFood() {
@@ -60,7 +69,7 @@ func (g *Game) spawnFood() {
 	}
 }
 
-// vim-keys to move "hjkl" or arrowkeys
+// vim-keys to move "hjkl" or Arrowkeys
 // if g.direction is Up you can´t move Down. Same for all direction
 func (g *Game) readKeys() {
 	if ebiten.IsKeyPressed(ebiten.KeyJ) || ebiten.IsKeyPressed(ebiten.KeyArrowDown) && g.direction != dirUp {
@@ -74,12 +83,14 @@ func (g *Game) readKeys() {
 	} else if ebiten.IsKeyPressed(ebiten.KeyEnter) && g.gameOver == true {
 		g.restartGame(&g.snake) // move snake to start position and remove body
 		g.gameOver = false      // Start the game with Enter-key if GameOver.
+	} else if ebiten.IsKeyPressed(ebiten.KeyEscape) { // Pause te game
+		g.pauseGame()
 	}
 }
 
 func (g *Game) Update() error {
 	g.readKeys()
-	// update speed
+	// check if the snake can move, ckeck every 60 FPS
 	if time.Since(g.lastUpdate) < gameSpeed {
 		return nil
 	}
@@ -88,7 +99,7 @@ func (g *Game) Update() error {
 	return nil
 }
 
-// Update the memory of the snake (*snake) not a copy of the snake
+// Update the memory of the snake (*snake) not a copy of snake
 func (g *Game) updateSnake(snake *[]Point, dir Point) {
 	head := (*snake)[0]
 	newHead := Point{
@@ -140,7 +151,8 @@ func (g *Game) isBadCollision(p Point, snake []Point) bool {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	if !g.gameOver {
+	if !g.gameOver && !g.gamePause {
+		// draw the snake eatch Time = gameSpeed
 		for _, p := range g.snake {
 			vector.DrawFilledRect(
 				screen,
@@ -148,7 +160,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				float32(p.y*gridSize),
 				gridSize,
 				gridSize,
-				color.White,
+				g.snakeColor,
 				true,
 			)
 		}
@@ -208,6 +220,21 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		addText(screen, 18, "Score: ", green, 120, 20)
 		addText(screen, 18, s, green, 200, 20)
 	}
+	///////////// Game Pause ///////////
+	if g.gamePause {
+		addText(screen, 48, "Pause the Game", yellow, screenWidth, screenHeight/3)
+		//addText(screen, "Game Over!", yellow, screenWidth/2, screenHeight/2)
+
+		vector.DrawFilledRect(
+			screen,
+			float32(screenWidth/4),  // x position
+			float32(screenHeight/3), // y position
+			screenWidth/2,           // width size
+			screenHeight/3,          // Height size
+			blue,
+			true,
+		)
+	}
 }
 
 func addText(screen *ebiten.Image, textSize int, t string, color color.Color, width, height float64) {
@@ -236,10 +263,6 @@ func addText(screen *ebiten.Image, textSize int, t string, color color.Color, wi
 	)
 }
 
-func (g *Game) Layout(outsidewith, outsideheight int) (int, int) {
-	return screenWidth, screenHeight
-}
-
 // Key-Enter restarts the Game
 func (g *Game) restartGame(snake *[]Point) {
 	newHead := Point{ // Place new head at center of the screen
@@ -255,6 +278,18 @@ func (g *Game) restartGame(snake *[]Point) {
 	}
 	gameSpeed = SPEED // set game-speed back to start-speed
 	score = 0         // set back score to 0
+}
+
+// Key-Escape Pause the game
+func (g *Game) pauseGame() {
+	if g.gamePause {
+		println("pause is on") // TEST
+		g.gamePause = false
+		return
+	}
+	println("***Not pause....") // TEST
+	g.gamePause = true
+
 }
 
 func main() {
@@ -286,6 +321,7 @@ func main() {
 			}},
 		direction: Point{x: 1, y: 0},
 	}
+	g.snakeColor = orange
 	// init food to the game
 	g.spawnFood()
 
@@ -303,6 +339,7 @@ func main() {
 
 }
 
+////////////////// TEST //////////////////////////////
 // replace this line with below section to test memory
 //func printMemStats() {}
 
