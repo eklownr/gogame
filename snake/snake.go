@@ -39,8 +39,8 @@ var (
 )
 
 const (
-	screenWidth  = 960
-	screenHeight = 540
+	screenWidth  = 1920 / 2
+	screenHeight = 1080 / 2
 	gridSize     = 20
 	maxGameSpeed = time.Second / 12
 	SPEED        = time.Second / 6
