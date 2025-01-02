@@ -6,7 +6,6 @@ import (
 	"image/color"
 	"log"
 	"os"
-	"runtime"
 	"time"
 
 	"github.com/eklownr/pretty"
@@ -263,6 +262,17 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		//addText(screen, "Game Over!", yellow, screenWidth/2, screenHeight/2)
 	}
 }
+func (g *Game) drawFood(screen *ebiten.Image, food Point, color color.Color) {
+	vector.DrawFilledRect(
+		screen,
+		float32(g.food.x*gridSize),
+		float32(g.food.y*gridSize),
+		gridSize,
+		gridSize,
+		red,
+		true,
+	)
+}
 
 func addText(screen *ebiten.Image, textSize int, t string, color color.Color, width, height float64) {
 	face := &text.GoTextFace{
@@ -375,25 +385,25 @@ func main() {
 
 }
 
-////////////////// TEST //////////////////////////////
+// //////////////// TEST //////////////////////////////
 // replace this line with below section to test memory
-//func printMemStats() {}
+func printMemStats() {}
 
-// This section below is only for Testing... Memory and other stuff
-func printMemStats() {
-	var m runtime.MemStats
-	runtime.ReadMemStats(&m)
-	println("Alloc Heap Memory stat in Mb: ", bToMb(m.Alloc))
-	println("Total Alloc Memory stat in Mb: ", bToMb(m.TotalAlloc))
-	println("Total SYS Heap and stack - memory in Mb: ", bToMb(m.Sys))
-	println("Garbage collector times: ", m.NumGC)
-	println("*************************")
-}
-func bToMb(b uint64) uint64 {
-	return b / 1000 / 1000
-}
+// // This section below is only for Testing... Memory and other stuff
+// func printMemStats() {
+// 	var m runtime.MemStats
+// 	runtime.ReadMemStats(&m)
+// 	println("Alloc Heap Memory stat in Mb: ", bToMb(m.Alloc))
+// 	println("Total Alloc Memory stat in Mb: ", bToMb(m.TotalAlloc))
+// 	println("Total SYS Heap and stack - memory in Mb: ", bToMb(m.Sys))
+// 	println("Garbage collector times: ", m.NumGC)
+// 	println("*************************")
+// }
+// func bToMb(b uint64) uint64 {
+// 	return b / 1000 / 1000
+// }
 
-// Some colors to print
+// Print colors in terminal
 func println(arg ...interface{}) {
 	pretty.Pl(arg...)
 }
