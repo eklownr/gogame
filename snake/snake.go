@@ -26,7 +26,6 @@ var (
 	dirLeft         = Point{x: -1, y: 0}
 	gameSpeed       = SPEED
 	mplusFaceSource *text.GoTextFaceSource
-	score           = 0
 	red             = color.RGBA{255, 0, 0, 255}
 	yellow          = color.RGBA{220, 200, 0, 255}
 	green           = color.RGBA{0, 220, 0, 255}
@@ -58,6 +57,7 @@ type Game struct {
 	gameOver   bool
 	gamePause  bool
 	fullWindow bool
+	score      int
 }
 
 func (g *Game) Layout(outsidewith, outsideheight int) (int, int) {
@@ -92,7 +92,6 @@ func (g *Game) readKeys() {
 	} else if inpututil.IsKeyJustPressed(ebiten.KeyF) { // Full screen
 		g.fullScreen()
 	}
-
 }
 
 func (g *Game) quitGame() {
@@ -144,7 +143,8 @@ func (g *Game) updateSnake(snake *[]Point, dir Point) {
 	} else if newHead == g.food { // Eat Food
 		*snake = append([]Point{newHead}, *snake...) // Grow the snake
 		g.spawnFood()
-		score += 10
+		g.spawnFood() // set rand position for food
+		g.score += 10
 		if gameSpeed > maxGameSpeed {
 			gameSpeed -= time.Second / 66 // get faster eatch food
 		}
@@ -187,17 +187,18 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				true,
 			)
 		}
-		vector.DrawFilledRect(
-			screen,
-			float32(g.food.x*gridSize),
-			float32(g.food.y*gridSize),
-			gridSize,
-			gridSize,
-			red,
-			true,
-		)
+		g.drawFood(screen, green)
+		//vector.DrawFilledRect(
+		//	screen,
+		//	float32(g.food.x*gridSize),
+		//	float32(g.food.y*gridSize),
+		//	gridSize,
+		//	gridSize,
+		//	red,
+		//	true,
+		//)
 		// Add text Score: ... to the screen
-		s := fmt.Sprint(score)
+		s := fmt.Sprint(g.score)
 		addText(screen, 18, "Score: ", green, 120, 20)
 		addText(screen, 18, s, green, 200, 20)
 	}
@@ -239,7 +240,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			op,
 		)
 		// Add text Score: ... to the screen
-		s := fmt.Sprint(score)
+		s := fmt.Sprint(g.score)
 		addText(screen, 18, "Score: ", green, 120, 20)
 		addText(screen, 18, s, green, 200, 20)
 		// Pause the game
@@ -262,14 +263,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		//addText(screen, "Game Over!", yellow, screenWidth/2, screenHeight/2)
 	}
 }
-func (g *Game) drawFood(screen *ebiten.Image, food Point, color color.Color) {
+
+// Draw the food
+func (g *Game) drawFood(screen *ebiten.Image, color color.Color) {
 	vector.DrawFilledRect(
 		screen,
 		float32(g.food.x*gridSize),
 		float32(g.food.y*gridSize),
 		gridSize,
 		gridSize,
-		red,
+		color,
 		true,
 	)
 }
@@ -314,7 +317,7 @@ func (g *Game) restartGame(snake *[]Point) {
 		direction: Point{x: 1, y: 0},
 	}
 	gameSpeed = SPEED // set game-speed back to start-speed
-	score = 0         // set back score to 0
+	g.score = 0       // set back score to 0
 	//g.gamePause = false // set pause back to false
 }
 
@@ -337,6 +340,7 @@ func (g *Game) fullScreen() {
 		ebiten.SetFullscreen(false)
 	}
 }
+
 func main() {
 	// print memStats
 	println("*** Mem before, first in Main() ***")
