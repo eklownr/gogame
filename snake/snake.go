@@ -31,7 +31,7 @@ var (
 	red             = color.RGBA{255, 0, 0, 255}
 	yellow          = color.RGBA{220, 200, 0, 255}
 	green           = color.RGBA{0, 220, 0, 255}
-	blue            = color.RGBA{0, 0, 220, 255}
+	blue            = color.RGBA{0, 20, 120, 255}
 	purple          = color.RGBA{200, 0, 200, 255}
 	orange          = color.RGBA{180, 160, 0, 255}
 	white           = color.RGBA{255, 255, 255, 255}
@@ -39,8 +39,8 @@ var (
 )
 
 const (
-	screenWidth  = 640
-	screenHeight = 480
+	screenWidth  = 960
+	screenHeight = 540
 	gridSize     = 20
 	maxGameSpeed = time.Second / 12
 	SPEED        = time.Second / 6
@@ -58,6 +58,7 @@ type Game struct {
 	food       Point
 	gameOver   bool
 	gamePause  bool
+	fullWindow bool
 }
 
 func (g *Game) Layout(outsidewith, outsideheight int) (int, int) {
@@ -89,7 +90,10 @@ func (g *Game) readKeys() {
 		g.pauseGame()
 	} else if ebiten.IsKeyPressed(ebiten.KeyQ) { // Quit the Game!
 		g.quitGame()
+	} else if inpututil.IsKeyJustPressed(ebiten.KeyF) { // Full screen
+		g.fullScreen()
 	}
+
 }
 
 func (g *Game) quitGame() {
@@ -165,6 +169,12 @@ func (g *Game) isBadCollision(p Point, snake []Point) bool {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	// Draw background color
+	оп := &ebiten.DrawImageOptions{}
+	img := ebiten.NewImage(screenWidth, screenHeight)
+	img.Fill(color.NRGBA{0, 20, 80, 255}) // Blue color
+	screen.DrawImage(img, оп)
+
 	if !g.gameOver && !g.gamePause {
 		// draw the snake eatch Time = gameSpeed
 		for _, p := range g.snake {
@@ -235,18 +245,22 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		addText(screen, 18, s, green, 200, 20)
 		// Pause the game
 	} else if g.gamePause {
-		addText(screen, 48, "Pause the Game", yellow, screenWidth, screenHeight/3)
-		//addText(screen, "Game Over!", yellow, screenWidth/2, screenHeight/2)
-
 		vector.DrawFilledRect(
 			screen,
-			float32(screenWidth/3),  // x position
-			float32(screenHeight/2), // y position
-			screenWidth/2,           // width size
-			screenHeight/3,          // Height size
+			float32(20),     // x position
+			float32(20),     // y position
+			screenWidth-40,  // width size
+			screenHeight-40, // Height size
 			blue,
 			true,
 		)
+		addText(screen, 48, "Pause", orange, screenWidth-5, screenHeight/3-3)
+		addText(screen, 48, "Pause", yellow, screenWidth, screenHeight/3)
+		addText(screen, 28, "Pause the Game - Esc", yellow, screenWidth, screenHeight/3+100)
+		addText(screen, 28, "Quit the game - q", yellow, screenWidth, screenHeight/3+150)
+		addText(screen, 28, "Full screen - f", yellow, screenWidth, screenHeight/3+200)
+		addText(screen, 28, "Start the Game from Game Over - Enter", yellow, screenWidth, screenHeight/3+250)
+		//addText(screen, "Game Over!", yellow, screenWidth/2, screenHeight/2)
 	}
 }
 
@@ -297,14 +311,22 @@ func (g *Game) restartGame(snake *[]Point) {
 // Escape key to Pause the game
 func (g *Game) pauseGame() {
 	if !g.gamePause {
-		ebiten.SetFullscreen(true)
 		g.gamePause = true
 	} else {
 		g.gamePause = false
 	}
-
 }
 
+// F key for full screen
+func (g *Game) fullScreen() {
+	if !g.fullWindow {
+		ebiten.SetFullscreen(true)
+		g.fullWindow = true
+	} else {
+		g.fullWindow = false
+		ebiten.SetFullscreen(false)
+	}
+}
 func main() {
 	// print memStats
 	println("*** Mem before, first in Main() ***")
