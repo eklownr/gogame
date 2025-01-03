@@ -112,7 +112,6 @@ func (g *Game) readKeys() {
 			g.score -= 40
 		}
 	}
-
 }
 
 func (g *Game) quitGame() {
@@ -216,7 +215,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		addText(screen, 18, "Score: ", green, 120, 20)
 		addText(screen, 18, s, green, 200, 20)
 	}
-
+	// Game Over
 	if g.gameOver {
 		addText(screen, 48, "Hit Enter to play", yellow, screenWidth, screenHeight/3)
 		//addText(screen, "Game Over!", yellow, screenWidth/2, screenHeight/2)
@@ -336,9 +335,9 @@ func (g *Game) restartGame(snake *[]Point) {
 	g = &Game{
 		direction: Point{x: 1, y: 0},
 	}
-	gameSpeed = SPEED // set game-speed back to start-speed
-	g.score = 0       // set back score to 0
-	g.snakeColor = white
+	gameSpeed = SPEED    // set game-speed back to start-speed
+	g.score = 0          // set score back to 0
+	g.snakeColor = white // set snake back color to white
 }
 
 // Escape key to Pause the game
