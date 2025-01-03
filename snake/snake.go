@@ -58,12 +58,14 @@ type Game struct {
 	gamePause  bool
 	fullWindow bool
 	score      int
+	screen     *ebiten.Image
 }
 
 func (g *Game) Layout(outsidewith, outsideheight int) (int, int) {
 	return screenWidth, screenHeight
 }
 
+// set random food position
 func (g *Game) spawnFood() {
 	g.food = Point{
 		rand.Intn(screenWidth / gridSize),
@@ -91,11 +93,30 @@ func (g *Game) readKeys() {
 		g.quitGame()
 	} else if inpututil.IsKeyJustPressed(ebiten.KeyF) { // Full screen
 		g.fullScreen()
+	} else if inpututil.IsKeyJustPressed(ebiten.KeyS) { // SpawnFood
+		g.spawnFood()
+		g.drawFood(g.screen, purple)
+	} else if inpututil.IsKeyJustPressed(ebiten.KeyY) { // buy yellow snake
+		if g.score >= 20 {
+			g.snakeColor = yellow
+			g.score -= 20
+		}
+	} else if inpututil.IsKeyJustPressed(ebiten.KeyP) { // buy yellow snake
+		if g.score >= 30 {
+			g.snakeColor = purple
+			g.score -= 30
+		}
+	} else if inpututil.IsKeyJustPressed(ebiten.KeyR) { // buy yellow snake
+		if g.score >= 40 {
+			g.snakeColor = red
+			g.score -= 40
+		}
 	}
+
 }
 
 func (g *Game) quitGame() {
-	println("Warning quit the game!")
+	println("Warning! Quit the game!")
 	ebiten.SetRunnableOnUnfocused(false)
 	os.Exit(1)
 }
@@ -168,6 +189,7 @@ func (g *Game) isBadCollision(p Point, snake []Point) bool {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	g.screen = screen
 	// Draw background color
 	оп := &ebiten.DrawImageOptions{}
 	img := ebiten.NewImage(screenWidth, screenHeight)
@@ -188,15 +210,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			)
 		}
 		g.drawFood(screen, green)
-		//vector.DrawFilledRect(
-		//	screen,
-		//	float32(g.food.x*gridSize),
-		//	float32(g.food.y*gridSize),
-		//	gridSize,
-		//	gridSize,
-		//	red,
-		//	true,
-		//)
+
 		// Add text Score: ... to the screen
 		s := fmt.Sprint(g.score)
 		addText(screen, 18, "Score: ", green, 120, 20)
@@ -254,13 +268,19 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			blue,
 			true,
 		)
-		addText(screen, 48, "Pause", orange, screenWidth-5, screenHeight/3-3)
-		addText(screen, 48, "Pause", yellow, screenWidth, screenHeight/3)
-		addText(screen, 28, "Pause the Game - Esc", yellow, screenWidth, screenHeight/3+100)
-		addText(screen, 28, "Quit the game - q", yellow, screenWidth, screenHeight/3+150)
-		addText(screen, 28, "Full screen - f", yellow, screenWidth, screenHeight/3+200)
-		addText(screen, 28, "Start the Game from Game Over - Enter", yellow, screenWidth, screenHeight/3+250)
-		//addText(screen, "Game Over!", yellow, screenWidth/2, screenHeight/2)
+		addText(screen, 56, "Pause", black, screenWidth+5, screenHeight/3+4)
+		addText(screen, 56, "Pause", yellow, screenWidth, screenHeight/3)
+		addText(screen, 34, "Pause the Game - Esc", yellow, screenWidth, screenHeight/3+100)
+		addText(screen, 34, "Quit the game - q", yellow, screenWidth, screenHeight/3+200)
+		addText(screen, 34, "Full screen - f", yellow, screenWidth, screenHeight/3+300)
+		addText(screen, 34, "*************** Shop ***************", purple, screenWidth, screenHeight/3+450)
+		addText(screen, 34, "Buy yellow snake, cost: 20 - y", green, screenWidth, screenHeight/3+550)
+		addText(screen, 34, "Buy purple snake, cost: 30 - p", green, screenWidth, screenHeight/3+650)
+		addText(screen, 34, "Buy red snake, cost:    40 - r", green, screenWidth, screenHeight/3+750)
+		// Add text Score: ... to the screen
+		s := fmt.Sprint(g.score)
+		addText(screen, 28, "Score: ", green, 200, 90)
+		addText(screen, 28, s, green, 400, 90)
 	}
 }
 
@@ -318,7 +338,7 @@ func (g *Game) restartGame(snake *[]Point) {
 	}
 	gameSpeed = SPEED // set game-speed back to start-speed
 	g.score = 0       // set back score to 0
-	//g.gamePause = false // set pause back to false
+	g.snakeColor = white
 }
 
 // Escape key to Pause the game
@@ -371,7 +391,7 @@ func main() {
 			}},
 		direction: Point{x: 1, y: 0},
 	}
-	g.snakeColor = orange
+	g.snakeColor = white
 	// init food to the game
 	g.spawnFood()
 
