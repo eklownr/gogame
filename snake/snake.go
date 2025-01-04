@@ -48,10 +48,10 @@ type Point struct {
 	x, y int
 }
 
-type Food struct {
-	point []Point
-	color color.Color
-}
+// type Food struct {
+// 	point []Point
+// 	color color.Color
+// }
 
 type Game struct {
 	snake      []Point
@@ -174,7 +174,7 @@ func (g *Game) updateSnake(snake *[]Point, dir Point) {
 		g.spawnFood()
 		g.spawnFood() // set rand position for food
 		g.score += 10
-		if gameSpeed > maxGameSpeed {
+		if gameSpeed > maxGameSpeed { // smaller gameSpeed = faster game
 			gameSpeed -= time.Second / 66 // get faster eatch food
 		}
 	} else {
@@ -197,7 +197,7 @@ func (g *Game) isBadCollision(p Point, snake []Point) bool {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	g.screen = screen
+	g.screen = screen // save screen to g.screen
 	// Draw background color
 	оп := &ebiten.DrawImageOptions{}
 	img := ebiten.NewImage(screenWidth, screenHeight)
@@ -206,16 +206,29 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	if !g.gameOver && !g.gamePause {
 		// draw the snake eatch Time = gameSpeed
-		for _, p := range g.snake {
-			vector.DrawFilledRect(
-				screen,
-				float32(p.x*gridSize),
-				float32(p.y*gridSize),
-				gridSize,
-				gridSize,
-				g.snakeColor,
-				true,
-			)
+		for i, p := range g.snake {
+			if i == 0 {
+				// drawHead = red
+				vector.DrawFilledRect(
+					screen,
+					float32(p.x*gridSize),
+					float32(p.y*gridSize),
+					gridSize,
+					gridSize,
+					red,
+					true,
+				)
+			} else {
+				vector.DrawFilledRect(
+					screen,
+					float32(p.x*gridSize),
+					float32(p.y*gridSize),
+					gridSize,
+					gridSize,
+					g.snakeColor,
+					true,
+				)
+			}
 		}
 		g.drawFood(screen, green)
 
@@ -397,7 +410,7 @@ func main() {
 			}},
 		direction: Point{x: 1, y: 0},
 	}
-	g.snakeColor = white
+	g.snakeColor = white // Init snake color to white
 	// init food to the game
 	g.spawnFood()
 
