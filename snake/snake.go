@@ -465,7 +465,10 @@ func main() {
 		direction: Point{x: 1, y: 0},
 	}
 	g.multiFood.point = append(g.multiFood.point, Point{x: 10, y: 10})
-	g.multiFood.point = append(g.multiFood.point, Point{x: 100, y: 100})
+	g.multiFood.point = append(g.multiFood.point, Point{x: 10, y: 10})
+	g.multiFood.point = append(g.multiFood.point, Point{x: 10, y: 10})
+	g.multiFood.point = append(g.multiFood.point, Point{x: 10, y: 10})
+	g.multiFood.point = append(g.multiFood.point, Point{x: 10, y: 10})
 	g.snakeColor = white // Init snake color to white
 	g.randFood()         // set random food position
 
