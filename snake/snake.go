@@ -48,6 +48,11 @@ type Point struct {
 	x, y int
 }
 
+type Food struct {
+	point []Point
+	color color.Color
+}
+
 type Game struct {
 	snake      []Point
 	snakeColor color.Color
@@ -363,11 +368,11 @@ func (g *Game) fullScreen() {
 }
 
 func main() {
-	// print memStats
+	// print memStats to the terminal
 	println("*** Mem before, first in Main() ***")
 	printMemStats()
 
-	// game over
+	// Text, font
 	s, err := text.NewGoTextFaceSource(
 		bytes.NewReader(
 			fonts.MPlus1pRegular_ttf,
@@ -396,15 +401,16 @@ func main() {
 	// init food to the game
 	g.spawnFood()
 
-	// print memStat
+	// print memStat to the terminal
 	println("*** Mem just before ebiten.RunGame(&Game) ***")
 	printMemStats()
 
+	// Run the game
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
 	}
 
-	// print memStat
+	// print memStat  to the terminal
 	println("*** Mem after, last of main() ***")
 	printMemStats()
 
