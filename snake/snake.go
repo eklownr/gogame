@@ -126,6 +126,10 @@ func (g *Game) Update() error {
 	if time.Since(g.lastUpdate) < gameSpeed {
 		return nil
 	}
+	if g.gameOver {
+		g.score = 0          // set score back to 0
+		g.snakeColor = white // set snake back color to white
+	}
 	g.lastUpdate = time.Now() // update lastUpdate
 	g.updateSnake(&g.snake, g.direction)
 	return nil
@@ -322,7 +326,7 @@ func addText(screen *ebiten.Image, textSize int, t string, color color.Color, wi
 	)
 }
 
-// Enter key to restart the Game
+// Enter-key to restart the Game
 func (g *Game) restartGame(snake *[]Point) {
 	newHead := Point{ // Place new head at center of the screen
 		x: screenWidth / gridSize / 2,
@@ -335,12 +339,10 @@ func (g *Game) restartGame(snake *[]Point) {
 	g = &Game{
 		direction: Point{x: 1, y: 0},
 	}
-	gameSpeed = SPEED    // set game-speed back to start-speed
-	g.score = 0          // set score back to 0
-	g.snakeColor = white // set snake back color to white
+	gameSpeed = SPEED // set game-speed back to start-speed
 }
 
-// Escape key to Pause the game
+// Escape-key to Pause the game
 func (g *Game) pauseGame() {
 	if !g.gamePause {
 		g.gamePause = true
@@ -349,7 +351,7 @@ func (g *Game) pauseGame() {
 	}
 }
 
-// F key for full screen
+// F-key for full screen
 func (g *Game) fullScreen() {
 	if !g.fullWindow {
 		ebiten.SetFullscreen(true)
