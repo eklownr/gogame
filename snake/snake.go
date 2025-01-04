@@ -48,10 +48,10 @@ type Point struct {
 	x, y int
 }
 
-// type Food struct {
-// 	point []Point
-// 	color color.Color
-// }
+type Food struct {
+	point []Point
+	color color.Color
+}
 
 type Game struct {
 	snake      []Point
@@ -59,6 +59,7 @@ type Game struct {
 	direction  Point
 	lastUpdate time.Time
 	food       Point
+	multiFood  Food
 	gameOver   bool
 	gamePause  bool
 	fullWindow bool
@@ -70,13 +71,35 @@ func (g *Game) Layout(outsidewith, outsideheight int) (int, int) {
 	return screenWidth, screenHeight
 }
 
+// set random mulitFood position
+func (g *Game) randMultiFood() {
+	for i := 0; i < len(g.multiFood.point); i++ {
+		g.multiFood.point[i] = Point{
+			rand.Intn(screenWidth / gridSize),
+			rand.Intn(screenHeight / gridSize),
+		}
+	}
+}
+
 // set random food position
-func (g *Game) spawnFood() {
+func (g *Game) randFood() {
 	g.food = Point{
 		rand.Intn(screenWidth / gridSize),
 		rand.Intn(screenHeight / gridSize),
 	}
 }
+
+// // spawn multi-food
+// func (g *Game) spawnMultiFood() {
+// 	g.multiFood = Food{
+// 		point: []Point{
+// 			{
+// 				x: rand.Intn(screenWidth / gridSize),
+// 				y: rand.Intn(screenHeight / gridSize),
+// 			},
+// 		},
+// 	}
+// }
 
 // vim-keys to move "hjkl" or Arrowkeys
 // if g.direction is Up you can´t move Down. Same for all direction
@@ -98,9 +121,8 @@ func (g *Game) readKeys() {
 		g.quitGame()
 	} else if inpututil.IsKeyJustPressed(ebiten.KeyF) { // Full screen
 		g.fullScreen()
-	} else if inpututil.IsKeyJustPressed(ebiten.KeyS) { // SpawnFood
-		g.spawnFood()
-		g.drawFood(g.screen, purple)
+	} else if inpututil.IsKeyJustPressed(ebiten.KeyS) { // set Food point randomly
+		g.randMultiFood() // TEST
 	} else if inpututil.IsKeyJustPressed(ebiten.KeyY) { // buy yellow snake
 		if g.score >= 20 {
 			g.snakeColor = yellow
@@ -171,8 +193,14 @@ func (g *Game) updateSnake(snake *[]Point, dir Point) {
 		*snake = append([]Point{newHead}, (*snake)[:len(*snake)-1]...)
 	} else if newHead == g.food { // Eat Food
 		*snake = append([]Point{newHead}, *snake...) // Grow the snake
-		g.spawnFood()
-		g.spawnFood() // set rand position for food
+		g.randFood()                                 // set rand position for food
+		g.score += 10
+		if gameSpeed > maxGameSpeed { // smaller gameSpeed = faster game
+			gameSpeed -= time.Second / 66 // get faster eatch food
+		}
+	} else if g.checkFoodCollition(g.multiFood, g.snake) { // Eat Food
+		g.randMultiFood()                            // set rand position for all multi food
+		*snake = append([]Point{newHead}, *snake...) // Grow the snake
 		g.score += 10
 		if gameSpeed > maxGameSpeed { // smaller gameSpeed = faster game
 			gameSpeed -= time.Second / 66 // get faster eatch food
@@ -183,6 +211,16 @@ func (g *Game) updateSnake(snake *[]Point, dir Point) {
 	}
 }
 
+// check if snake head collision with multi-food
+func (g *Game) checkFoodCollition(food Food, snake []Point) bool {
+	// check snake head collision with food
+	for _, mf := range food.point {
+		if mf == snake[0] {
+			return true
+		}
+	}
+	return false
+}
 func (g *Game) isBadCollision(p Point, snake []Point) bool {
 	//// check if snake is out of sceen
 	//if p.x < 0 || p.y < 0 || p.x >= screenWidth/gridSize || p.y >= screenHeight/gridSize {return true }
@@ -218,7 +256,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 					red,
 					true,
 				)
-			} else {
+			} else { // drawbody g.snakeColor
 				vector.DrawFilledRect(
 					screen,
 					float32(p.x*gridSize),
@@ -231,6 +269,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 		}
 		g.drawFood(screen, green)
+		g.drawMultiFood(screen)
 
 		// Add text Score: ... to the screen
 		s := fmt.Sprint(g.score)
@@ -302,6 +341,21 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		s := fmt.Sprint(g.score)
 		addText(screen, 28, "Score: ", green, 200, 90)
 		addText(screen, 28, s, green, 400, 90)
+	}
+}
+
+// draw multi-food
+func (g *Game) drawMultiFood(screen *ebiten.Image) {
+	for _, p := range g.multiFood.point {
+		vector.DrawFilledRect(
+			screen,
+			float32(p.x*gridSize),
+			float32(p.y*gridSize),
+			gridSize,
+			gridSize,
+			red,
+			true,
+		)
 	}
 }
 
@@ -410,9 +464,10 @@ func main() {
 			}},
 		direction: Point{x: 1, y: 0},
 	}
+	g.multiFood.point = append(g.multiFood.point, Point{x: 10, y: 10})
+	g.multiFood.point = append(g.multiFood.point, Point{x: 100, y: 100})
 	g.snakeColor = white // Init snake color to white
-	// init food to the game
-	g.spawnFood()
+	g.randFood()         // set random food position
 
 	// print memStat to the terminal
 	println("*** Mem just before ebiten.RunGame(&Game) ***")
