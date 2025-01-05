@@ -1,18 +1,18 @@
 package main
 
 import (
-	"bytes"
 	"image"
+	"image/color"
 	_ "image/png"
 	"log"
 
-	"github.com/hajimehoshi/ebiten/examples/resources/images"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 const (
-	screenWidth  = 320
-	screenHeight = 240
+	screenWidth  = 1920 / 3
+	screenHeight = 1080 / 3
 
 	frameOX     = 0
 	frameOY     = 32
@@ -23,24 +23,58 @@ const (
 
 var (
 	runnerImage *ebiten.Image
+	skyBlue     = color.RGBA{120, 180, 255, 255}
+	red         = color.RGBA{255, 0, 0, 255}
+	yellow      = color.RGBA{220, 200, 0, 255}
+	green       = color.RGBA{0, 220, 0, 255}
+	blue        = color.RGBA{0, 20, 120, 255}
+	purple      = color.RGBA{200, 0, 200, 255}
+	orange      = color.RGBA{180, 160, 0, 255}
+	white       = color.RGBA{255, 255, 255, 255}
+	black       = color.RGBA{0, 0, 0, 255}
 )
 
 type Game struct {
-	count int
+	Player
+	costomer Npc
+	worker   Npc
+}
+type Sprite struct {
+	img  *ebiten.Image
+	x, y float64
+}
+
+type Player struct {
+	Sprite
+}
+
+type Npc struct {
+	Sprite
+}
+
+type plant struct {
+	Sprite
+	types string
 }
 
 func (g *Game) Update() error {
-	g.count++
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(-float64(frameWidth)/2, -float64(frameHeight)/2)
-	op.GeoM.Translate(screenWidth/2, screenHeight/2)
-	i := (g.count / 5) % frameCount
-	sx, sy := frameOX+i*frameWidth, frameOY
-	screen.DrawImage(runnerImage.SubImage(image.Rect(sx, sy, sx+frameWidth, sy+frameHeight)).(*ebiten.Image), op)
+	screen.Fill(skyBlue) // background collor
+	screen.DrawImage(
+		g.Player.img.SubImage(image.Rect(0, 0, 40, 40)).(*ebiten.Image),
+		&ebiten.DrawImageOptions{},
+	)
+
+	///////// Animation ///////////
+	// op := &ebiten.DrawImageOptions{}
+	// op.GeoM.Translate(-float64(frameWidth)/2, -float64(frameHeight)/2)
+	// op.GeoM.Translate(screenWidth/2, screenHeight/2)
+	// i := (g.count / 5) % frameCount
+	// sx, sy := frameOX+i*frameWidth, frameOY
+	// screen.DrawImage(runnerImage.SubImage(image.Rect(sx, sy, sx+frameWidth, sy+frameHeight)).(*ebiten.Image), op)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -48,16 +82,28 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
+
+	///////// Animation ///////////
 	// Decode an image from the image file's byte slice.
-	img, _, err := image.Decode(bytes.NewReader(images.Runner_png))
-	if err != nil {
-		log.Fatal(err)
-	}
-	runnerImage = ebiten.NewImageFromImage(img)
+	//	img, _, err := image.Decode(bytes.NewReader(images.Runner_png))
+	//	if err != nil {
+	//		log.Fatal(err)
+	//	}
+	//	runnerImage = ebiten.NewImageFromImage(img)
 
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
-	ebiten.SetWindowTitle("Animation (Ebitengine Demo)")
-	if err := ebiten.RunGame(&Game{}); err != nil {
+	ebiten.SetWindowTitle("Gopher Mart")
+
+	playerImg, _, err := ebitenutil.NewImageFromFile("assets/images/player.png")
+	checkErr(err)
+
+	g := &Game{playerImage: playerImg}
+	if err := ebiten.RunGame(g); err != nil {
+		log.Fatal(err)
+	}
+}
+func checkErr(err error) {
+	if err != nil {
 		log.Fatal(err)
 	}
 }
