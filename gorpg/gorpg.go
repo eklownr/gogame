@@ -11,14 +11,8 @@ import (
 )
 
 const (
-	screenWidth  = 1920 / 3
-	screenHeight = 1080 / 3
-
-	frameOX     = 0
-	frameOY     = 32
-	frameWidth  = 32
-	frameHeight = 32
-	frameCount  = 8
+	screenWidth  = 1920 / 2
+	screenHeight = 1080 / 2
 )
 
 var (
@@ -40,8 +34,9 @@ type Game struct {
 	worker   *Sprite
 }
 type Sprite struct {
-	img  *ebiten.Image
-	x, y float64
+	img       *ebiten.Image
+	direction Point
+	speed     float64
 }
 
 type plant struct {
@@ -49,8 +44,26 @@ type plant struct {
 	types string
 }
 
+func (g *Game) dirRight() {
+	g.Player.direction.x += g.Player.speed
+}
+func (g *Game) dirLeft() {
+	g.Player.direction.x -= g.Player.speed
+}
+func (g *Game) dirUp() {
+	g.Player.direction.y -= g.Player.speed
+}
+func (g *Game) dirDown() {
+	g.Player.direction.y += g.Player.speed
+}
+
 func (g *Game) Update() error {
+	g.readKeys()
 	return nil
+}
+
+type Point struct {
+	x, y float64
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -58,7 +71,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	///////// draw img player ///////////
 	opts := &ebiten.DrawImageOptions{}
-	opts.GeoM.Translate(g.Player.x, g.Player.y)
+	opts.GeoM.Translate(g.Player.direction.x, g.Player.direction.y)
 
 	screen.DrawImage(
 		g.Player.img.SubImage(
@@ -66,6 +79,54 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		).(*ebiten.Image),
 		opts,
 	)
+}
+
+// vim-keys to move "hjkl" or Arrowkeys
+// if g.direction is Up you can´t move Down. Same for all direction
+func (g *Game) readKeys() {
+	if ebiten.IsKeyPressed(ebiten.KeyJ) || ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+		g.dirDown()
+	} else if ebiten.IsKeyPressed(ebiten.KeyK) || ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+		g.dirUp()
+	} else if ebiten.IsKeyPressed(ebiten.KeyH) || ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+		g.dirLeft()
+	} else if ebiten.IsKeyPressed(ebiten.KeyL) || ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+		g.dirRight()
+	}
+	//	} else if ebiten.IsKeyPressed(ebiten.KeyEnter) && g.gameOver == true {
+	//		g.restartGame(&g.snake) // move snake to start position and remove body
+	//		g.gameOver = false      // Start the game with Enter-key if GameOver.
+	//	} else if inpututil.IsKeyJustPressed(ebiten.KeyEscape) { // Pause the game
+	//
+	//		g.pauseGame()
+	//	} else if ebiten.IsKeyPressed(ebiten.KeyQ) { // Quit the Game!
+	//
+	//		g.quitGame()
+	//	} else if inpututil.IsKeyJustPressed(ebiten.KeyF) { // Full screen
+	//
+	//		g.fullScreen()
+	//	} else if inpututil.IsKeyJustPressed(ebiten.KeyS) { // set Food point randomly
+	//
+	//		g.randMultiFood() // TEST
+	//	} else if inpututil.IsKeyJustPressed(ebiten.KeyY) { // buy yellow snake
+	//
+	//		if g.score >= 20 {
+	//			g.snakeColor = yellow
+	//			g.score -= 20
+	//		}
+	//	} else if inpututil.IsKeyJustPressed(ebiten.KeyP) { // buy yellow snake
+	//
+	//		if g.score >= 30 {
+	//			g.snakeColor = purple
+	//			g.score -= 30
+	//		}
+	//	} else if inpututil.IsKeyJustPressed(ebiten.KeyR) { // buy yellow snake
+	//
+	//		if g.score >= 40 {
+	//			g.snakeColor = red
+	//			g.score -= 40
+	//		}
+	//	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -90,9 +151,9 @@ func main() {
 
 	g := &Game{
 		Player: &Sprite{
-			img: playerImg,
-			x:   250,
-			y:   250,
+			img:       playerImg,
+			direction: Point{200, 200},
+			speed:     2,
 		},
 	}
 	if err := ebiten.RunGame(g); err != nil {
