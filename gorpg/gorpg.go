@@ -1,4 +1,4 @@
-package gorpg
+package main
 
 import (
 	"bytes"
