@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	screenWidth  = 1920 / 2
-	screenHeight = 1080 / 2
+	screenWidth  = 1920 / 3
+	screenHeight = 1080 / 3
 )
 
 var (
@@ -86,11 +86,14 @@ func (g *Game) Draw(screen *ebiten.Image) {
 func (g *Game) readKeys() {
 	if ebiten.IsKeyPressed(ebiten.KeyJ) || ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
 		g.dirDown()
-	} else if ebiten.IsKeyPressed(ebiten.KeyK) || ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyK) || ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
 		g.dirUp()
-	} else if ebiten.IsKeyPressed(ebiten.KeyH) || ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyH) || ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
 		g.dirLeft()
-	} else if ebiten.IsKeyPressed(ebiten.KeyL) || ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyL) || ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
 		g.dirRight()
 	}
 	//	} else if ebiten.IsKeyPressed(ebiten.KeyEnter) && g.gameOver == true {
