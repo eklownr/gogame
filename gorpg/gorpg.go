@@ -35,21 +35,13 @@ var (
 )
 
 type Game struct {
-	Player
-	costomer Npc
-	worker   Npc
+	Player   *Sprite
+	costomer *Sprite
+	worker   *Sprite
 }
 type Sprite struct {
 	img  *ebiten.Image
 	x, y float64
-}
-
-type Player struct {
-	Sprite
-}
-
-type Npc struct {
-	Sprite
 }
 
 type plant struct {
@@ -63,18 +55,17 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(skyBlue) // background collor
-	screen.DrawImage(
-		g.Player.img.SubImage(image.Rect(0, 0, 40, 40)).(*ebiten.Image),
-		&ebiten.DrawImageOptions{},
-	)
 
-	///////// Animation ///////////
-	// op := &ebiten.DrawImageOptions{}
-	// op.GeoM.Translate(-float64(frameWidth)/2, -float64(frameHeight)/2)
-	// op.GeoM.Translate(screenWidth/2, screenHeight/2)
-	// i := (g.count / 5) % frameCount
-	// sx, sy := frameOX+i*frameWidth, frameOY
-	// screen.DrawImage(runnerImage.SubImage(image.Rect(sx, sy, sx+frameWidth, sy+frameHeight)).(*ebiten.Image), op)
+	///////// draw img player ///////////
+	opts := &ebiten.DrawImageOptions{}
+	opts.GeoM.Translate(g.Player.x, g.Player.y)
+
+	screen.DrawImage(
+		g.Player.img.SubImage(
+			image.Rect(0, 0, 40, 40),
+		).(*ebiten.Image),
+		opts,
+	)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -97,7 +88,13 @@ func main() {
 	playerImg, _, err := ebitenutil.NewImageFromFile("assets/images/player.png")
 	checkErr(err)
 
-	g := &Game{playerImage: playerImg}
+	g := &Game{
+		Player: &Sprite{
+			img: playerImg,
+			x:   250,
+			y:   250,
+		},
+	}
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
 	}
