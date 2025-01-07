@@ -13,6 +13,7 @@ import (
 const (
 	screenWidth  = 1920 / 3
 	screenHeight = 1080 / 3
+	imgSize      = 48
 )
 
 var (
@@ -26,6 +27,8 @@ var (
 	orange      = color.RGBA{180, 160, 0, 255}
 	white       = color.RGBA{255, 255, 255, 255}
 	black       = color.RGBA{0, 0, 0, 255}
+	rectTop     = Point{0, 0}
+	rectBot     = Point{imgSize, imgSize}
 )
 
 type Game struct {
@@ -52,15 +55,36 @@ type Plant struct {
 
 func (g *Game) dirDown() {
 	g.Player.pos.y += g.Player.speed
+	rectTop.x = imgSize - imgSize
+	rectTop.y = imgSize - imgSize
+	rectBot.x = imgSize
+	rectBot.y = imgSize
 }
 func (g *Game) dirUp() {
 	g.Player.pos.y -= g.Player.speed
-}
-func (g *Game) dirRight() {
-	g.Player.pos.x += g.Player.speed
+	//	rectTop.x = imgSize
+	//	rectTop.y = imgSize
+	//	rectBot.x = imgSize * 2
+	//	rectBot.y = imgSize * 2
+
+	rectTop.x = imgSize - imgSize
+	rectTop.y = imgSize
+	rectBot.x = imgSize
+	rectBot.y = imgSize * 2
 }
 func (g *Game) dirLeft() {
 	g.Player.pos.x -= g.Player.speed
+	rectTop.x = imgSize - imgSize
+	rectTop.y = imgSize * 2
+	rectBot.x = imgSize
+	rectBot.y = imgSize * 3
+}
+func (g *Game) dirRight() {
+	g.Player.pos.x += g.Player.speed
+	rectTop.x = imgSize - imgSize
+	rectTop.y = imgSize * 3
+	rectBot.x = imgSize
+	rectBot.y = imgSize * 4
 }
 
 func (g *Game) Update() error {
@@ -81,7 +105,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	screen.DrawImage(
 		g.Player.img.SubImage(
-			image.Rect(0, 0, 40, 40),
+			image.Rect(int(rectTop.x), int(rectTop.y), int(rectBot.x), int(rectBot.y)),
 		).(*ebiten.Image),
 		opts,
 	)
