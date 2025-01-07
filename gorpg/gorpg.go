@@ -9,6 +9,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 const (
@@ -41,6 +42,7 @@ type Game struct {
 	plants     *[]Plant
 	lastUpdate time.Time
 	tick       bool
+	fullWindow bool
 }
 type Sprite struct {
 	img *ebiten.Image
@@ -134,6 +136,16 @@ func (g *Game) dirRight() {
 	}
 }
 
+// F-key for full screen
+func (g *Game) fullScreen() {
+	if !g.fullWindow {
+		ebiten.SetFullscreen(true)
+		g.fullWindow = true
+	} else {
+		g.fullWindow = false
+		ebiten.SetFullscreen(false)
+	}
+}
 func (g *Game) Update() error {
 	g.readKeys()
 
@@ -180,6 +192,8 @@ func (g *Game) readKeys() {
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyL) || ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
 		g.dirRight()
+	} else if inpututil.IsKeyJustPressed(ebiten.KeyF) { // Full screen
+		g.fullScreen()
 	}
 }
 
@@ -206,7 +220,7 @@ func main() {
 		Player: &Charakters{
 			Sprite: &Sprite{
 				img: playerImg,
-				pos: Point{200, 200},
+				pos: Point{screenWidth/2 - (imgSize / 2), screenHeight/2 - (imgSize / 2)},
 			},
 			speed: 2,
 		},
