@@ -5,6 +5,7 @@ import (
 	"image/color"
 	_ "image/png"
 	"log"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -14,6 +15,7 @@ const (
 	screenWidth  = 1920 / 3
 	screenHeight = 1080 / 3
 	imgSize      = 48
+	SPEED        = time.Second / 4
 )
 
 var (
@@ -29,13 +31,16 @@ var (
 	black       = color.RGBA{0, 0, 0, 255}
 	rectTop     = Point{0, 0}
 	rectBot     = Point{imgSize, imgSize}
+	gameSpeed   = SPEED
 )
 
 type Game struct {
-	Player   *Charakters
-	costomer *[]Charakters
-	worker   *[]Charakters
-	plants   *[]Plant
+	Player     *Charakters
+	costomer   *[]Charakters
+	worker     *[]Charakters
+	plants     *[]Plant
+	lastUpdate time.Time
+	tick       bool
 }
 type Sprite struct {
 	img *ebiten.Image
@@ -52,48 +57,97 @@ type Plant struct {
 	*Sprite
 	variety string
 }
+type Point struct {
+	x, y float64
+}
 
+// Idle faceing front
+func (g *Game) idle() {
+	if g.tick {
+		rectTop.x = imgSize - imgSize // 0
+		rectTop.y = imgSize - imgSize // 0
+		rectBot.x = imgSize           // 48
+		rectBot.y = imgSize           // 48
+	} else {
+		rectTop.x = imgSize
+		rectTop.y = imgSize - imgSize
+		rectBot.x = imgSize * 2
+		rectBot.y = imgSize
+	}
+}
+
+// set new position and player image
 func (g *Game) dirDown() {
 	g.Player.pos.y += g.Player.speed
-	rectTop.x = imgSize - imgSize
-	rectTop.y = imgSize - imgSize
-	rectBot.x = imgSize
-	rectBot.y = imgSize
+	if g.tick {
+		rectTop.x = imgSize * 2
+		rectTop.y = imgSize - imgSize
+		rectBot.x = imgSize * 3
+		rectBot.y = imgSize
+	} else {
+		rectTop.x = imgSize * 3
+		rectTop.y = imgSize - imgSize
+		rectBot.x = imgSize * 4
+		rectBot.y = imgSize
+	}
 }
 func (g *Game) dirUp() {
 	g.Player.pos.y -= g.Player.speed
-	//	rectTop.x = imgSize
-	//	rectTop.y = imgSize
-	//	rectBot.x = imgSize * 2
-	//	rectBot.y = imgSize * 2
-
-	rectTop.x = imgSize - imgSize
-	rectTop.y = imgSize
-	rectBot.x = imgSize
-	rectBot.y = imgSize * 2
+	if g.tick {
+		rectTop.x = imgSize
+		rectTop.y = imgSize
+		rectBot.x = imgSize * 2
+		rectBot.y = imgSize * 2
+	} else {
+		rectTop.x = imgSize - imgSize
+		rectTop.y = imgSize
+		rectBot.x = imgSize
+		rectBot.y = imgSize * 2
+	}
 }
 func (g *Game) dirLeft() {
 	g.Player.pos.x -= g.Player.speed
-	rectTop.x = imgSize - imgSize
-	rectTop.y = imgSize * 2
-	rectBot.x = imgSize
-	rectBot.y = imgSize * 3
+	if g.tick {
+		rectTop.x = imgSize * 2
+		rectTop.y = imgSize * 2
+		rectBot.x = imgSize * 3
+		rectBot.y = imgSize * 3
+	} else {
+		rectTop.x = imgSize * 3
+		rectTop.y = imgSize * 2
+		rectBot.x = imgSize * 4
+		rectBot.y = imgSize * 3
+	}
 }
 func (g *Game) dirRight() {
 	g.Player.pos.x += g.Player.speed
-	rectTop.x = imgSize - imgSize
-	rectTop.y = imgSize * 3
-	rectBot.x = imgSize
-	rectBot.y = imgSize * 4
+	if g.tick {
+		rectTop.x = imgSize - imgSize
+		rectTop.y = imgSize * 3
+		rectBot.x = imgSize
+		rectBot.y = imgSize * 4
+	} else {
+		rectTop.x = imgSize * 2
+		rectTop.y = imgSize * 3
+		rectBot.x = imgSize * 3
+		rectBot.y = imgSize * 4
+	}
 }
 
 func (g *Game) Update() error {
 	g.readKeys()
-	return nil
-}
 
-type Point struct {
-	x, y float64
+	// check Animation tick every 60 FPS
+	if time.Since(g.lastUpdate) < gameSpeed {
+		return nil
+	}
+	if g.tick {
+		g.tick = false
+	} else {
+		g.tick = true
+	}
+	g.lastUpdate = time.Now() // update lastUpdate
+	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -115,6 +169,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 func (g *Game) readKeys() {
 	if ebiten.IsKeyPressed(ebiten.KeyJ) || ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
 		g.dirDown()
+	} else {
+		g.idle()
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyK) || ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
 		g.dirUp()
