@@ -76,7 +76,7 @@ func (g *Game) idle() {
 	}
 }
 
-// set new position and player image
+// set new position and player images(animation)
 func (g *Game) dirDown() {
 	g.Player.pos.y += g.Player.speed
 	if g.tick {
@@ -94,14 +94,14 @@ func (g *Game) dirDown() {
 func (g *Game) dirUp() {
 	g.Player.pos.y -= g.Player.speed
 	if g.tick {
-		rectTop.x = imgSize
+		rectTop.x = imgSize * 2
 		rectTop.y = imgSize
-		rectBot.x = imgSize * 2
+		rectBot.x = imgSize * 3
 		rectBot.y = imgSize * 2
 	} else {
-		rectTop.x = imgSize - imgSize
+		rectTop.x = imgSize * 3
 		rectTop.y = imgSize
-		rectBot.x = imgSize
+		rectBot.x = imgSize * 4
 		rectBot.y = imgSize * 2
 	}
 }
