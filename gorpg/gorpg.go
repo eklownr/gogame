@@ -47,6 +47,7 @@ type Game struct {
 	bgImg      *ebiten.Image
 	village    *ebiten.Image
 	housePos   Point
+	coins      []Point
 }
 type Sprite struct {
 	img    *ebiten.Image
@@ -68,7 +69,7 @@ type Point struct {
 	x, y float64
 }
 
-// Idle faceing front
+// Idle faceing front animation
 func (g *Game) idle() {
 	if g.tick {
 		rectTop.x = imgSize - imgSize // 0
@@ -151,6 +152,7 @@ func (g *Game) fullScreen() {
 		ebiten.SetFullscreen(false)
 	}
 }
+
 func (g *Game) Update() error {
 	g.Player.prePos = g.Player.pos // save old position
 	g.readKeys()                   // read keys and move player
