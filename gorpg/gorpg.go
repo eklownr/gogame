@@ -91,9 +91,9 @@ func (g *Game) idle() {
 
 // set new position and player images(animation)
 func (g *Game) dirDown() {
-	if g.Player.Dir.right || g.Player.Dir.left {
-		g.Player.speed *= 0.7
-	}
+	//	if g.Player.Dir.right || g.Player.Dir.left {
+	//		g.Player.speed *= 0.7
+	//	}
 	g.Player.pos.y += g.Player.speed
 	// show animation subImage
 	if g.tick {
@@ -108,7 +108,7 @@ func (g *Game) dirDown() {
 		rectBot.y = imgSize
 	}
 	g.Player.Dir.down = false
-	g.Player.speed = 3
+	//g.Player.speed = 3
 }
 func (g *Game) dirUp() {
 	g.Player.pos.y -= g.Player.speed
