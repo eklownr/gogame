@@ -36,6 +36,9 @@ var (
 	gameSpeed   = SPEED
 )
 
+type Dir struct {
+	down, up, right, left bool
+}
 type Game struct {
 	Player     *Charakters
 	costomer   *[]Charakters
@@ -56,6 +59,7 @@ type Sprite struct {
 }
 type Charakters struct {
 	*Sprite
+	Dir
 	speed  float64
 	dest   Point
 	coin   int
@@ -71,6 +75,7 @@ type Point struct {
 
 // Idle faceing front animation
 func (g *Game) idle() {
+	// show animation subImage
 	if g.tick {
 		rectTop.x = imgSize - imgSize // 0
 		rectTop.y = imgSize - imgSize // 0
@@ -86,7 +91,13 @@ func (g *Game) idle() {
 
 // set new position and player images(animation)
 func (g *Game) dirDown() {
+	//	if g.Player.Dir.right || g.Player.Dir.left {
+	//		g.Player.pos.y += g.Player.speed * 0.5
+	//	} else {
+	//		g.Player.pos.y += g.Player.speed
+	//	}
 	g.Player.pos.y += g.Player.speed
+	// show animation subImage
 	if g.tick {
 		rectTop.x = imgSize * 2
 		rectTop.y = imgSize - imgSize
@@ -98,9 +109,11 @@ func (g *Game) dirDown() {
 		rectBot.x = imgSize * 4
 		rectBot.y = imgSize
 	}
+	g.Player.Dir.down = false
 }
 func (g *Game) dirUp() {
 	g.Player.pos.y -= g.Player.speed
+	// show animation subImage
 	if g.tick {
 		rectTop.x = imgSize * 2
 		rectTop.y = imgSize
@@ -112,9 +125,11 @@ func (g *Game) dirUp() {
 		rectBot.x = imgSize * 4
 		rectBot.y = imgSize * 2
 	}
+	g.Player.Dir.up = false
 }
 func (g *Game) dirLeft() {
 	g.Player.pos.x -= g.Player.speed
+	// show animation subImage
 	if g.tick {
 		rectTop.x = imgSize * 2
 		rectTop.y = imgSize * 2
@@ -126,9 +141,11 @@ func (g *Game) dirLeft() {
 		rectBot.x = imgSize * 4
 		rectBot.y = imgSize * 3
 	}
+	g.Player.Dir.left = false
 }
 func (g *Game) dirRight() {
 	g.Player.pos.x += g.Player.speed
+	// show animation subImage
 	if g.tick {
 		rectTop.x = imgSize - imgSize
 		rectTop.y = imgSize * 3
@@ -140,6 +157,7 @@ func (g *Game) dirRight() {
 		rectBot.x = imgSize * 3
 		rectBot.y = imgSize * 4
 	}
+	g.Player.Dir.right = false
 }
 
 // F-key for full screen
@@ -227,17 +245,21 @@ func (g *Game) Draw(screen *ebiten.Image) {
 func (g *Game) readKeys() {
 	if ebiten.IsKeyPressed(ebiten.KeyJ) || ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
 		g.dirDown()
+		g.Player.Dir.down = true
 	} else {
 		g.idle()
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyK) || ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
 		g.dirUp()
+		g.Player.Dir.up = true
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyH) || ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
 		g.dirLeft()
+		g.Player.Dir.left = true
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyL) || ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
 		g.dirRight()
+		g.Player.Dir.right = true
 	} else if inpututil.IsKeyJustPressed(ebiten.KeyF) { // Full screen
 		g.fullScreen()
 	}
@@ -271,12 +293,16 @@ func main() {
 				img: playerImg,
 				pos: Point{screenWidth/2 - (imgSize / 2), screenHeight/2 - (imgSize / 2)},
 			},
-			speed: 2,
+			speed: 3,
 		},
 	}
 	g.bgImg = bgImg
 	g.village = village
 	g.housePos = Point{300, houseTileSize}
+	g.Player.Dir.down = false
+	g.Player.Dir.up = false
+	g.Player.Dir.right = false
+	g.Player.Dir.left = false
 
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
