@@ -13,10 +13,11 @@ import (
 )
 
 const (
-	screenWidth  = 1920 / 3
-	screenHeight = 1080 / 3
-	imgSize      = 48
-	SPEED        = time.Second / 4
+	screenWidth   = 1920 / 3
+	screenHeight  = 1080 / 3
+	imgSize       = 48
+	SPEED         = time.Second / 4
+	houseTileSize = 64
 )
 
 var (
@@ -44,6 +45,8 @@ type Game struct {
 	tick       bool
 	fullWindow bool
 	bgImg      *ebiten.Image
+	village    *ebiten.Image
+	housePos   Point
 }
 type Sprite struct {
 	img    *ebiten.Image
@@ -149,9 +152,9 @@ func (g *Game) fullScreen() {
 	}
 }
 func (g *Game) Update() error {
+	g.Player.prePos = g.Player.pos // save old position
+	g.readKeys()                   // read keys and move player
 	// Player collision
-	g.Player.prePos = g.Player.pos
-	g.readKeys()
 	if g.Player.pos.x < 0 {
 		g.Player.pos = g.Player.prePos
 	} else if g.Player.pos.x > screenWidth-imgSize {
@@ -159,6 +162,12 @@ func (g *Game) Update() error {
 	} else if g.Player.pos.y < 0 {
 		g.Player.pos = g.Player.prePos
 	} else if g.Player.pos.y > screenHeight-imgSize-5 {
+		g.Player.pos = g.Player.prePos
+	} else if g.Player.pos.x >= g.housePos.x-32 && //collision with house
+		g.Player.pos.x <= g.housePos.x+imgSize &&
+		g.Player.pos.y >= g.housePos.y-imgSize/2 &&
+		g.Player.pos.y <= g.housePos.y+imgSize/2 {
+		println("You are at home")
 		g.Player.pos = g.Player.prePos
 	}
 
@@ -187,6 +196,17 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			image.Rect(0, 0, 600, 370),
 		).(*ebiten.Image),
 		op,
+	)
+
+	///////// draw hoouse 0 ////////////
+	opt := &ebiten.DrawImageOptions{}
+	opt.GeoM.Translate(300, houseTileSize)
+
+	screen.DrawImage(
+		g.village.SubImage(
+			image.Rect(0, 0, houseTileSize, imgSize),
+		).(*ebiten.Image),
+		opt,
 	)
 
 	///////// draw img player ///////////
@@ -230,7 +250,11 @@ func main() {
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("Gopher Mart")
 
-	// load player image
+	// load village image
+	village, _, err := ebitenutil.NewImageFromFile("assets/images/village.png")
+	checkErr(err)
+
+	// load background image
 	bgImg, _, err := ebitenutil.NewImageFromFile("assets/images/grass.png")
 	checkErr(err)
 
@@ -249,6 +273,8 @@ func main() {
 		},
 	}
 	g.bgImg = bgImg
+	g.village = village
+	g.housePos = Point{300, houseTileSize}
 
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
