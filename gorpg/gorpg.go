@@ -261,7 +261,7 @@ func main() {
 	checkErr(err)
 
 	// load player image
-	playerImg, _, err := ebitenutil.NewImageFromFile("assets/images/player.png")
+	playerImg, _, err := ebitenutil.NewImageFromFile("assets/images/playerBlue.png")
 	checkErr(err)
 
 	// Game constructor
