@@ -46,8 +46,9 @@ type Game struct {
 	bgImg      *ebiten.Image
 }
 type Sprite struct {
-	img *ebiten.Image
-	pos Point
+	img    *ebiten.Image
+	pos    Point
+	prePos Point
 }
 type Charakters struct {
 	*Sprite
@@ -148,7 +149,18 @@ func (g *Game) fullScreen() {
 	}
 }
 func (g *Game) Update() error {
+	// Player collision
+	g.Player.prePos = g.Player.pos
 	g.readKeys()
+	if g.Player.pos.x < 0 {
+		g.Player.pos = g.Player.prePos
+	} else if g.Player.pos.x > screenWidth-imgSize {
+		g.Player.pos = g.Player.prePos
+	} else if g.Player.pos.y < 0 {
+		g.Player.pos = g.Player.prePos
+	} else if g.Player.pos.y > screenHeight-imgSize-5 {
+		g.Player.pos = g.Player.prePos
+	}
 
 	// check Animation tick every 60 FPS
 	if time.Since(g.lastUpdate) < gameSpeed {
@@ -172,7 +184,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	screen.DrawImage(
 		g.bgImg.SubImage(
-			image.Rect(0, 0, 800, 350),
+			image.Rect(0, 0, 600, 370),
 		).(*ebiten.Image),
 		op,
 	)
