@@ -43,6 +43,7 @@ type Game struct {
 	lastUpdate time.Time
 	tick       bool
 	fullWindow bool
+	bgImg      *ebiten.Image
 }
 type Sprite struct {
 	img *ebiten.Image
@@ -165,6 +166,17 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(skyBlue) // background collor
 
+	///////// draw background ///////////
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(20, 20)
+
+	screen.DrawImage(
+		g.bgImg.SubImage(
+			image.Rect(0, 0, 800, 350),
+		).(*ebiten.Image),
+		op,
+	)
+
 	///////// draw img player ///////////
 	opts := &ebiten.DrawImageOptions{}
 	opts.GeoM.Translate(g.Player.pos.x, g.Player.pos.y)
@@ -202,20 +214,19 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
-	///////// Animation ///////////
-	// Decode an image from the image file's byte slice.
-	//	img, _, err := image.Decode(bytes.NewReader(images.Runner_png))
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//	runnerImage = ebiten.NewImageFromImage(img)
-
+	// Window properties
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("Gopher Mart")
 
+	// load player image
+	bgImg, _, err := ebitenutil.NewImageFromFile("assets/images/grass.png")
+	checkErr(err)
+
+	// load player image
 	playerImg, _, err := ebitenutil.NewImageFromFile("assets/images/player.png")
 	checkErr(err)
 
+	// Game constructor
 	g := &Game{
 		Player: &Charakters{
 			Sprite: &Sprite{
@@ -225,6 +236,7 @@ func main() {
 			speed: 2,
 		},
 	}
+	g.bgImg = bgImg
 
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
