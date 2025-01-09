@@ -5,6 +5,7 @@ import (
 	"image/color"
 	_ "image/png"
 	"log"
+
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -38,21 +39,17 @@ var (
 	diagonalSpeed = 0.8
 )
 
-type Dir struct {
-	down, up, right, left bool
-}
 type Game struct {
 	Player     *Charakters
 	costomer   *[]Charakters
 	worker     *[]Charakters
-	plants     *[]Plant
 	lastUpdate time.Time
 	tick       bool
 	fullWindow bool
 	bgImg      *ebiten.Image
 	village    *ebiten.Image
 	housePos   Point
-	coins      []Point
+	coins      *Objects
 }
 type Sprite struct {
 	img    *ebiten.Image
@@ -67,12 +64,17 @@ type Charakters struct {
 	coin   int
 	wallet int
 }
-type Plant struct {
+type Objects struct {
 	*Sprite
 	variety string
+	dest    Point
+	picked  bool
 }
 type Point struct {
 	x, y float64
+}
+type Dir struct {
+	down, up, right, left bool
 }
 
 // Idle faceing front animation
@@ -191,7 +193,15 @@ func (g *Game) fullScreen() {
 		ebiten.SetFullscreen(false)
 	}
 }
-
+func (g *Game) checkCollision(p1 Point, p2 Point) bool {
+	if p1.x >= p2.x-imgSize/2 &&
+		p1.x <= p2.x+imgSize &&
+		p1.y >= p2.y-imgSize/2 &&
+		p1.y <= p2.y+imgSize/2 {
+		return true
+	}
+	return false
+}
 func (g *Game) Update() error {
 	g.Player.prePos = g.Player.pos // save old position
 	g.readKeys()                   // read keys and move player
@@ -204,12 +214,14 @@ func (g *Game) Update() error {
 		g.Player.pos = g.Player.prePos
 	} else if g.Player.pos.y > screenHeight-imgSize-5 {
 		g.Player.pos = g.Player.prePos
-	} else if g.Player.pos.x >= g.housePos.x-32 && //collision with house
-		g.Player.pos.x <= g.housePos.x+imgSize &&
-		g.Player.pos.y >= g.housePos.y-imgSize/2 &&
-		g.Player.pos.y <= g.housePos.y+imgSize/2 {
+	} else if g.checkCollision(g.Player.pos, g.housePos) { //collision with house
 		println("You are at home")
 		g.Player.pos = g.Player.prePos
+	} else if g.checkCollision(g.coins.pos, g.Player.pos) {
+		println("You found a coin")
+		g.Player.coin++
+		println("You have", g.Player.coin, "coins")
+		g.coins.picked = true
 	}
 
 	// check Animation tick every 60 FPS
@@ -250,6 +262,24 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		opt,
 	)
 
+	///////// draw cooin player caring on head ////////////
+	optst := &ebiten.DrawImageOptions{}
+	for i := 3; i < 3+g.Player.coin; i++ {
+		optst.GeoM.Translate(g.Player.pos.x+imgSize/2-3, g.Player.pos.y+float64(2.0*i)-10.0)
+
+		screen.DrawImage(
+			g.coins.img.SubImage(
+				image.Rect(0, 0, imgSize, imgSize),
+			).(*ebiten.Image),
+			optst,
+		)
+		optst.GeoM.Reset()
+	}
+	g.drawCoin(screen, 100.0, 100.0, *g.coins)
+	g.drawCoin(screen, 150.0, 100.0, *g.coins)
+	g.drawCoin(screen, 100.0, 150.0, *g.coins)
+	g.drawCoin(screen, 120.0, 120.0, *g.coins)
+
 	///////// draw img player ///////////
 	opts := &ebiten.DrawImageOptions{}
 	opts.GeoM.Translate(g.Player.pos.x, g.Player.pos.y)
@@ -260,6 +290,21 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		).(*ebiten.Image),
 		opts,
 	)
+}
+
+func (g *Game) drawCoin(screen *ebiten.Image, x, y float64, coin Objects) {
+	if coin.picked {
+		return
+	}
+	option := &ebiten.DrawImageOptions{}
+	option.GeoM.Translate(x, y)
+	screen.DrawImage(
+		g.coins.img.SubImage(
+			image.Rect(0, 0, imgSize, imgSize),
+		).(*ebiten.Image),
+		option,
+	)
+	option.GeoM.Reset()
 }
 
 // vim-keys to move "hjkl" or Arrowkeys
@@ -290,6 +335,13 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return screenWidth, screenHeight
 }
 
+// check for errors
+func checkErr(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func main() {
 	// Window properties
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
@@ -307,6 +359,10 @@ func main() {
 	playerImg, _, err := ebitenutil.NewImageFromFile("assets/images/playerBlue.png")
 	checkErr(err)
 
+	// load coin image
+	coinImg, _, err := ebitenutil.NewImageFromFile("assets/images/coin.png")
+	checkErr(err)
+
 	// Game constructor
 	g := &Game{
 		Player: &Charakters{
@@ -315,24 +371,20 @@ func main() {
 				pos: Point{screenWidth/2 - (imgSize / 2), screenHeight/2 - (imgSize / 2)},
 			},
 			speed: PlayerSpeed,
+			coin:  2,
+		},
+		coins: &Objects{
+			Sprite: &Sprite{
+				img: coinImg,
+				pos: Point{screenWidth / 3, screenHeight/3 - (imgSize / 2)},
+			},
 		},
 	}
 	g.bgImg = bgImg
 	g.village = village
 	g.housePos = Point{300, houseTileSize}
-	g.Player.Dir.down = false
-	g.Player.Dir.up = false
-	g.Player.Dir.right = false
-	g.Player.Dir.left = false
 
 	if err := ebiten.RunGame(g); err != nil {
-		log.Fatal(err)
-	}
-}
-
-// check for errors
-func checkErr(err error) {
-	if err != nil {
 		log.Fatal(err)
 	}
 }
