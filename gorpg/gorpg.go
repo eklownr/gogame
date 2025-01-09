@@ -21,19 +21,21 @@ const (
 )
 
 var (
-	runnerImage *ebiten.Image
-	skyBlue     = color.RGBA{120, 180, 255, 255}
-	red         = color.RGBA{255, 0, 0, 255}
-	yellow      = color.RGBA{220, 200, 0, 255}
-	green       = color.RGBA{0, 220, 0, 255}
-	blue        = color.RGBA{0, 20, 120, 255}
-	purple      = color.RGBA{200, 0, 200, 255}
-	orange      = color.RGBA{180, 160, 0, 255}
-	white       = color.RGBA{255, 255, 255, 255}
-	black       = color.RGBA{0, 0, 0, 255}
-	rectTop     = Point{0, 0}
-	rectBot     = Point{imgSize, imgSize}
-	gameSpeed   = SPEED
+	runnerImage   *ebiten.Image
+	skyBlue       = color.RGBA{120, 180, 255, 255}
+	red           = color.RGBA{255, 0, 0, 255}
+	yellow        = color.RGBA{220, 200, 0, 255}
+	green         = color.RGBA{0, 220, 0, 255}
+	blue          = color.RGBA{0, 20, 120, 255}
+	purple        = color.RGBA{200, 0, 200, 255}
+	orange        = color.RGBA{180, 160, 0, 255}
+	white         = color.RGBA{255, 255, 255, 255}
+	black         = color.RGBA{0, 0, 0, 255}
+	rectTop       = Point{0, 0}
+	rectBot       = Point{imgSize, imgSize}
+	gameSpeed     = SPEED
+	PlayerSpeed   = 3.0
+	diagonalSpeed = 0.8
 )
 
 type Dir struct {
@@ -91,9 +93,9 @@ func (g *Game) idle() {
 
 // set new position and player images(animation)
 func (g *Game) dirDown() {
-	//	if g.Player.Dir.right || g.Player.Dir.left {
-	//		g.Player.speed *= 0.7
-	//	}
+	if g.Player.Dir.right || g.Player.Dir.left {
+		g.Player.speed = PlayerSpeed * diagonalSpeed
+	}
 	g.Player.pos.y += g.Player.speed
 	// show animation subImage
 	if g.tick {
@@ -108,9 +110,14 @@ func (g *Game) dirDown() {
 		rectBot.y = imgSize
 	}
 	g.Player.Dir.down = false
-	//g.Player.speed = 3
+	g.Player.Dir.right = false
+	g.Player.Dir.left = false
+	g.Player.speed = PlayerSpeed
 }
 func (g *Game) dirUp() {
+	if g.Player.Dir.right || g.Player.Dir.left {
+		g.Player.speed = PlayerSpeed * diagonalSpeed
+	}
 	g.Player.pos.y -= g.Player.speed
 	// show animation subImage
 	if g.tick {
@@ -125,8 +132,14 @@ func (g *Game) dirUp() {
 		rectBot.y = imgSize * 2
 	}
 	g.Player.Dir.up = false
+	g.Player.Dir.right = false
+	g.Player.Dir.left = false
+	g.Player.speed = PlayerSpeed
 }
 func (g *Game) dirLeft() {
+	if g.Player.Dir.up || g.Player.Dir.down {
+		g.Player.speed = PlayerSpeed * diagonalSpeed
+	}
 	g.Player.pos.x -= g.Player.speed
 	// show animation subImage
 	if g.tick {
@@ -141,8 +154,14 @@ func (g *Game) dirLeft() {
 		rectBot.y = imgSize * 3
 	}
 	g.Player.Dir.left = false
+	g.Player.Dir.up = false
+	g.Player.Dir.down = false
+	g.Player.speed = PlayerSpeed
 }
 func (g *Game) dirRight() {
+	if g.Player.Dir.up || g.Player.Dir.down {
+		g.Player.speed = PlayerSpeed * diagonalSpeed
+	}
 	g.Player.pos.x += g.Player.speed
 	// show animation subImage
 	if g.tick {
@@ -157,6 +176,9 @@ func (g *Game) dirRight() {
 		rectBot.y = imgSize * 4
 	}
 	g.Player.Dir.right = false
+	g.Player.Dir.up = false
+	g.Player.Dir.down = false
+	g.Player.speed = PlayerSpeed
 }
 
 // F-key for full screen
@@ -292,7 +314,7 @@ func main() {
 				img: playerImg,
 				pos: Point{screenWidth/2 - (imgSize / 2), screenHeight/2 - (imgSize / 2)},
 			},
-			speed: 3,
+			speed: PlayerSpeed,
 		},
 	}
 	g.bgImg = bgImg
