@@ -280,6 +280,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.drawCoin(screen, 150.0, 100.0, g.coins)
 	g.drawCoin(screen, 100.0, 150.0, g.coins)
 	g.drawCoin(screen, 120.0, 120.0, g.coins)
+	g.drawCoin(screen, 90.0, 200.0, g.coins)
 
 	///////// draw img player ///////////
 	opts := &ebiten.DrawImageOptions{}
