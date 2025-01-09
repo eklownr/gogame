@@ -275,6 +275,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		)
 		optst.GeoM.Reset()
 	}
+	/// TEST set coin position ///
 	g.drawCoin(screen, 100.0, 100.0, *g.coins)
 	g.drawCoin(screen, 150.0, 100.0, *g.coins)
 	g.drawCoin(screen, 100.0, 150.0, *g.coins)
