@@ -49,7 +49,7 @@ type Game struct {
 	bgImg      *ebiten.Image
 	village    *ebiten.Image
 	housePos   Point
-	coins      *Objects
+	coins      Objects
 }
 type Sprite struct {
 	img    *ebiten.Image
@@ -276,10 +276,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		optst.GeoM.Reset()
 	}
 	/// TEST set coin position ///
-	g.drawCoin(screen, 100.0, 100.0, *g.coins)
-	g.drawCoin(screen, 150.0, 100.0, *g.coins)
-	g.drawCoin(screen, 100.0, 150.0, *g.coins)
-	g.drawCoin(screen, 120.0, 120.0, *g.coins)
+	g.drawCoin(screen, 100.0, 100.0, g.coins)
+	g.drawCoin(screen, 150.0, 100.0, g.coins)
+	g.drawCoin(screen, 100.0, 150.0, g.coins)
+	g.drawCoin(screen, 120.0, 120.0, g.coins)
 
 	///////// draw img player ///////////
 	opts := &ebiten.DrawImageOptions{}
@@ -374,7 +374,7 @@ func main() {
 			speed: PlayerSpeed,
 			coin:  2,
 		},
-		coins: &Objects{
+		coins: Objects{
 			Sprite: &Sprite{
 				img: coinImg,
 				pos: Point{screenWidth / 3, screenHeight/3 - (imgSize / 2)},
