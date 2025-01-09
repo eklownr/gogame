@@ -219,9 +219,11 @@ func (g *Game) Update() error {
 		g.Player.pos = g.Player.prePos
 	} else if g.checkCollision(g.coins.pos, g.Player.pos) {
 		println("You found a coin")
-		g.Player.coin++
-		println("You have", g.Player.coin, "coins")
-		g.coins.picked = true
+		if g.Player.coin < 8 {
+			g.Player.coin++
+			println("You have", g.Player.coin, "coins")
+			g.coins.picked = true
+		}
 	}
 
 	// check Animation tick every 60 FPS
