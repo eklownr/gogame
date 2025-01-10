@@ -52,9 +52,10 @@ type Game struct {
 	coins      Objects
 }
 type Sprite struct {
-	img    *ebiten.Image
-	pos    Point
-	prePos Point
+	img     *ebiten.Image
+	pos     Point
+	prePos  Point
+	rectPos image.Rectangle
 }
 type Charakters struct {
 	*Sprite
@@ -193,6 +194,8 @@ func (g *Game) fullScreen() {
 		ebiten.SetFullscreen(false)
 	}
 }
+
+// check buildings collision
 func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	if p1.x >= p2.x-imgSize/2 &&
 		p1.x <= p2.x+imgSize &&
@@ -202,6 +205,19 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	}
 	return false
 }
+
+// check images rectangle collision
+func (g *Game) checkRectCollision(r1 image.Rectangle, r2 image.Rectangle) bool {
+	if r1.Min.X < r2.Max.X &&
+		r1.Max.X > r2.Min.X &&
+		r1.Min.Y < r2.Max.Y &&
+		r1.Max.Y > r2.Min.Y {
+		return true
+	}
+	return false
+}
+
+// update function
 func (g *Game) Update() error {
 	g.Player.prePos = g.Player.pos // save old position
 	g.readKeys()                   // read keys and move player
@@ -217,7 +233,7 @@ func (g *Game) Update() error {
 	} else if g.checkCollision(g.Player.pos, g.housePos) { //collision with house
 		println("You are at home")
 		g.Player.pos = g.Player.prePos
-	} else if g.checkCollision(g.coins.pos, g.Player.pos) {
+	} else if g.checkRectCollision(g.coins.rectPos, g.Player.rectPos) {
 		println("You found a coin")
 		if g.Player.coin < 8 {
 			g.Player.coin++
@@ -239,6 +255,7 @@ func (g *Game) Update() error {
 	return nil
 }
 
+// Draw function
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(skyBlue) // background collor
 
@@ -255,7 +272,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	///////// draw hoouse 0 ////////////
 	opt := &ebiten.DrawImageOptions{}
-	opt.GeoM.Translate(300, houseTileSize)
+	opt.GeoM.Translate(300, houseTileSize) // house position x, y
 
 	screen.DrawImage(
 		g.village.SubImage(
@@ -278,6 +295,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		optst.GeoM.Reset()
 	}
 	/// TEST set coin position ///
+	g.drawCoin(screen, g.coins.pos.x, g.coins.pos.y, g.coins)
 	g.drawCoin(screen, 100.0, 100.0, g.coins)
 	g.drawCoin(screen, 150.0, 100.0, g.coins)
 	g.drawCoin(screen, 100.0, 150.0, g.coins)
@@ -301,13 +319,14 @@ func (g *Game) drawCoin(screen *ebiten.Image, x, y float64, coin Objects) {
 		return
 	}
 	option := &ebiten.DrawImageOptions{}
-	option.GeoM.Translate(x, y)
+	option.GeoM.Translate(x, y) // coin position x, y
 	screen.DrawImage(
 		g.coins.img.SubImage(
 			image.Rect(0, 0, imgSize, imgSize),
 		).(*ebiten.Image),
 		option,
 	)
+	g.coins.rectPos = image.Rect(int(x), int(y), int(x+imgSize), int(y+imgSize))
 	option.GeoM.Reset()
 }
 
@@ -379,8 +398,9 @@ func main() {
 		},
 		coins: Objects{
 			Sprite: &Sprite{
-				img: coinImg,
-				pos: Point{screenWidth / 3, screenHeight/3 - (imgSize / 2)},
+				img:     coinImg,
+				pos:     Point{80, 80},
+				rectPos: image.Rect(80, 80, imgSize, imgSize),
 			},
 		},
 	}
