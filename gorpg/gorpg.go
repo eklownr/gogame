@@ -233,12 +233,12 @@ func (g *Game) Update() error {
 	} else if g.checkCollision(g.Player.pos, g.housePos) { //collision with house
 		println("You are at home")
 		g.Player.pos = g.Player.prePos
-	} else if g.checkRectCollision(g.coins.rectPos, g.Player.rectPos) {
+	} else if g.checkRectCollision(g.coins[0].rectPos, g.Player.rectPos) {
 		println("You found a coin")
 		if g.Player.coin < 8 {
 			g.Player.coin++
 			println("You have", g.Player.coin, "coins")
-			g.coins.picked = true
+			g.coins[0].picked = true
 		}
 	}
 
@@ -287,7 +287,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		optst.GeoM.Translate(g.Player.pos.x+imgSize/2-3, g.Player.pos.y+float64(2.0*i)-10.0)
 
 		screen.DrawImage(
-			g.coins.img.SubImage(
+			g.coins[0].img.SubImage(
 				image.Rect(0, 0, imgSize, imgSize),
 			).(*ebiten.Image),
 			optst,
@@ -295,12 +295,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		optst.GeoM.Reset()
 	}
 	/// TEST set coin position ///
-	g.drawCoin(screen, g.coins.pos.x, g.coins.pos.y, g.coins)
-	g.drawCoin(screen, 100.0, 100.0, g.coins)
-	g.drawCoin(screen, 150.0, 100.0, g.coins)
-	g.drawCoin(screen, 100.0, 150.0, g.coins)
-	g.drawCoin(screen, 120.0, 120.0, g.coins)
-	g.drawCoin(screen, 90.0, 200.0, g.coins)
+	//	g.drawCoin(screen, g.coins.pos.x, g.coins.pos.y, g.coins)
+	//	g.drawCoin(screen, 100.0, 100.0, g.coins)
+	//	g.drawCoin(screen, 150.0, 100.0, g.coins)
+	//	g.drawCoin(screen, 100.0, 150.0, g.coins)
+	//	g.drawCoin(screen, 120.0, 120.0, g.coins)
+	//	g.drawCoin(screen, 90.0, 200.0, g.coins)
 
 	///////// draw img player ///////////
 	opts := &ebiten.DrawImageOptions{}
@@ -314,19 +314,19 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	)
 }
 
-func (g *Game) drawCoin(screen *ebiten.Image, x, y float64, coin Objects) {
+func (g *Game) drawCoin(screen *ebiten.Image, x, y float64, coin Objects, index int) {
 	if coin.picked {
 		return
 	}
 	option := &ebiten.DrawImageOptions{}
 	option.GeoM.Translate(x, y) // coin position x, y
 	screen.DrawImage(
-		g.coins.img.SubImage(
+		g.coins[index].img.SubImage(
 			image.Rect(0, 0, imgSize, imgSize),
 		).(*ebiten.Image),
 		option,
 	)
-	g.coins.rectPos = image.Rect(int(x), int(y), int(x+imgSize), int(y+imgSize))
+	g.coins[index].rectPos = image.Rect(int(x), int(y), int(x+imgSize), int(y+imgSize))
 	option.GeoM.Reset()
 }
 
@@ -396,12 +396,20 @@ func main() {
 			speed: PlayerSpeed,
 			coin:  2,
 		},
-		coins: []*Objects{
-			Sprite: &Sprite{
-				img:     coinImg,
-				pos:     Point{80, 80},
-				rectPos: image.Rect(80, 80, imgSize, imgSize),
-			},
+		//		coins: []*Objects{
+		//			Sprite: &Sprite{
+		//				img:     coinImg,
+		//				pos:     Point{80, 80},
+		//				rectPos: image.Rect(80, 80, imgSize, imgSize),
+		//			},
+		//		},
+	}
+	g.coins = append(g.coins, &Objects{})
+	g.coins[0] = &Objects{
+		Sprite: &Sprite{
+			img:     coinImg,
+			pos:     Point{100, 100},
+			rectPos: image.Rect(100, 100, imgSize, imgSize),
 		},
 	}
 	g.bgImg = bgImg
