@@ -240,6 +240,13 @@ func (g *Game) Update() error {
 			println("You have", g.Player.coin, "coins")
 			g.coins[0].picked = true
 		}
+	} else if g.checkCollision(g.coins[0].pos, g.Player.pos) {
+		println("You found a coin at X position", g.coins[0].pos.x)
+		if g.Player.coin < 800 {
+			g.Player.coin++
+			println("You have", g.Player.coin, "coins")
+			g.coins[0].picked = true
+		}
 	}
 
 	// check Animation tick every 60 FPS
@@ -300,7 +307,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	//	g.drawCoin(screen, 150.0, 100.0, g.coins)
 	//	g.drawCoin(screen, 100.0, 150.0, g.coins)
 	//	g.drawCoin(screen, 120.0, 120.0, g.coins)
-	//	g.drawCoin(screen, 90.0, 200.0, g.coins)
+	g.drawCoin(screen, 100.0, 100.0, *g.coins[0], 0)
 
 	///////// draw img player ///////////
 	opts := &ebiten.DrawImageOptions{}
@@ -316,6 +323,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 func (g *Game) drawCoin(screen *ebiten.Image, x, y float64, coin Objects, index int) {
 	if coin.picked {
+		g.coins[index].pos = Point{-100, -100} // outside of screen
 		return
 	}
 	option := &ebiten.DrawImageOptions{}
@@ -404,14 +412,28 @@ func main() {
 		//			},
 		//		},
 	}
-	g.coins = append(g.coins, &Objects{})
-	g.coins[0] = &Objects{
+	g.coins = append(g.coins, &Objects{
 		Sprite: &Sprite{
 			img:     coinImg,
 			pos:     Point{100, 100},
 			rectPos: image.Rect(100, 100, imgSize, imgSize),
 		},
-	}
+	})
+	//	g.coins = append(g.coins, &Objects{
+	//		Sprite: &Sprite{
+	//			img:     coinImg,
+	//			pos:     Point{150, 100},
+	//			rectPos: image.Rect(150, 100, imgSize, imgSize),
+	//		},
+	//	})
+
+	//	g.coins[0] = &Objects{
+	//		Sprite: &Sprite{
+	//			img:     coinImg,
+	//			pos:     Point{100, 100},
+	//			rectPos: image.Rect(100, 100, imgSize, imgSize),
+	//		},
+	//	}
 	g.bgImg = bgImg
 	g.village = village
 	g.housePos = Point{300, houseTileSize}
