@@ -41,15 +41,15 @@ var (
 
 type Game struct {
 	Player     *Charakters
-	costomer   *[]Charakters
-	worker     *[]Charakters
+	costomer   []*Charakters
+	worker     []*Charakters
 	lastUpdate time.Time
 	tick       bool
 	fullWindow bool
 	bgImg      *ebiten.Image
 	village    *ebiten.Image
 	housePos   Point
-	coins      Objects
+	coins      []*Objects
 }
 type Sprite struct {
 	img     *ebiten.Image
@@ -396,7 +396,7 @@ func main() {
 			speed: PlayerSpeed,
 			coin:  2,
 		},
-		coins: Objects{
+		coins: []*Objects{
 			Sprite: &Sprite{
 				img:     coinImg,
 				pos:     Point{80, 80},
