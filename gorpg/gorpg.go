@@ -195,6 +195,23 @@ func (g *Game) fullScreen() {
 	}
 }
 
+// //// TESTING //////
+func (g *Game) checkObjectCollision(obj []*Objects, p2 Point) bool {
+	for i := range obj {
+		if g.checkCollision(obj[i].pos, p2) {
+			g.coins[i].picked = true
+			return true
+		}
+	}
+	//	if p1.x >= p2.x-imgSize/2 &&
+	//		p1.x <= p2.x+imgSize &&
+	//		p1.y >= p2.y-imgSize/2 &&
+	//		p1.y <= p2.y+imgSize/2 {
+	//		return true
+	//	}
+	return false
+}
+
 // check buildings collision
 func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	if p1.x >= p2.x-imgSize/2 &&
@@ -233,12 +250,11 @@ func (g *Game) Update() error {
 	} else if g.checkCollision(g.Player.pos, g.housePos) { //collision with house
 		println("You are at home")
 		g.Player.pos = g.Player.prePos
-	} else if g.checkRectCollision(g.coins[0].rectPos, g.Player.rectPos) {
+	} else if g.checkObjectCollision(g.coins, Point{g.Player.prePos.x, g.Player.pos.y}) {
 		println("You found a coin")
-		if g.Player.coin < 8 {
+		if g.Player.coin < 800 {
 			g.Player.coin++
 			println("You have", g.Player.coin, "coins")
-			g.coins[0].picked = true
 		}
 	} else if g.checkCollision(g.coins[0].pos, g.Player.pos) {
 		println("You found a coin at X position", g.coins[0].pos.x)
@@ -307,7 +323,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	//	g.drawCoin(screen, 150.0, 100.0, g.coins)
 	//	g.drawCoin(screen, 100.0, 150.0, g.coins)
 	//	g.drawCoin(screen, 120.0, 120.0, g.coins)
+
+	//for i := 0; i < 3; i++ {
+	//	g.drawCoin(screen, g.coins[i].pos.x, g.coins[i].pos.y, *g.coins[i], i)
+	//}
 	g.drawCoin(screen, 100.0, 100.0, *g.coins[0], 0)
+	g.drawCoin(screen, 130.0, 100.0, *g.coins[1], 0)
+	g.drawCoin(screen, 100.0, 140.0, *g.coins[2], 0)
 
 	///////// draw img player ///////////
 	opts := &ebiten.DrawImageOptions{}
@@ -404,36 +426,17 @@ func main() {
 			speed: PlayerSpeed,
 			coin:  2,
 		},
-		//		coins: []*Objects{
-		//			Sprite: &Sprite{
-		//				img:     coinImg,
-		//				pos:     Point{80, 80},
-		//				rectPos: image.Rect(80, 80, imgSize, imgSize),
-		//			},
-		//		},
 	}
-	g.coins = append(g.coins, &Objects{
-		Sprite: &Sprite{
-			img:     coinImg,
-			pos:     Point{100, 100},
-			rectPos: image.Rect(100, 100, imgSize, imgSize),
-		},
-	})
-	//	g.coins = append(g.coins, &Objects{
-	//		Sprite: &Sprite{
-	//			img:     coinImg,
-	//			pos:     Point{150, 100},
-	//			rectPos: image.Rect(150, 100, imgSize, imgSize),
-	//		},
-	//	})
-
-	//	g.coins[0] = &Objects{
-	//		Sprite: &Sprite{
-	//			img:     coinImg,
-	//			pos:     Point{100, 100},
-	//			rectPos: image.Rect(100, 100, imgSize, imgSize),
-	//		},
-	//	}
+	// add 10 coins
+	for i := 0; i < 10; i++ {
+		g.coins = append(g.coins, &Objects{
+			Sprite: &Sprite{
+				img:     coinImg,
+				pos:     Point{100, 100},
+				rectPos: image.Rect(100, 100, imgSize, imgSize),
+			},
+		})
+	}
 	g.bgImg = bgImg
 	g.village = village
 	g.housePos = Point{300, houseTileSize}
