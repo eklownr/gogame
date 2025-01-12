@@ -11,6 +11,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 const (
@@ -22,12 +23,13 @@ const (
 )
 
 var (
-	runnerImage   *ebiten.Image
 	skyBlue       = color.RGBA{120, 180, 255, 255}
 	red           = color.RGBA{255, 0, 0, 255}
+	red_rect      = color.RGBA{255, 0, 0, 40}
+	blue          = color.RGBA{0, 20, 120, 255}
+	blue_rect     = color.RGBA{0, 20, 120, 40}
 	yellow        = color.RGBA{220, 200, 0, 255}
 	green         = color.RGBA{0, 220, 0, 255}
-	blue          = color.RGBA{0, 20, 120, 255}
 	purple        = color.RGBA{200, 0, 200, 255}
 	orange        = color.RGBA{180, 160, 0, 255}
 	white         = color.RGBA{255, 255, 255, 255}
@@ -50,6 +52,7 @@ type Game struct {
 	village    *ebiten.Image
 	housePos   Point
 	coins      []*Objects
+	house      []*Objects
 }
 type Sprite struct {
 	img     *ebiten.Image
@@ -195,40 +198,27 @@ func (g *Game) fullScreen() {
 	}
 }
 
-// //// TESTING //////
-func (g *Game) checkObjectCollision(obj []*Objects, p2 Point) bool {
+// check collision Objects to Point
+func (g *Game) Collision_Object_Point(obj []*Objects, p2 Point) bool {
 	for i := range obj {
 		if g.checkCollision(obj[i].pos, p2) {
-			g.coins[i].picked = true
+			obj[i].picked = true
+			obj[i].pos = Point{
+				x: -100,
+				y: -100,
+			}
 			return true
 		}
 	}
-	//	if p1.x >= p2.x-imgSize/2 &&
-	//		p1.x <= p2.x+imgSize &&
-	//		p1.y >= p2.y-imgSize/2 &&
-	//		p1.y <= p2.y+imgSize/2 {
-	//		return true
-	//	}
 	return false
 }
 
 // check buildings collision
 func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	if p1.x >= p2.x-imgSize/2 &&
-		p1.x <= p2.x+imgSize &&
+		p1.x <= p2.x+imgSize/2 &&
 		p1.y >= p2.y-imgSize/2 &&
 		p1.y <= p2.y+imgSize/2 {
-		return true
-	}
-	return false
-}
-
-// check images rectangle collision
-func (g *Game) checkRectCollision(r1 image.Rectangle, r2 image.Rectangle) bool {
-	if r1.Min.X < r2.Max.X &&
-		r1.Max.X > r2.Min.X &&
-		r1.Min.Y < r2.Max.Y &&
-		r1.Max.Y > r2.Min.Y {
 		return true
 	}
 	return false
@@ -247,21 +237,19 @@ func (g *Game) Update() error {
 		g.Player.pos = g.Player.prePos
 	} else if g.Player.pos.y > screenHeight-imgSize-5 {
 		g.Player.pos = g.Player.prePos
-	} else if g.checkCollision(g.Player.pos, g.housePos) { //collision with house
+	} else if g.checkCollision(g.Player.pos, g.house[0].pos) { //collision with house
 		println("You are at home")
 		g.Player.pos = g.Player.prePos
-	} else if g.checkObjectCollision(g.coins, Point{g.Player.prePos.x, g.Player.pos.y}) {
-		println("You found a coin")
-		if g.Player.coin < 800 {
+	}
+	for i := range g.coins {
+		if g.checkCollision(g.coins[i].pos, g.Player.pos) && g.coins[i].picked == false {
+			println("You have NOW: ", g.Player.coin, "coins")
 			g.Player.coin++
-			println("You have", g.Player.coin, "coins")
-		}
-	} else if g.checkCollision(g.coins[0].pos, g.Player.pos) {
-		println("You found a coin at X position", g.coins[0].pos.x)
-		if g.Player.coin < 800 {
-			g.Player.coin++
-			println("You have", g.Player.coin, "coins")
-			g.coins[0].picked = true
+			g.coins[i].picked = true
+			g.coins[i].pos = Point{
+				x: -100,
+				y: -100,
+			}
 		}
 	}
 
@@ -317,19 +305,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		)
 		optst.GeoM.Reset()
 	}
-	/// TEST set coin position ///
-	//	g.drawCoin(screen, g.coins.pos.x, g.coins.pos.y, g.coins)
-	//	g.drawCoin(screen, 100.0, 100.0, g.coins)
-	//	g.drawCoin(screen, 150.0, 100.0, g.coins)
-	//	g.drawCoin(screen, 100.0, 150.0, g.coins)
-	//	g.drawCoin(screen, 120.0, 120.0, g.coins)
-
-	//for i := 0; i < 3; i++ {
-	//	g.drawCoin(screen, g.coins[i].pos.x, g.coins[i].pos.y, *g.coins[i], i)
-	//}
-	g.drawCoin(screen, 100.0, 100.0, *g.coins[0], 0)
-	g.drawCoin(screen, 130.0, 100.0, *g.coins[1], 0)
-	g.drawCoin(screen, 100.0, 140.0, *g.coins[2], 0)
+	/// Draw coin at same as Game constructor g.coins.pos ///
+	for i := 0; i < 10; i++ {
+		g.drawCoin(screen, g.coins[i].pos.x, g.coins[i].pos.y, *g.coins[i], i)
+	}
 
 	///////// draw img player ///////////
 	opts := &ebiten.DrawImageOptions{}
@@ -340,6 +319,26 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			image.Rect(int(rectTop.x), int(rectTop.y), int(rectBot.x), int(rectBot.y)),
 		).(*ebiten.Image),
 		opts,
+	)
+	// TEST draw Player collision rect
+	vector.DrawFilledRect(
+		screen,
+		float32(g.Player.pos.x),
+		float32(g.Player.pos.y),
+		float32(imgSize),
+		float32(imgSize),
+		blue_rect,
+		true,
+	)
+	// TEST draw Player collision rect
+	vector.DrawFilledRect(
+		screen,
+		float32(g.Player.pos.x+(imgSize/2)/2),
+		float32(g.Player.pos.y+(imgSize/2)/2),
+		float32(imgSize/2),
+		float32(imgSize/2),
+		red_rect,
+		true,
 	)
 }
 
@@ -356,8 +355,19 @@ func (g *Game) drawCoin(screen *ebiten.Image, x, y float64, coin Objects, index 
 		).(*ebiten.Image),
 		option,
 	)
-	g.coins[index].rectPos = image.Rect(int(x), int(y), int(x+imgSize), int(y+imgSize))
+	g.coins[index].rectPos = image.Rect(int(x), int(y), int(imgSize/2), int(imgSize/2))
 	option.GeoM.Reset()
+
+	// TEST draw coin rect
+	vector.DrawFilledRect(
+		screen,
+		float32(x),
+		float32(y),
+		float32(imgSize/2),
+		float32(imgSize/2),
+		red_rect,
+		true,
+	)
 }
 
 // vim-keys to move "hjkl" or Arrowkeys
@@ -428,18 +438,25 @@ func main() {
 		},
 	}
 	// add 10 coins
-	for i := 0; i < 10; i++ {
+	for i := 1; i < 11; i++ {
 		g.coins = append(g.coins, &Objects{
 			Sprite: &Sprite{
 				img:     coinImg,
-				pos:     Point{100, 100},
-				rectPos: image.Rect(100, 100, imgSize, imgSize),
+				pos:     Point{200, 20*float64(i) + 60},
+				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
 			},
 		})
 	}
 	g.bgImg = bgImg
 	g.village = village
 	g.housePos = Point{300, houseTileSize}
+	g.house = append(g.house, &Objects{
+		Sprite: &Sprite{
+			img:     village,
+			pos:     g.housePos,
+			rectPos: image.Rect(0, 0, houseTileSize, imgSize),
+		},
+	})
 
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
