@@ -34,8 +34,6 @@ var (
 	orange        = color.RGBA{180, 160, 0, 255}
 	white         = color.RGBA{255, 255, 255, 255}
 	black         = color.RGBA{0, 0, 0, 255}
-	rectTop       = Point{0, 0}
-	rectBot       = Point{imgSize, imgSize}
 	gameSpeed     = SPEED
 	PlayerSpeed   = 3.0
 	diagonalSpeed = 0.8
@@ -59,6 +57,8 @@ type Sprite struct {
 	pos     Point
 	prePos  Point
 	rectPos image.Rectangle
+	rectTop Point
+	rectBot Point
 }
 type Charakters struct {
 	*Sprite
@@ -85,15 +85,15 @@ type Dir struct {
 func (g *Game) idle() {
 	// show animation subImage
 	if g.tick {
-		rectTop.x = imgSize - imgSize // 0
-		rectTop.y = imgSize - imgSize // 0
-		rectBot.x = imgSize           // 48
-		rectBot.y = imgSize           // 48
+		g.Player.rectTop.x = imgSize - imgSize // 0
+		g.Player.rectTop.y = imgSize - imgSize // 0
+		g.Player.rectBot.x = imgSize           // 48
+		g.Player.rectBot.y = imgSize           // 48
 	} else {
-		rectTop.x = imgSize
-		rectTop.y = imgSize - imgSize
-		rectBot.x = imgSize * 2
-		rectBot.y = imgSize
+		g.Player.rectTop.x = imgSize
+		g.Player.rectTop.y = imgSize - imgSize
+		g.Player.rectBot.x = imgSize * 2
+		g.Player.rectBot.y = imgSize
 	}
 }
 
@@ -105,15 +105,15 @@ func (g *Game) dirDown() {
 	g.Player.pos.y += g.Player.speed
 	// show animation subImage
 	if g.tick {
-		rectTop.x = imgSize * 2
-		rectTop.y = imgSize - imgSize
-		rectBot.x = imgSize * 3
-		rectBot.y = imgSize
+		g.Player.rectTop.x = imgSize * 2
+		g.Player.rectTop.y = imgSize - imgSize
+		g.Player.rectBot.x = imgSize * 3
+		g.Player.rectBot.y = imgSize
 	} else {
-		rectTop.x = imgSize * 3
-		rectTop.y = imgSize - imgSize
-		rectBot.x = imgSize * 4
-		rectBot.y = imgSize
+		g.Player.rectTop.x = imgSize * 3
+		g.Player.rectTop.y = imgSize - imgSize
+		g.Player.rectBot.x = imgSize * 4
+		g.Player.rectBot.y = imgSize
 	}
 	g.Player.Dir.down = false
 	g.Player.Dir.right = false
@@ -127,15 +127,15 @@ func (g *Game) dirUp() {
 	g.Player.pos.y -= g.Player.speed
 	// show animation subImage
 	if g.tick {
-		rectTop.x = imgSize * 2
-		rectTop.y = imgSize
-		rectBot.x = imgSize * 3
-		rectBot.y = imgSize * 2
+		g.Player.rectTop.x = imgSize * 2
+		g.Player.rectTop.y = imgSize
+		g.Player.rectBot.x = imgSize * 3
+		g.Player.rectBot.y = imgSize * 2
 	} else {
-		rectTop.x = imgSize * 3
-		rectTop.y = imgSize
-		rectBot.x = imgSize * 4
-		rectBot.y = imgSize * 2
+		g.Player.rectTop.x = imgSize * 3
+		g.Player.rectTop.y = imgSize
+		g.Player.rectBot.x = imgSize * 4
+		g.Player.rectBot.y = imgSize * 2
 	}
 	g.Player.Dir.up = false
 	g.Player.Dir.right = false
@@ -149,15 +149,15 @@ func (g *Game) dirLeft() {
 	g.Player.pos.x -= g.Player.speed
 	// show animation subImage
 	if g.tick {
-		rectTop.x = imgSize * 2
-		rectTop.y = imgSize * 2
-		rectBot.x = imgSize * 3
-		rectBot.y = imgSize * 3
+		g.Player.rectTop.x = imgSize * 2
+		g.Player.rectTop.y = imgSize * 2
+		g.Player.rectBot.x = imgSize * 3
+		g.Player.rectBot.y = imgSize * 3
 	} else {
-		rectTop.x = imgSize * 3
-		rectTop.y = imgSize * 2
-		rectBot.x = imgSize * 4
-		rectBot.y = imgSize * 3
+		g.Player.rectTop.x = imgSize * 3
+		g.Player.rectTop.y = imgSize * 2
+		g.Player.rectBot.x = imgSize * 4
+		g.Player.rectBot.y = imgSize * 3
 	}
 	g.Player.Dir.left = false
 	g.Player.Dir.up = false
@@ -171,15 +171,15 @@ func (g *Game) dirRight() {
 	g.Player.pos.x += g.Player.speed
 	// show animation subImage
 	if g.tick {
-		rectTop.x = imgSize - imgSize
-		rectTop.y = imgSize * 3
-		rectBot.x = imgSize
-		rectBot.y = imgSize * 4
+		g.Player.rectTop.x = imgSize - imgSize
+		g.Player.rectTop.y = imgSize * 3
+		g.Player.rectBot.x = imgSize
+		g.Player.rectBot.y = imgSize * 4
 	} else {
-		rectTop.x = imgSize * 2
-		rectTop.y = imgSize * 3
-		rectBot.x = imgSize * 3
-		rectBot.y = imgSize * 4
+		g.Player.rectTop.x = imgSize * 2
+		g.Player.rectTop.y = imgSize * 3
+		g.Player.rectBot.x = imgSize * 3
+		g.Player.rectBot.y = imgSize * 4
 	}
 	g.Player.Dir.right = false
 	g.Player.Dir.up = false
@@ -201,12 +201,13 @@ func (g *Game) fullScreen() {
 // check collision Objects to Point
 func (g *Game) Collision_Object_Point(obj []*Objects, p2 Point) bool {
 	for i := range obj {
-		if g.checkCollision(obj[i].pos, p2) {
+		if obj[i].pos == p2 {
 			obj[i].picked = true
 			obj[i].pos = Point{
 				x: -100,
 				y: -100,
 			}
+			g.Player.coin++
 			return true
 		}
 	}
@@ -215,6 +216,8 @@ func (g *Game) Collision_Object_Point(obj []*Objects, p2 Point) bool {
 
 // check buildings collision
 func (g *Game) checkCollision(p1 Point, p2 Point) bool {
+	//g.Player.pos.x = g.Player.pos.x + (imgSize/2)/2
+	//g.Player.pos.y = g.Player.pos.y + (imgSize/2)/2
 	if p1.x >= p2.x-imgSize/2 &&
 		p1.x <= p2.x+imgSize/2 &&
 		p1.y >= p2.y-imgSize/2 &&
@@ -228,6 +231,7 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 func (g *Game) Update() error {
 	g.Player.prePos = g.Player.pos // save old position
 	g.readKeys()                   // read keys and move player
+
 	// Player collision
 	if g.Player.pos.x < 0 {
 		g.Player.pos = g.Player.prePos
@@ -243,8 +247,8 @@ func (g *Game) Update() error {
 	}
 	for i := range g.coins {
 		if g.checkCollision(g.coins[i].pos, g.Player.pos) && g.coins[i].picked == false {
-			println("You have NOW: ", g.Player.coin, "coins")
 			g.Player.coin++
+			println("You have NOW: ", g.Player.coin, "coins")
 			g.coins[i].picked = true
 			g.coins[i].pos = Point{
 				x: -100,
@@ -316,7 +320,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	screen.DrawImage(
 		g.Player.img.SubImage(
-			image.Rect(int(rectTop.x), int(rectTop.y), int(rectBot.x), int(rectBot.y)),
+			image.Rect(0, 0, imgSize, imgSize),
 		).(*ebiten.Image),
 		opts,
 	)
@@ -361,8 +365,8 @@ func (g *Game) drawCoin(screen *ebiten.Image, x, y float64, coin Objects, index 
 	// TEST draw coin rect
 	vector.DrawFilledRect(
 		screen,
-		float32(x),
-		float32(y),
+		float32(x-imgSize/4),
+		float32(y-imgSize/4),
 		float32(imgSize/2),
 		float32(imgSize/2),
 		red_rect,
@@ -437,13 +441,16 @@ func main() {
 			coin:  2,
 		},
 	}
+	g.Player.rectTop = Point{(g.Player.pos.y + (imgSize/2)/2), imgSize / 2}
+	g.Player.rectBot = Point{imgSize / 2, imgSize / 2}
+
 	// add 10 coins
 	for i := 1; i < 11; i++ {
 		g.coins = append(g.coins, &Objects{
 			Sprite: &Sprite{
 				img:     coinImg,
 				pos:     Point{200, 20*float64(i) + 60},
-				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
+				rectPos: image.Rect(0+imgSize/4, 0+imgSize/4, imgSize/2, imgSize/2),
 			},
 		})
 	}
