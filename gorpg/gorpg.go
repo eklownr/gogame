@@ -224,6 +224,12 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 		p1.y <= p2.y+imgSize/2 {
 		return true
 	}
+	//	if p1.x >= p2.x-imgSize/2 &&
+	//		p1.x <= p2.x+imgSize/2 &&
+	//		p1.y >= p2.y-imgSize/2 &&
+	//		p1.y <= p2.y+imgSize/2 {
+	//		return true
+	//	}
 	return false
 }
 
@@ -337,8 +343,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// TEST draw Player collision rect
 	vector.DrawFilledRect(
 		screen,
-		float32(g.Player.pos.x+(imgSize/2)/2),
-		float32(g.Player.pos.y+(imgSize/2)/2),
+		float32(g.Player.pos.x+imgSize/4),
+		float32(g.Player.pos.y+imgSize/4),
 		float32(imgSize/2),
 		float32(imgSize/2),
 		red_rect,
