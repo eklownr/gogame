@@ -214,6 +214,14 @@ func (g *Game) Collision_Object_Point(obj []*Objects, p2 Point) bool {
 	return false
 }
 
+// check collision image.Rectangle to image.Rectangle
+func (g *Game) Collision_Image_Image(r1 image.Rectangle, r2 image.Rectangle) bool {
+	if r2.Overlaps(r1) {
+		return true
+	}
+	return false
+}
+
 // check buildings collision
 func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	if p1.x >= p2.x-imgSize/2 &&
@@ -224,23 +232,16 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	}
 	return false
 }
-func (g *Game) collideX(p1 Point, p2 Point) bool {
-	if p1.x >= p2.x-imgSize/2 &&
-		p1.x <= p2.x+imgSize/2 {
-		return true
-	}
-	return false
-}
-func (g *Game) collideY(p1 Point, p2 Point) bool {
-	if p1.y >= p2.y-imgSize/2 &&
-		p1.y <= p2.y+imgSize/2 {
-		return true
-	}
-	return false
-}
 
 // update function
 func (g *Game) Update() error {
+
+	g.Player.rectPos = image.Rect(
+		int(g.Player.pos.x+imgSize/4),
+		int(g.Player.pos.y+imgSize/4),
+		int(imgSize/2),
+		int(imgSize/2),
+	)
 	g.Player.prePos = g.Player.pos // save old position
 	g.readKeys()                   // read keys and move player
 
@@ -253,18 +254,25 @@ func (g *Game) Update() error {
 		g.Player.pos = g.Player.prePos
 	} else if g.Player.pos.y > screenHeight-imgSize-5 {
 		g.Player.pos = g.Player.prePos
-	} else if g.collideX(g.Player.pos, g.house[0].pos) && g.collideY(g.Player.pos, g.house[0].pos) { //collision with house
+	} else if g.Collision_Image_Image(g.house[0].rectPos, g.Player.rectPos) {
+		//collision with house
 		println("You are at home")
-		g.Player.pos = g.Player.prePos
+		//g.Player.pos = g.Player.prePos
 	}
 	for i := range g.coins {
-		if g.checkCollision(g.coins[i].pos, g.Player.pos) && g.coins[i].picked == false {
+		g.coins[i].rectPos = image.Rect(
+			int(g.coins[i].pos.x+imgSize/4),
+			int(g.coins[i].pos.y+imgSize/4),
+			int(imgSize/2),
+			int(imgSize/2),
+		)
+		if g.Collision_Image_Image(g.coins[i].rectPos, g.Player.rectPos) && g.coins[i].picked == false {
 			g.Player.coin++
 			println("You have NOW: ", g.Player.coin, "coins")
-			g.coins[i].picked = true
+			//g.coins[i].picked = true
 			g.coins[i].pos = Point{
-				x: -100,
-				y: -100,
+				x: 100,
+				y: 100,
 			}
 		}
 	}
@@ -356,6 +364,26 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		red_rect,
 		true,
 	)
+	vector.StrokeRect(
+		screen,
+		float32(g.Player.pos.x+imgSize/4),
+		float32(g.Player.pos.y+imgSize/4),
+		imgSize/2,
+		imgSize/2,
+		3.0,
+		color.RGBA{122, 222, 0, 100},
+		false,
+	)
+	vector.StrokeRect(
+		screen,
+		float32(g.housePos.x)+float32(g.house[0].rectPos.Min.X),
+		float32(g.housePos.y)+float32(g.house[0].rectPos.Min.Y),
+		houseTileSize,
+		imgSize,
+		3.0,
+		color.RGBA{222, 122, 0, 100},
+		false,
+	)
 }
 
 func (g *Game) drawCoin(screen *ebiten.Image, x, y float64, coin Objects, index int) {
@@ -371,7 +399,7 @@ func (g *Game) drawCoin(screen *ebiten.Image, x, y float64, coin Objects, index 
 		).(*ebiten.Image),
 		option,
 	)
-	g.coins[index].rectPos = image.Rect(int(x-imgSize/4+10), int(y-imgSize/4+10), int(imgSize/4), int(imgSize/4))
+	//g.coins[index].rectPos = image.Rect(int(x-imgSize/4+10), int(y-imgSize/4+10), int(imgSize/4), int(imgSize/4))
 	option.GeoM.Reset()
 
 	// TEST draw coin rect
@@ -462,7 +490,7 @@ func main() {
 			Sprite: &Sprite{
 				img:     coinImg,
 				pos:     Point{200, 20*float64(i) + 60},
-				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
+				rectPos: image.Rect(110, 220, imgSize/2, imgSize/2),
 			},
 		})
 	}
