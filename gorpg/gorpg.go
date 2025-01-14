@@ -216,20 +216,12 @@ func (g *Game) Collision_Object_Point(obj []*Objects, p2 Point) bool {
 
 // check buildings collision
 func (g *Game) checkCollision(p1 Point, p2 Point) bool {
-	//g.Player.pos.x = g.Player.pos.x + (imgSize/2)/2
-	//g.Player.pos.y = g.Player.pos.y + (imgSize/2)/2
-	if p1.x >= p2.x-imgSize/2 &&
+	if p1.x >= p2.x-imgSize/2+10 &&
 		p1.x <= p2.x+imgSize/2 &&
-		p1.y >= p2.y-imgSize/2 &&
+		p1.y >= p2.y-imgSize/2+10 &&
 		p1.y <= p2.y+imgSize/2 {
 		return true
 	}
-	//	if p1.x >= p2.x-imgSize/2 &&
-	//		p1.x <= p2.x+imgSize/2 &&
-	//		p1.y >= p2.y-imgSize/2 &&
-	//		p1.y <= p2.y+imgSize/2 {
-	//		return true
-	//	}
 	return false
 }
 
@@ -261,6 +253,10 @@ func (g *Game) Update() error {
 				y: -100,
 			}
 		}
+	}
+
+	if g.Player.pos == g.coins[0].pos {
+		println("player.pos == coins[0].pos")
 	}
 
 	// check Animation tick every 60 FPS
@@ -365,16 +361,16 @@ func (g *Game) drawCoin(screen *ebiten.Image, x, y float64, coin Objects, index 
 		).(*ebiten.Image),
 		option,
 	)
-	g.coins[index].rectPos = image.Rect(int(x), int(y), int(imgSize/2), int(imgSize/2))
+	g.coins[index].rectPos = image.Rect(int(x-imgSize/4+10), int(y-imgSize/4+10), int(imgSize/4), int(imgSize/4))
 	option.GeoM.Reset()
 
 	// TEST draw coin rect
 	vector.DrawFilledRect(
 		screen,
-		float32(x-imgSize/4),
-		float32(y-imgSize/4),
-		float32(imgSize/2),
-		float32(imgSize/2),
+		float32(x-imgSize/4+10),
+		float32(y-imgSize/4+10),
+		float32(imgSize/4),
+		float32(imgSize/4),
 		red_rect,
 		true,
 	)
@@ -447,7 +443,7 @@ func main() {
 			coin:  2,
 		},
 	}
-	g.Player.rectTop = Point{(g.Player.pos.y + (imgSize/2)/2), imgSize / 2}
+	g.Player.rectTop = Point{g.Player.pos.y + imgSize/4, g.Player.pos.y + imgSize/4}
 	g.Player.rectBot = Point{imgSize / 2, imgSize / 2}
 
 	// add 10 coins
@@ -456,7 +452,7 @@ func main() {
 			Sprite: &Sprite{
 				img:     coinImg,
 				pos:     Point{200, 20*float64(i) + 60},
-				rectPos: image.Rect(0+imgSize/4, 0+imgSize/4, imgSize/2, imgSize/2),
+				rectPos: image.Rect(0-imgSize/4, 0-imgSize/4, imgSize/2, imgSize/2),
 			},
 		})
 	}

@@ -162,7 +162,7 @@ func (g *Game) Update() error {
 	return nil
 }
 
-// update snak, check collision and pause
+// update snake, check collision and pause
 func (g *Game) updateSnake(snake *[]Point, dir Point) {
 	head := (*snake)[0]
 	newHead := Point{
