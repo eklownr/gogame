@@ -216,9 +216,23 @@ func (g *Game) Collision_Object_Point(obj []*Objects, p2 Point) bool {
 
 // check buildings collision
 func (g *Game) checkCollision(p1 Point, p2 Point) bool {
-	if p1.x >= p2.x-imgSize/2+10 &&
+	if p1.x >= p2.x-imgSize/2 &&
 		p1.x <= p2.x+imgSize/2 &&
-		p1.y >= p2.y-imgSize/2+10 &&
+		p1.y >= p2.y-imgSize/2 &&
+		p1.y <= p2.y+imgSize/2 {
+		return true
+	}
+	return false
+}
+func (g *Game) collideX(p1 Point, p2 Point) bool {
+	if p1.x >= p2.x-imgSize/2 &&
+		p1.x <= p2.x+imgSize/2 {
+		return true
+	}
+	return false
+}
+func (g *Game) collideY(p1 Point, p2 Point) bool {
+	if p1.y >= p2.y-imgSize/2 &&
 		p1.y <= p2.y+imgSize/2 {
 		return true
 	}
@@ -239,7 +253,7 @@ func (g *Game) Update() error {
 		g.Player.pos = g.Player.prePos
 	} else if g.Player.pos.y > screenHeight-imgSize-5 {
 		g.Player.pos = g.Player.prePos
-	} else if g.checkCollision(g.Player.pos, g.house[0].pos) { //collision with house
+	} else if g.collideX(g.Player.pos, g.house[0].pos) && g.collideY(g.Player.pos, g.house[0].pos) { //collision with house
 		println("You are at home")
 		g.Player.pos = g.Player.prePos
 	}
@@ -253,10 +267,6 @@ func (g *Game) Update() error {
 				y: -100,
 			}
 		}
-	}
-
-	if g.Player.pos == g.coins[0].pos {
-		println("player.pos == coins[0].pos")
 	}
 
 	// check Animation tick every 60 FPS
@@ -326,16 +336,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		).(*ebiten.Image),
 		opts,
 	)
-	// TEST draw Player collision rect
-	vector.DrawFilledRect(
-		screen,
-		float32(g.Player.pos.x),
-		float32(g.Player.pos.y),
-		float32(imgSize),
-		float32(imgSize),
-		blue_rect,
-		true,
-	)
+	//	// TEST draw Player collision rect
+	//	vector.DrawFilledRect(
+	//		screen,
+	//		float32(g.Player.pos.x),
+	//		float32(g.Player.pos.y),
+	//		float32(imgSize),
+	//		float32(imgSize),
+	//		blue_rect,
+	//		true,
+	//	)
 	// TEST draw Player collision rect
 	vector.DrawFilledRect(
 		screen,
@@ -452,10 +462,11 @@ func main() {
 			Sprite: &Sprite{
 				img:     coinImg,
 				pos:     Point{200, 20*float64(i) + 60},
-				rectPos: image.Rect(0-imgSize/4, 0-imgSize/4, imgSize/2, imgSize/2),
+				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
 			},
 		})
 	}
+
 	g.bgImg = bgImg
 	g.village = village
 	g.housePos = Point{300, houseTileSize}
