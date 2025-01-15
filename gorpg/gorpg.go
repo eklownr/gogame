@@ -36,6 +36,7 @@ var (
 	gameSpeed     = SPEED
 	PlayerSpeed   = 3.0
 	diagonalSpeed = 0.8
+	coin_anim     = 0
 )
 
 type Game struct {
@@ -245,10 +246,30 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	return false
 }
 
+func (g *Game) coin_animation() {
+	count := 0
+	if g.tick {
+		coin_anim = 0
+		count += 1
+		if count < 50 {
+			coin_anim = 10
+			count = 0
+		}
+	} else {
+		coin_anim = 20
+		count += 1
+		if count < 50 {
+			coin_anim = 30
+			count = 0
+		}
+	}
+}
+
 // update function
 func (g *Game) Update() error {
 	g.Player.prePos = g.Player.pos // save old position
 	g.readKeys()                   // read keys and move player
+	g.coin_animation()
 
 	// Player border collision
 	if g.Player.pos.x < 0 {
@@ -269,12 +290,14 @@ func (g *Game) Update() error {
 	// Player collide with []coin
 	for i := range g.coins {
 		if g.Collision_Object_Caracter(*g.coins[i], *g.Player) && g.coins[i].picked == false {
-			g.Player.coin++
-			println("You have: ", g.Player.coin, "coins")
-			g.coins[i].picked = true
-			g.coins[i].pos = Point{
-				x: -100,
-				y: -100,
+			if g.Player.coin < g.Player.wallet { // add coins to your wallet
+				g.Player.coin++
+				println("You have: ", g.Player.coin, "coins")
+				g.coins[i].picked = true
+				g.coins[i].pos = Point{
+					x: -100,
+					y: -100,
+				}
 			}
 		}
 	}
@@ -308,7 +331,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		op,
 	)
 
-	//	///////// draw all big and small house  ////////////
+	//	///////// draw all house big and small  ////////////
 	for i := range g.house {
 		opt := &ebiten.DrawImageOptions{}
 		opt.GeoM.Translate(g.house[i].pos.x, g.house[i].pos.y) // house position x, y
@@ -327,7 +350,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 		screen.DrawImage(
 			g.coins[0].img.SubImage(
-				image.Rect(0, 0, imgSize, imgSize),
+				image.Rect(0, 0, 10, 10),
 			).(*ebiten.Image),
 			optst,
 		)
@@ -349,32 +372,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		).(*ebiten.Image),
 		opts,
 	)
-	// // TEST Draw player collision rect
-	// vector.StrokeRect(
-	//
-	//	screen,
-	//	float32(g.Player.pos.x+imgSize/4),
-	//	float32(g.Player.pos.y+imgSize/4),
-	//	imgSize/2,
-	//	imgSize/2,
-	//	3.0,
-	//	color.RGBA{122, 222, 0, 100},
-	//	false,
-	//
-	// )
-	// // Draw house collision rect
-	// vector.StrokeRect(
-	//
-	//	screen,
-	//	float32(g.housePos.x)+float32(g.house[0].rectPos.Min.X),
-	//	float32(g.housePos.y)+float32(g.house[0].rectPos.Min.Y),
-	//	houseTileSize,
-	//	imgSize,
-	//	3.0,
-	//	color.RGBA{222, 122, 0, 100},
-	//	false,
-	//
-	// )
+	/////// TEST Draw player collision rect
+	// vector.StrokeRect(screen, float32(g.Player.pos.x+imgSize/4),float32(g.Player.pos.y+imgSize/4),imgSize/2,imgSize/2,3.0,color.RGBA{122, 222, 0, 100},false)
+
+	/////// Draw house collision rect
+	// vector.StrokeRect(screen,float32(g.housePos.x)+float32(g.house[0].rectPos.Min.X),float32(g.housePos.y)+float32(g.house[0].rectPos.Min.Y),houseTileSize,imgSize,3.0,color.RGBA{222, 122, 0, 100},false)
 }
 
 func (g *Game) drawCoin(screen *ebiten.Image, x, y float64, coin Objects, index int) {
@@ -386,7 +388,7 @@ func (g *Game) drawCoin(screen *ebiten.Image, x, y float64, coin Objects, index 
 	option.GeoM.Translate(x, y) // coin position x, y
 	screen.DrawImage(
 		g.coins[index].img.SubImage(
-			image.Rect(0, 0, imgSize/2, imgSize/2),
+			image.Rect(coin_anim, 0, coin_anim+10, 10),
 		).(*ebiten.Image),
 		option,
 	)
@@ -458,7 +460,7 @@ func main() {
 	checkErr(err)
 
 	// load coin image
-	coinImg, _, err := ebitenutil.NewImageFromFile("assets/images/coin.png")
+	coinImg, _, err := ebitenutil.NewImageFromFile("assets/images/coin2.png")
 	checkErr(err)
 
 	// Game constructor
@@ -468,8 +470,9 @@ func main() {
 				img: playerImg,
 				pos: Point{screenWidth/2 - (imgSize / 2), screenHeight/2 - (imgSize / 2)},
 			},
-			speed: PlayerSpeed,
-			coin:  2,
+			speed:  PlayerSpeed,
+			coin:   2,
+			wallet: 8,
 		},
 	}
 	g.Player.rectTop = Point{g.Player.pos.y + imgSize/4, g.Player.pos.y + imgSize/4}
@@ -481,7 +484,7 @@ func main() {
 			Sprite: &Sprite{
 				img:     coinImg,
 				pos:     Point{200, 20*float64(i) + 60},
-				rectPos: image.Rect(110, 220, imgSize/2, imgSize/2),
+				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
 			},
 			variety: "coin",
 		})
@@ -519,6 +522,14 @@ func main() {
 			img:     village,
 			pos:     Point{400, imgSize},
 			rectPos: image.Rect(houseTileSize*2+imgSize, 0, houseTileSize*2+imgSize*2, imgSize),
+		},
+		variety: "small_house",
+	})
+	g.house = append(g.house, &Objects{
+		Sprite: &Sprite{
+			img:     village,
+			pos:     Point{500, imgSize},
+			rectPos: image.Rect(houseTileSize*2+imgSize, imgSize, houseTileSize*2+imgSize*2, imgSize*2),
 		},
 		variety: "small_house",
 	})
