@@ -259,10 +259,14 @@ func (g *Game) Update() error {
 		g.Player.pos = g.Player.prePos
 	} else if g.Player.pos.y > screenHeight-imgSize-5 {
 		g.Player.pos = g.Player.prePos
-	} else if g.Collision_Object_Caracter(*g.house[0], *g.Player) {
-		//collision with house
-		g.Player.pos = g.Player.prePos
 	}
+	//Player collide with []house
+	for i := range g.house {
+		if g.Collision_Object_Caracter(*g.house[i], *g.Player) {
+			g.Player.pos = g.Player.prePos
+		}
+	}
+	// Player collide with []coin
 	for i := range g.coins {
 		if g.Collision_Object_Caracter(*g.coins[i], *g.Player) && g.coins[i].picked == false {
 			g.Player.coin++
@@ -304,29 +308,19 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		op,
 	)
 
-	///////// draw house 0 ////////////
-	opt := &ebiten.DrawImageOptions{}
-	opt.GeoM.Translate(250, houseTileSize) // house position x, y
-
-	screen.DrawImage(
-		g.village.SubImage(
-			image.Rect(0, 0, houseTileSize, imgSize),
-		).(*ebiten.Image),
-		opt,
-	)
-	opt.GeoM.Reset()
-
-	///////// draw house 1 ////////////
-	opt.GeoM.Translate(100, houseTileSize*3) // house position x, y
-	screen.DrawImage(
-		g.village.SubImage(
-			image.Rect(houseTileSize, 0, houseTileSize*2, imgSize),
-		).(*ebiten.Image),
-		opt,
-	)
-	opt.GeoM.Reset()
-
-	///////// draw cooin player caring on head ////////////
+	//	///////// draw all big and small house  ////////////
+	for i := range g.house {
+		opt := &ebiten.DrawImageOptions{}
+		opt.GeoM.Translate(g.house[i].pos.x, g.house[i].pos.y) // house position x, y
+		screen.DrawImage(
+			g.village.SubImage(
+				g.house[i].rectPos,
+			).(*ebiten.Image),
+			opt,
+		)
+		opt.GeoM.Reset()
+	}
+	///////// draw coin player caring on head ////////////
 	optst := &ebiten.DrawImageOptions{}
 	for i := 3; i < 3+g.Player.coin; i++ {
 		optst.GeoM.Translate(g.Player.pos.x+imgSize/2-3, g.Player.pos.y+float64(2.0*i)-10.0)
@@ -507,10 +501,26 @@ func main() {
 	g.house = append(g.house, &Objects{
 		Sprite: &Sprite{
 			img:     village,
-			pos:     Point{100, 400},
+			pos:     Point{100, 100},
 			rectPos: image.Rect(houseTileSize, 0, houseTileSize*2, imgSize),
 		},
 		variety: "house",
+	})
+	g.house = append(g.house, &Objects{
+		Sprite: &Sprite{
+			img:     village,
+			pos:     Point{300, 200},
+			rectPos: image.Rect(0, imgSize, imgSize*2, imgSize*2),
+		},
+		variety: "small_house",
+	})
+	g.house = append(g.house, &Objects{
+		Sprite: &Sprite{
+			img:     village,
+			pos:     Point{400, imgSize},
+			rectPos: image.Rect(houseTileSize*2+imgSize, 0, houseTileSize*2+imgSize*2, imgSize),
+		},
+		variety: "small_house",
 	})
 
 	if err := ebiten.RunGame(g); err != nil {
