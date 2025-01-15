@@ -5,6 +5,7 @@ import (
 	"image/color"
 	_ "image/png"
 	"log"
+	"os"
 
 	"time"
 
@@ -197,6 +198,11 @@ func (g *Game) fullScreen() {
 		ebiten.SetFullscreen(false)
 	}
 }
+func (g *Game) quitGame() {
+	println("Warning! Quit the game!")
+	ebiten.SetRunnableOnUnfocused(false)
+	os.Exit(1)
+}
 
 // check collision Objects with charakter
 func (g *Game) Collision_Object_Caracter(obj Objects, char Charakters) bool {
@@ -247,20 +253,15 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 }
 
 func (g *Game) coin_animation() {
-	count := 0
 	if g.tick {
 		coin_anim = 0
-		count += 1
-		if count < 50 {
+		if time.Since(g.lastUpdate) < gameSpeed/2 {
 			coin_anim = 10
-			count = 0
 		}
 	} else {
 		coin_anim = 20
-		count += 1
-		if count < 50 {
+		if time.Since(g.lastUpdate) < gameSpeed/2 {
 			coin_anim = 30
-			count = 0
 		}
 	}
 }
@@ -428,7 +429,10 @@ func (g *Game) readKeys() {
 		g.Player.Dir.right = true
 	} else if inpututil.IsKeyJustPressed(ebiten.KeyF) { // Full screen
 		g.fullScreen()
+	} else if inpututil.IsKeyJustPressed(ebiten.KeyQ) { // Quit the game
+		g.quitGame()
 	}
+
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
