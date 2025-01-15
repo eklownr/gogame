@@ -195,7 +195,7 @@ func (g *Game) dirRight() {
 	g.Player.speed = PlayerSpeed
 }
 
-// F-key for full screen
+// F key for full screen
 func (g *Game) fullScreen() {
 	if !g.fullWindow {
 		ebiten.SetFullscreen(true)
@@ -205,6 +205,8 @@ func (g *Game) fullScreen() {
 		ebiten.SetFullscreen(false)
 	}
 }
+
+// Q key for quit
 func (g *Game) quitGame() {
 	println("Warning! Quit the game!")
 	ebiten.SetRunnableOnUnfocused(false)
@@ -327,6 +329,7 @@ func (g *Game) Update() error {
 // Draw function
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(skyBlue) // background collor
+
 	if g.gamePause {
 		g.pause(screen)
 		return
@@ -443,7 +446,7 @@ func (g *Game) readKeys() {
 	} else if inpututil.IsKeyJustPressed(ebiten.KeyQ) { // Quit the game
 		g.quitGame()
 	} else if inpututil.IsKeyJustPressed(ebiten.KeyEscape) { // Pause the game
-		g.gamePause = true
+		g.pauseGame()
 	}
 
 }
@@ -459,6 +462,14 @@ func checkErr(err error) {
 	}
 }
 
+// Escape-key to Pause the game
+func (g *Game) pauseGame() {
+	if !g.gamePause {
+		g.gamePause = true
+	} else {
+		g.gamePause = false
+	}
+}
 func (g *Game) pause(screen *ebiten.Image) {
 	// Pause the game
 	vector.DrawFilledRect(
@@ -470,15 +481,15 @@ func (g *Game) pause(screen *ebiten.Image) {
 		blue,
 		true,
 	)
-	addText(screen, 56, "Pause", black, screenWidth+5, screenHeight/3+4)
-	addText(screen, 56, "Pause", yellow, screenWidth, screenHeight/3)
-	addText(screen, 34, "Pause the Game - Esc", yellow, screenWidth, screenHeight/3+100)
-	addText(screen, 34, "Quit the game - q", yellow, screenWidth, screenHeight/3+200)
-	addText(screen, 34, "Full screen - f", yellow, screenWidth, screenHeight/3+300)
-	addText(screen, 34, "*************** Shop ***************", purple, screenWidth, screenHeight/3+450)
-	addText(screen, 34, "Buy yellow snake, cost: 20 - y", green, screenWidth, screenHeight/3+550)
-	addText(screen, 34, "Buy purple snake, cost: 30 - p", green, screenWidth, screenHeight/3+650)
-	addText(screen, 34, "Buy red snake, cost:    40 - r", green, screenWidth, screenHeight/3+750)
+	addText(screen, 32, "Pause", black, screenWidth+5, screenHeight/3+4)
+	addText(screen, 32, "Pause", yellow, screenWidth, screenHeight/3)
+	addText(screen, 20, "Pause the Game - Esc", yellow, screenWidth, screenHeight/3+100)
+	addText(screen, 20, "Quit the game - q", yellow, screenWidth, screenHeight/3+200)
+	addText(screen, 20, "Full screen - f", yellow, screenWidth, screenHeight/3+300)
+	addText(screen, 20, "*************** Shop ***************", purple, screenWidth, screenHeight/3+450)
+	addText(screen, 20, "Buy yellow snake, cost: 20 - y", green, screenWidth, screenHeight/3+550)
+	addText(screen, 20, "Buy purple snake, cost: 30 - p", green, screenWidth, screenHeight/3+650)
+	addText(screen, 20, "Buy red snake, cost:    40 - r", green, screenWidth, screenHeight/3+750)
 }
 
 func addText(screen *ebiten.Image, textSize int, t string, color color.Color, width, height float64) {
