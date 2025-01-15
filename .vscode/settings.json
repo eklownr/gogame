@@ -1,0 +1,10 @@
+{
+    "outline.collapseItems": "alwaysCollapse",
+    "search.collapseResults": "alwaysCollapse",
+    "interactiveWindow.collapseCellInputCode": "always",
+    "editor.foldingImportsByDefault": true,
+    "editor.unfoldOnClickAfterEndOfLine": true,
+    "editor.showFoldingControls": "always",
+    "editor.folding": true,
+    "editor.foldingStrategy": "indentation",
+}
