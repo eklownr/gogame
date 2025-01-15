@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"image"
 	"image/color"
 	_ "image/png"
@@ -9,9 +10,12 @@ import (
 
 	"time"
 
+	"github.com/hajimehoshi/ebiten/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 const (
@@ -23,21 +27,22 @@ const (
 )
 
 var (
-	skyBlue       = color.RGBA{120, 180, 255, 255}
-	red           = color.RGBA{255, 0, 0, 255}
-	red_rect      = color.RGBA{255, 0, 0, 40}
-	blue          = color.RGBA{0, 20, 120, 255}
-	blue_rect     = color.RGBA{0, 20, 120, 40}
-	yellow        = color.RGBA{220, 200, 0, 255}
-	green         = color.RGBA{0, 220, 0, 255}
-	purple        = color.RGBA{200, 0, 200, 255}
-	orange        = color.RGBA{180, 160, 0, 255}
-	white         = color.RGBA{255, 255, 255, 255}
-	black         = color.RGBA{0, 0, 0, 255}
-	gameSpeed     = SPEED
-	PlayerSpeed   = 3.0
-	diagonalSpeed = 0.8
-	coin_anim     = 0
+	skyBlue         = color.RGBA{120, 180, 255, 255}
+	red             = color.RGBA{255, 0, 0, 255}
+	red_rect        = color.RGBA{255, 0, 0, 40}
+	blue            = color.RGBA{0, 20, 120, 255}
+	blue_rect       = color.RGBA{0, 20, 120, 40}
+	yellow          = color.RGBA{220, 200, 0, 255}
+	green           = color.RGBA{0, 220, 0, 255}
+	purple          = color.RGBA{200, 0, 200, 255}
+	orange          = color.RGBA{180, 160, 0, 255}
+	white           = color.RGBA{255, 255, 255, 255}
+	black           = color.RGBA{0, 0, 0, 255}
+	gameSpeed       = SPEED
+	PlayerSpeed     = 3.0
+	diagonalSpeed   = 0.8
+	coin_anim       = 0
+	mplusFaceSource *text.GoTextFaceSource
 )
 
 type Game struct {
@@ -47,6 +52,8 @@ type Game struct {
 	lastUpdate time.Time
 	tick       bool
 	fullWindow bool
+	gameOver   bool
+	gamePause  bool
 	bgImg      *ebiten.Image
 	village    *ebiten.Image
 	//	housePos   Point
@@ -320,6 +327,10 @@ func (g *Game) Update() error {
 // Draw function
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(skyBlue) // background collor
+	if g.gamePause {
+		g.pause(screen)
+		return
+	}
 
 	///////// draw background ///////////
 	op := &ebiten.DrawImageOptions{}
@@ -431,6 +442,8 @@ func (g *Game) readKeys() {
 		g.fullScreen()
 	} else if inpututil.IsKeyJustPressed(ebiten.KeyQ) { // Quit the game
 		g.quitGame()
+	} else if inpututil.IsKeyJustPressed(ebiten.KeyEscape) { // Pause the game
+		g.gamePause = true
 	}
 
 }
@@ -446,7 +459,59 @@ func checkErr(err error) {
 	}
 }
 
+func (g *Game) pause(screen *ebiten.Image) {
+	// Pause the game
+	vector.DrawFilledRect(
+		screen,
+		float32(20),     // x position
+		float32(20),     // y position
+		screenWidth-40,  // width size
+		screenHeight-40, // Height size
+		blue,
+		true,
+	)
+	addText(screen, 56, "Pause", black, screenWidth+5, screenHeight/3+4)
+	addText(screen, 56, "Pause", yellow, screenWidth, screenHeight/3)
+	addText(screen, 34, "Pause the Game - Esc", yellow, screenWidth, screenHeight/3+100)
+	addText(screen, 34, "Quit the game - q", yellow, screenWidth, screenHeight/3+200)
+	addText(screen, 34, "Full screen - f", yellow, screenWidth, screenHeight/3+300)
+	addText(screen, 34, "*************** Shop ***************", purple, screenWidth, screenHeight/3+450)
+	addText(screen, 34, "Buy yellow snake, cost: 20 - y", green, screenWidth, screenHeight/3+550)
+	addText(screen, 34, "Buy purple snake, cost: 30 - p", green, screenWidth, screenHeight/3+650)
+	addText(screen, 34, "Buy red snake, cost:    40 - r", green, screenWidth, screenHeight/3+750)
+}
+
+func addText(screen *ebiten.Image, textSize int, t string, color color.Color, width, height float64) {
+	face := &text.GoTextFace{
+		Source: mplusFaceSource,
+		Size:   float64(textSize),
+	}
+
+	// t := "YOURE TEXT"
+	w, h := text.Measure(
+		t,
+		face,
+		face.Size,
+	)
+
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(
+		width/2-w/2, height/2-h/2,
+	)
+	op.ColorScale.ScaleWithColor(color)
+	text.Draw(
+		screen,
+		t,
+		face,
+		op,
+	)
+}
 func main() {
+	// Text, font
+	textsource, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
+	checkErr(err)
+	mplusFaceSource = textsource
+
 	// Window properties
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("Gopher Mart")
