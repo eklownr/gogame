@@ -47,9 +47,9 @@ type Game struct {
 	fullWindow bool
 	bgImg      *ebiten.Image
 	village    *ebiten.Image
-	housePos   Point
-	coins      []*Objects
-	house      []*Objects
+	//	housePos   Point
+	coins []*Objects
+	house []*Objects
 }
 type Sprite struct {
 	img     *ebiten.Image
@@ -224,8 +224,8 @@ func (g *Game) Collision_Object_Caracter(obj Objects, char Charakters) bool {
 		object_position = image.Rect(
 			int(obj.pos.x),
 			int(obj.pos.y),
-			int(obj.pos.x+houseTileSize),
-			int(obj.pos.y+imgSize))
+			int(obj.pos.x+houseTileSize-10),
+			int(obj.pos.y+imgSize-10))
 	}
 
 	if object_position.Overlaps(charakter_position) {
@@ -234,7 +234,7 @@ func (g *Game) Collision_Object_Caracter(obj Objects, char Charakters) bool {
 	return false
 }
 
-// check buildings collision
+// TEST check buildings collision
 func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	if p1.x >= p2.x-imgSize &&
 		p1.x <= p2.x+imgSize &&
@@ -304,9 +304,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		op,
 	)
 
-	///////// draw hoouse 0 ////////////
+	///////// draw house 0 ////////////
 	opt := &ebiten.DrawImageOptions{}
-	opt.GeoM.Translate(300, houseTileSize) // house position x, y
+	opt.GeoM.Translate(250, houseTileSize) // house position x, y
 
 	screen.DrawImage(
 		g.village.SubImage(
@@ -314,6 +314,17 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		).(*ebiten.Image),
 		opt,
 	)
+	opt.GeoM.Reset()
+
+	///////// draw house 1 ////////////
+	opt.GeoM.Translate(100, houseTileSize*3) // house position x, y
+	screen.DrawImage(
+		g.village.SubImage(
+			image.Rect(houseTileSize, 0, houseTileSize*2, imgSize),
+		).(*ebiten.Image),
+		opt,
+	)
+	opt.GeoM.Reset()
 
 	///////// draw cooin player caring on head ////////////
 	optst := &ebiten.DrawImageOptions{}
@@ -484,12 +495,20 @@ func main() {
 
 	g.bgImg = bgImg
 	g.village = village
-	g.housePos = Point{300, houseTileSize}
+	//	g.housePos = Point{300, houseTileSize}
 	g.house = append(g.house, &Objects{
 		Sprite: &Sprite{
 			img:     village,
-			pos:     g.housePos,
+			pos:     Point{250, houseTileSize},
 			rectPos: image.Rect(0, 0, houseTileSize, imgSize),
+		},
+		variety: "house",
+	})
+	g.house = append(g.house, &Objects{
+		Sprite: &Sprite{
+			img:     village,
+			pos:     Point{100, 400},
+			rectPos: image.Rect(houseTileSize, 0, houseTileSize*2, imgSize),
 		},
 		variety: "house",
 	})
