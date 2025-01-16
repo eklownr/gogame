@@ -7,14 +7,14 @@ import (
 
 type TylemapLayers struct {
 	Data   []int `json:"data"`
-	Whith  int   `json:"width"`
+	Width  int   `json:"width"`
 	Height int   `json:"height"`
 }
 type TilemapJSON struct {
-	Tiles []TylemapLayers `json:"layers"`
+	Layers []TylemapLayers `json:"layers"`
 }
 
-func newTilemapJSON(filepath string) (*TilemapJSON, error) {
+func NewTilemapJSON(filepath string) (*TilemapJSON, error) {
 	content, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil, err

@@ -16,6 +16,8 @@ github.com/hajimehoshi/bitmapfont v1.3.0 h1:h6+HJQ+2MKT3lEVEArjVC4/h0qcFXlVsMTGu
 github.com/hajimehoshi/bitmapfont v1.3.0/go.mod h1:/Qb7yVjHYNUV4JdqNkPs6BSZwLjKqkZOMIp6jZD0KgE=
 github.com/hajimehoshi/bitmapfont/v3 v3.2.0 h1:0DISQM/rseKIJhdF29AkhvdzIULqNIIlXAGWit4ez1Q=
 github.com/hajimehoshi/bitmapfont/v3 v3.2.0/go.mod h1:8gLqGatKVu0pwcNCJguW3Igg9WQqVXF0zg/RvrGQWyg=
+github.com/hajimehoshi/ebiten v1.12.9 h1:Mt1lsXi1YyuYQ4tuiC/pDSmntWY1Hx7ZAL11g93PJVA=
+github.com/hajimehoshi/ebiten v1.12.9/go.mod h1:1XI25ImVCDPJiXox4h9yK/CvN5sjDYnbF4oZcFzPXHw=
 github.com/hajimehoshi/ebiten v1.12.12 h1:JvmF1bXRa+t+/CcLWxrJCRsdjs2GyBYBSiFAfIqDFlI=
 github.com/hajimehoshi/ebiten v1.12.12/go.mod h1:1XI25ImVCDPJiXox4h9yK/CvN5sjDYnbF4oZcFzPXHw=
 github.com/hajimehoshi/ebiten/v2 v2.8.6 h1:Dkd/sYI0TYyZRCE7GVxV59XC+WCi2BbGAbIBjXeVC1U=

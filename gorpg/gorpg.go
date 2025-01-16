@@ -43,6 +43,7 @@ var (
 	PlayerSpeed     = 3.0
 	diagonalSpeed   = 0.8
 	coin_anim       = 0
+	tileSize        = 16
 	mplusFaceSource *text.GoTextFaceSource
 )
 
@@ -57,10 +58,17 @@ type Game struct {
 	gamePause  bool
 	bgImg      *ebiten.Image
 	village    *ebiten.Image
+	// Tilermaps
+	tilemapImg      *ebiten.Image
+	tilemapImg2     *ebiten.Image
+	tilemapImgWater *ebiten.Image
+	tilemapJSON     *tilemaps.TilemapJSON
+	tilemapJSON2    *tilemaps.TilemapJSON
+	tilemapJSON3    *tilemaps.TilemapJSON
 	//	housePos   Point
-	coins       []*Objects
-	house       []*Objects
-	tilemapJSON *tilemaps.TilemapJSON
+	coins []*Objects
+	house []*Objects
+	scene int
 }
 type Sprite struct {
 	img     *ebiten.Image
@@ -347,7 +355,54 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		).(*ebiten.Image),
 		op,
 	)
+	op.GeoM.Reset()
 
+	/////////// draw bg tile layers ////////////
+	o := &ebiten.DrawImageOptions{}
+	for _, layer := range g.tilemapJSON.Layers {
+		for index, id := range layer.Data {
+			x := index % layer.Width
+			y := index / layer.Width
+			x *= tileSize
+			y *= tileSize
+
+			srcX := (id - 1) % 22
+			srcY := (id - 1) / 22
+			srcX *= tileSize
+			srcY *= tileSize
+
+			o.GeoM.Translate(float64(x), float64(y))
+			screen.DrawImage(
+				g.tilemapImg.SubImage(image.Rect(srcX, srcY, srcX+tileSize, srcY+tileSize)).(*ebiten.Image),
+				o,
+			)
+			o.GeoM.Reset()
+		}
+	}
+
+	if g.scene == 3 {
+		/////////// draw bg tile layers ////////////
+		for _, layer := range g.tilemapJSON3.Layers {
+			for index, id := range layer.Data {
+				x := index % layer.Width
+				y := index / layer.Width
+				x *= tileSize
+				y *= tileSize
+
+				srcX := (id - 1) % 28
+				srcY := (id - 1) / 28
+				srcX *= tileSize
+				srcY *= tileSize
+
+				o.GeoM.Translate(float64(x), float64(y))
+				screen.DrawImage(
+					g.tilemapImgWater.SubImage(image.Rect(srcX, srcY, srcX+tileSize, srcY+tileSize)).(*ebiten.Image),
+					o,
+				)
+				o.GeoM.Reset()
+			}
+		}
+	}
 	//	///////// draw all house big and small  ////////////
 	for i := range g.house {
 		opt := &ebiten.DrawImageOptions{}
@@ -520,6 +575,26 @@ func addText(screen *ebiten.Image, textSize int, t string, color color.Color, wi
 	)
 }
 func main() {
+	// TilemapJSON1
+	tilemapJSON1, err := tilemaps.NewTilemapJSON("assets/map/level1_bg.json")
+	checkErr(err)
+
+	// TilemapJSON2
+	tilemapJSON2, err := tilemaps.NewTilemapJSON("assets/map/level2_bg.json")
+	checkErr(err)
+
+	// TilemapJSON2 Water
+	tilemapJSON3, err := tilemaps.NewTilemapJSON("assets/map/water_bg.json")
+	checkErr(err)
+
+	// load tilemapImg image to tilemap 1 - 2
+	tilemapImg, _, err := ebitenutil.NewImageFromFile("assets/map/tileset_floor.png")
+	checkErr(err)
+
+	// load tilemapImg image to tilemap water
+	tilemapImgWater, _, err := ebitenutil.NewImageFromFile("assets/map/TilesetWater.png")
+	checkErr(err)
+
 	// Text, font
 	textsource, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
 	checkErr(err)
@@ -572,8 +647,6 @@ func main() {
 		})
 	}
 
-	g.bgImg = bgImg
-	g.village = village
 	//	g.housePos = Point{300, houseTileSize}
 	g.house = append(g.house, &Objects{
 		Sprite: &Sprite{
@@ -615,6 +688,17 @@ func main() {
 		},
 		variety: "small_house",
 	})
+
+	// Add tilemapJSON
+	g.bgImg = bgImg
+	g.village = village
+	g.tilemapImg = tilemapImg
+	g.tilemapImgWater = tilemapImgWater
+
+	g.tilemapJSON = tilemapJSON1
+	g.tilemapJSON2 = tilemapJSON2
+	g.tilemapJSON3 = tilemapJSON3
+	g.scene = 3
 
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
