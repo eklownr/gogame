@@ -577,10 +577,8 @@ func (g *Game) pause(screen *ebiten.Image) {
 	addText(screen, 20, "Pause the Game - Esc", yellow, screenWidth, screenHeight/3+100)
 	addText(screen, 20, "Quit the game - q", yellow, screenWidth, screenHeight/3+200)
 	addText(screen, 20, "Full screen - f", yellow, screenWidth, screenHeight/3+300)
-	addText(screen, 20, "*************** Shop ***************", purple, screenWidth, screenHeight/3+450)
-	addText(screen, 20, "Buy yellow snake, cost: 20 - y", green, screenWidth, screenHeight/3+550)
-	addText(screen, 20, "Buy purple snake, cost: 30 - p", green, screenWidth, screenHeight/3+650)
-	addText(screen, 20, "Buy red snake, cost:    40 - r", green, screenWidth, screenHeight/3+750)
+	addText(screen, 20, "Change scene key: 0-3", purple, screenWidth, screenHeight/3+400)
+	addText(screen, 20, "*********************", green, screenWidth, screenHeight/3+500)
 }
 
 func addText(screen *ebiten.Image, textSize int, t string, color color.Color, width, height float64) {
