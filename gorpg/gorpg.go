@@ -59,8 +59,8 @@ type Game struct {
 	bgImg      *ebiten.Image
 	village    *ebiten.Image
 	// Tilermaps
-	tilemapImg      *ebiten.Image
-	tilemapImg2     *ebiten.Image
+	tilemapImg *ebiten.Image
+	//tilemapImg2     *ebiten.Image
 	tilemapImgWater *ebiten.Image
 	tilemapJSON     *tilemaps.TilemapJSON
 	tilemapJSON2    *tilemaps.TilemapJSON
