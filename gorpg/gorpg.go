@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"gorpg/tilemaps"
 	"image"
 	"image/color"
 	_ "image/png"
@@ -57,8 +58,9 @@ type Game struct {
 	bgImg      *ebiten.Image
 	village    *ebiten.Image
 	//	housePos   Point
-	coins []*Objects
-	house []*Objects
+	coins       []*Objects
+	house       []*Objects
+	tilemapJSON *tilemaps.TilemapJSON
 }
 type Sprite struct {
 	img     *ebiten.Image
