@@ -345,41 +345,67 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		return
 	}
 
-	///////// draw background ///////////
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(20, 20)
+	if g.scene == 0 {
+		///////// draw background ///////////
+		op.GeoM.Translate(20, 20)
 
-	screen.DrawImage(
-		g.bgImg.SubImage(
-			image.Rect(0, 0, 600, 370),
-		).(*ebiten.Image),
-		op,
-	)
-	op.GeoM.Reset()
+		screen.DrawImage(
+			g.bgImg.SubImage(
+				image.Rect(0, 0, 600, 370),
+			).(*ebiten.Image),
+			op,
+		)
+		op.GeoM.Reset()
+	}
 
-	/////////// draw bg tile layers ////////////
-	o := &ebiten.DrawImageOptions{}
-	for _, layer := range g.tilemapJSON.Layers {
-		for index, id := range layer.Data {
-			x := index % layer.Width
-			y := index / layer.Width
-			x *= tileSize
-			y *= tileSize
+	if g.scene == 1 {
+		/////////// draw bg tile layers ////////////
+		for _, layer := range g.tilemapJSON.Layers {
+			for index, id := range layer.Data {
+				x := index % layer.Width
+				y := index / layer.Width
+				x *= tileSize
+				y *= tileSize
 
-			srcX := (id - 1) % 22
-			srcY := (id - 1) / 22
-			srcX *= tileSize
-			srcY *= tileSize
+				srcX := (id - 1) % 22
+				srcY := (id - 1) / 22
+				srcX *= tileSize
+				srcY *= tileSize
 
-			o.GeoM.Translate(float64(x), float64(y))
-			screen.DrawImage(
-				g.tilemapImg.SubImage(image.Rect(srcX, srcY, srcX+tileSize, srcY+tileSize)).(*ebiten.Image),
-				o,
-			)
-			o.GeoM.Reset()
+				op.GeoM.Translate(float64(x), float64(y))
+				screen.DrawImage(
+					g.tilemapImg.SubImage(image.Rect(srcX, srcY, srcX+tileSize, srcY+tileSize)).(*ebiten.Image),
+					op,
+				)
+				op.GeoM.Reset()
+			}
 		}
 	}
 
+	if g.scene == 2 {
+		/////////// draw bg tile layers ////////////
+		for _, layer := range g.tilemapJSON2.Layers {
+			for index, id := range layer.Data {
+				x := index % layer.Width
+				y := index / layer.Width
+				x *= tileSize
+				y *= tileSize
+
+				srcX := (id - 1) % 22
+				srcY := (id - 1) / 22
+				srcX *= tileSize
+				srcY *= tileSize
+
+				op.GeoM.Translate(float64(x), float64(y))
+				screen.DrawImage(
+					g.tilemapImg.SubImage(image.Rect(srcX, srcY, srcX+tileSize, srcY+tileSize)).(*ebiten.Image),
+					op,
+				)
+				op.GeoM.Reset()
+			}
+		}
+	}
 	if g.scene == 3 {
 		/////////// draw bg tile layers ////////////
 		for _, layer := range g.tilemapJSON3.Layers {
@@ -394,12 +420,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				srcX *= tileSize
 				srcY *= tileSize
 
-				o.GeoM.Translate(float64(x), float64(y))
+				op.GeoM.Translate(float64(x), float64(y))
 				screen.DrawImage(
 					g.tilemapImgWater.SubImage(image.Rect(srcX, srcY, srcX+tileSize, srcY+tileSize)).(*ebiten.Image),
-					o,
+					op,
 				)
-				o.GeoM.Reset()
+				op.GeoM.Reset()
 			}
 		}
 	}
@@ -504,6 +530,14 @@ func (g *Game) readKeys() {
 		g.quitGame()
 	} else if inpututil.IsKeyJustPressed(ebiten.KeyEscape) { // Pause the game
 		g.pauseGame()
+	} else if inpututil.IsKeyJustPressed(ebiten.Key0) { // Pause the game
+		g.scene = 0
+	} else if inpututil.IsKeyJustPressed(ebiten.Key1) { // Pause the game
+		g.scene = 1
+	} else if inpututil.IsKeyJustPressed(ebiten.Key2) { // Pause the game
+		g.scene = 2
+	} else if inpututil.IsKeyJustPressed(ebiten.Key3) { // Pause the game
+		g.scene = 3
 	}
 
 }
