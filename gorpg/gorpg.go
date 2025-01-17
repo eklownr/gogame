@@ -49,8 +49,8 @@ var (
 
 type Game struct {
 	Player     *Charakters
-	costomer   []*Charakters
-	worker     []*Charakters
+	costomers  []*Charakters
+	workers    []*Charakters
 	lastUpdate time.Time
 	tick       bool
 	fullWindow bool
@@ -96,6 +96,22 @@ type Point struct {
 }
 type Dir struct {
 	down, up, right, left bool
+}
+
+// Idle faceing front animation
+func (g *Game) idleWorkers(i int) {
+	// show animation subImage
+	if g.tick {
+		g.workers[i].rectTop.x = imgSize - imgSize // 0
+		g.workers[i].rectTop.y = imgSize - imgSize // 0
+		g.workers[i].rectBot.x = imgSize           // 48
+		g.workers[i].rectBot.y = imgSize           // 48
+	} else {
+		g.workers[i].rectTop.x = imgSize
+		g.workers[i].rectTop.y = imgSize - imgSize
+		g.workers[i].rectBot.x = imgSize * 2
+		g.workers[i].rectBot.y = imgSize
+	}
 }
 
 // Idle faceing front animation
@@ -297,6 +313,9 @@ func (g *Game) Update() error {
 	g.Player.prePos = g.Player.pos // save old position
 	g.readKeys()                   // read keys and move player
 	g.coin_animation()
+	for i := range g.workers { // Idle animation for all workers
+		g.idleWorkers(i)
+	}
 
 	// Player border collision
 	if g.Player.pos.x < 0-imgSize/2 {
@@ -447,6 +466,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 		}
 	}
+
 	//	///////// draw all house big and small  ////////////
 	for i := range g.house {
 		opt := &ebiten.DrawImageOptions{}
@@ -459,6 +479,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		)
 		opt.GeoM.Reset()
 	}
+
+	/// Draw Workers at same as Game constructor in main() ///
+	for i := 0; i < 10; i++ {
+		g.drawWorker(screen, g.workers[i].pos.x, g.workers[i].pos.y, i)
+	}
+
 	///////// draw coin player caring on head ////////////
 	optst := &ebiten.DrawImageOptions{}
 	for i := 3; i < 3+g.Player.coin; i++ {
@@ -490,6 +516,18 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	/////// TEST Draw player and house collision rect
 	// vector.StrokeRect(screen, float32(g.Player.pos.x+imgSize/4),float32(g.Player.pos.y+imgSize/4),imgSize/2,imgSize/2,3.0,color.RGBA{122, 222, 0, 100},false)
 	// vector.StrokeRect(screen,float32(g.housePos.x)+float32(g.house[0].rectPos.Min.X),float32(g.housePos.y)+float32(g.house[0].rectPos.Min.Y),houseTileSize,imgSize,3.0,color.RGBA{222, 122, 0, 100},false)
+}
+
+func (g *Game) drawWorker(screen *ebiten.Image, x, y float64, i int) {
+	option := &ebiten.DrawImageOptions{}
+	option.GeoM.Translate(x, y) // worker position x, y
+	screen.DrawImage(
+		g.workers[i].img.SubImage(
+			image.Rect(int(g.workers[i].rectTop.x), int(g.workers[i].rectTop.y), int(g.workers[i].rectBot.x), int(g.workers[i].rectBot.y)),
+		).(*ebiten.Image),
+		option,
+	)
+	option.GeoM.Reset()
 }
 
 func (g *Game) drawCoin(screen *ebiten.Image, x, y float64, coin Objects, index int) {
@@ -659,8 +697,12 @@ func main() {
 	bgImg, _, err := ebitenutil.NewImageFromFile("assets/images/grass.png")
 	checkErr(err)
 
-	// load player image
+	// load Player image
 	playerImg, _, err := ebitenutil.NewImageFromFile("assets/images/playerBlue.png")
+	checkErr(err)
+
+	// load Worker image
+	workerImg, _, err := ebitenutil.NewImageFromFile("assets/images/player.png")
 	checkErr(err)
 
 	// load coin image
@@ -681,6 +723,21 @@ func main() {
 	}
 	g.Player.rectTop = Point{g.Player.pos.y + imgSize/4, g.Player.pos.y + imgSize/4}
 	g.Player.rectBot = Point{imgSize / 2, imgSize / 2}
+
+	// add 10 workers
+	for i := 0; i < 10; i++ {
+		g.workers = append(g.workers, &Charakters{
+			Sprite: &Sprite{
+				img:     workerImg,
+				pos:     Point{40, 20*float64(i) + 60},
+				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
+			},
+		})
+	}
+	for i := 0; i < 10; i++ { //set rectTop and rectBot for animation
+		g.workers[i].rectTop = Point{0, 0}
+		g.workers[i].rectBot = Point{imgSize, imgSize}
+	}
 
 	// add 10 coins
 	for i := 1; i < 11; i++ {
@@ -747,6 +804,7 @@ func main() {
 	g.tilemapJSON3 = tilemapJSON3
 	g.scene = 1
 
+	// Start game
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
 	}
