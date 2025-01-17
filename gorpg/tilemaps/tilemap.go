@@ -5,13 +5,13 @@ import (
 	"os"
 )
 
-type TylemapLayers struct {
+type TilemapLayers struct {
 	Data   []int `json:"data"`
 	Width  int   `json:"width"`
 	Height int   `json:"height"`
 }
 type TilemapJSON struct {
-	Layers []TylemapLayers `json:"layers"`
+	Layers []TilemapLayers `json:"layers"`
 }
 
 func NewTilemapJSON(filepath string) (*TilemapJSON, error) {
