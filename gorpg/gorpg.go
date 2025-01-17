@@ -56,13 +56,12 @@ type Game struct {
 	fullWindow bool
 	gameOver   bool
 	gamePause  bool
-	bgImg      *ebiten.Image
-	village    *ebiten.Image
-	// Tilermaps
-	tilemapImg *ebiten.Image
-	//tilemapImg2     *ebiten.Image
+	// Tilermaps and background imgages
+	village         *ebiten.Image
+	bgImg           *ebiten.Image
+	tilemapImg      *ebiten.Image
 	tilemapImgWater *ebiten.Image
-	tilemapJSON     *tilemaps.TilemapJSON
+	tilemapJSON1    *tilemaps.TilemapJSON
 	tilemapJSON2    *tilemaps.TilemapJSON
 	tilemapJSON3    *tilemaps.TilemapJSON
 	//	housePos   Point
@@ -361,7 +360,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	if g.scene == 1 {
 		/////////// draw bg tile layers ////////////
-		for _, layer := range g.tilemapJSON.Layers {
+		for _, layer := range g.tilemapJSON1.Layers {
 			for index, id := range layer.Data {
 				x := index % layer.Width
 				y := index / layer.Width
@@ -407,7 +406,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	}
 	if g.scene == 3 {
-		/////////// draw bg tile layers ////////////
+		/////////// draw bg tile layers from waterTileImg ////////////
 		for _, layer := range g.tilemapJSON3.Layers {
 			for index, id := range layer.Data {
 				x := index % layer.Width
@@ -454,7 +453,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		)
 		optst.GeoM.Reset()
 	}
-	/// Draw coin at same as Game constructor g.coins.pos ///
+	/// Draw coin at same as Game constructor g.coins.pos in main() ///
 	for i := 0; i < 10; i++ {
 		g.drawCoin(screen, g.coins[i].pos.x, g.coins[i].pos.y, *g.coins[i], i)
 	}
@@ -462,7 +461,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	///////// draw img player ///////////
 	opts := &ebiten.DrawImageOptions{}
 	opts.GeoM.Translate(g.Player.pos.x, g.Player.pos.y)
-
 	// amination position to Player.img.SubImage(image.Rect(0, 0, imgSize, imgSize))
 	screen.DrawImage(
 		g.Player.img.SubImage(
@@ -470,10 +468,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		).(*ebiten.Image),
 		opts,
 	)
-	/////// TEST Draw player collision rect
+	/////// TEST Draw player and house collision rect
 	// vector.StrokeRect(screen, float32(g.Player.pos.x+imgSize/4),float32(g.Player.pos.y+imgSize/4),imgSize/2,imgSize/2,3.0,color.RGBA{122, 222, 0, 100},false)
-
-	/////// Draw house collision rect
 	// vector.StrokeRect(screen,float32(g.housePos.x)+float32(g.house[0].rectPos.Min.X),float32(g.housePos.y)+float32(g.house[0].rectPos.Min.Y),houseTileSize,imgSize,3.0,color.RGBA{222, 122, 0, 100},false)
 }
 
@@ -727,10 +723,10 @@ func main() {
 	g.tilemapImg = tilemapImg
 	g.tilemapImgWater = tilemapImgWater
 
-	g.tilemapJSON = tilemapJSON1
+	g.tilemapJSON1 = tilemapJSON1
 	g.tilemapJSON2 = tilemapJSON2
 	g.tilemapJSON3 = tilemapJSON3
-	g.scene = 3
+	g.scene = 1
 
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
