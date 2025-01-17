@@ -245,6 +245,14 @@ func (g *Game) Collision_Object_Caracter(obj Objects, char Charakters) bool {
 			int(obj.pos.y+imgSize/4))
 	}
 
+	if obj.variety == "budda" {
+		object_position = image.Rect(
+			int(obj.pos.x),
+			int(obj.pos.y),
+			int(obj.pos.x+imgSize/2),
+			int(obj.pos.y+imgSize/2))
+	}
+
 	if obj.variety == "house" {
 		object_position = image.Rect(
 			int(obj.pos.x),
@@ -291,19 +299,23 @@ func (g *Game) Update() error {
 	g.coin_animation()
 
 	// Player border collision
-	if g.Player.pos.x < 0 {
-		g.Player.pos = g.Player.prePos
-	} else if g.Player.pos.x > screenWidth-imgSize {
-		g.Player.pos = g.Player.prePos
-	} else if g.Player.pos.y < 0 {
-		g.Player.pos = g.Player.prePos
-	} else if g.Player.pos.y > screenHeight-imgSize-5 {
-		g.Player.pos = g.Player.prePos
+	if g.Player.pos.x < 0-imgSize/2 {
+		g.Player.pos.x = screenWidth - imgSize/2
+	} else if g.Player.pos.x > screenWidth-imgSize/2 {
+		g.Player.pos.x = 0 - imgSize/2
+	} else if g.Player.pos.y < 0-imgSize/2 {
+		g.Player.pos.y = screenHeight - imgSize/2
+	} else if g.Player.pos.y > screenHeight {
+		g.Player.pos.y = 0 - imgSize/2
 	}
 	//Player collide with []house
 	for i := range g.house {
 		if g.Collision_Object_Caracter(*g.house[i], *g.Player) {
 			g.Player.pos = g.Player.prePos
+			if g.house[i].variety == "budda" {
+				g.Player.pos.x = 50
+				g.Player.pos.y = 50
+			}
 		}
 	}
 	// Player collide with []coin
@@ -698,7 +710,7 @@ func main() {
 			pos:     Point{300, 200},
 			rectPos: image.Rect(0, imgSize, imgSize*2, imgSize*2),
 		},
-		variety: "small_house",
+		variety: "budda",
 	})
 	g.house = append(g.house, &Objects{
 		Sprite: &Sprite{
