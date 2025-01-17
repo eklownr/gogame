@@ -313,8 +313,15 @@ func (g *Game) Update() error {
 		if g.Collision_Object_Caracter(*g.house[i], *g.Player) {
 			g.Player.pos = g.Player.prePos
 			if g.house[i].variety == "budda" {
+				// Portal Player
 				g.Player.pos.x = 50
 				g.Player.pos.y = 50
+				// change scene
+				if g.scene < 3 {
+					g.scene++
+				} else {
+					g.scene = 0
+				}
 			}
 		}
 	}
