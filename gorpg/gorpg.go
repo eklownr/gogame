@@ -296,34 +296,6 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	return false
 }
 
-func (g *Game) plant_animation() {
-	if g.tick {
-		plant_anim = 0
-		if time.Since(g.lastUpdate) < gameSpeed/2 {
-			coin_anim = 10
-		}
-	} else {
-		plant_anim = 20
-		if time.Since(g.lastUpdate) < gameSpeed/2 {
-			coin_anim = 30
-		}
-	}
-}
-
-func (g *Game) coin_animation() {
-	if g.tick {
-		coin_anim = 0
-		if time.Since(g.lastUpdate) < gameSpeed/2 {
-			coin_anim = 10
-		}
-	} else {
-		coin_anim = 20
-		if time.Since(g.lastUpdate) < gameSpeed/2 {
-			coin_anim = 30
-		}
-	}
-}
-
 // update function
 func (g *Game) Update() error {
 	g.Player.prePos = g.Player.pos // save old position
@@ -537,13 +509,27 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// vector.StrokeRect(screen,float32(g.housePos.x)+float32(g.house[0].rectPos.Min.X),float32(g.housePos.y)+float32(g.house[0].rectPos.Min.Y),houseTileSize,imgSize,3.0,color.RGBA{222, 122, 0, 100},false)
 }
 
+func (g *Game) plant_animation() {
+	if g.tick {
+		plant_anim = imgSize
+		if time.Since(g.lastUpdate) < gameSpeed/2 {
+			plant_anim = imgSize * 2
+		}
+	} else {
+		plant_anim = imgSize * 3
+		if time.Since(g.lastUpdate) < gameSpeed/2 {
+			plant_anim = imgSize * 4
+		}
+	}
+}
+
 // TEST plants animation
 func (g *Game) drawPlanst(screen *ebiten.Image, x, y float64) {
 	option := &ebiten.DrawImageOptions{}
 	option.GeoM.Translate(x, y) // coin position x, y
 	screen.DrawImage(
 		g.plantImg.SubImage(
-			image.Rect(coin_anim, 0, coin_anim+10, 10),
+			image.Rect(plant_anim, 0, plant_anim+imgSize, imgSize),
 		).(*ebiten.Image),
 		option,
 	)
@@ -560,6 +546,20 @@ func (g *Game) drawWorker(screen *ebiten.Image, x, y float64, i int) {
 		option,
 	)
 	option.GeoM.Reset()
+}
+
+func (g *Game) coin_animation() {
+	if g.tick {
+		coin_anim = 0
+		if time.Since(g.lastUpdate) < gameSpeed/2 {
+			coin_anim = 10
+		}
+	} else {
+		coin_anim = 20
+		if time.Since(g.lastUpdate) < gameSpeed/2 {
+			coin_anim = 30
+		}
+	}
 }
 
 func (g *Game) drawCoin(screen *ebiten.Image, x, y float64, coin Objects, index int) {
@@ -770,7 +770,7 @@ func main() {
 			},
 		})
 	}
-	for i := 0; i < 10; i++ { //set rectTop and rectBot for animation
+	for i := range g.workers { //set rectTop and rectBot for animation
 		g.workers[i].rectTop = Point{0, 0}
 		g.workers[i].rectBot = Point{imgSize, imgSize}
 	}
