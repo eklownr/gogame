@@ -42,15 +42,19 @@ var (
 	gameSpeed       = SPEED
 	PlayerSpeed     = 3.0
 	diagonalSpeed   = 0.8
-	coin_anim       = 0
 	tileSize        = 16
 	mplusFaceSource *text.GoTextFaceSource
+	coin_anim       = 0
+	plant_anim      = 0
 )
 
 type Game struct {
 	Player     *Charakters
 	costomers  []*Charakters
 	workers    []*Charakters
+	coins      []*Objects
+	house      []*Objects
+	plants     []*Objects
 	lastUpdate time.Time
 	tick       bool
 	fullWindow bool
@@ -61,13 +65,11 @@ type Game struct {
 	bgImg           *ebiten.Image
 	tilemapImg      *ebiten.Image
 	tilemapImgWater *ebiten.Image
+	plantImg        *ebiten.Image
 	tilemapJSON1    *tilemaps.TilemapJSON
 	tilemapJSON2    *tilemaps.TilemapJSON
 	tilemapJSON3    *tilemaps.TilemapJSON
-	//	housePos   Point
-	coins []*Objects
-	house []*Objects
-	scene int
+	scene           int
 }
 type Sprite struct {
 	img     *ebiten.Image
@@ -292,6 +294,20 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 		return true
 	}
 	return false
+}
+
+func (g *Game) plant_animation() {
+	if g.tick {
+		plant_anim = 0
+		if time.Since(g.lastUpdate) < gameSpeed/2 {
+			coin_anim = 10
+		}
+	} else {
+		plant_anim = 20
+		if time.Since(g.lastUpdate) < gameSpeed/2 {
+			coin_anim = 30
+		}
+	}
 }
 
 func (g *Game) coin_animation() {
@@ -660,6 +676,15 @@ func addText(screen *ebiten.Image, textSize int, t string, color color.Color, wi
 	)
 }
 func main() {
+	// Window properties
+	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
+	ebiten.SetWindowTitle("Gopher Mart")
+
+	// Text, font
+	textsource, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
+	checkErr(err)
+	mplusFaceSource = textsource
+
 	// TilemapJSON1
 	tilemapJSON1, err := tilemaps.NewTilemapJSON("assets/map/level1_bg.json")
 	checkErr(err)
@@ -680,15 +705,6 @@ func main() {
 	tilemapImgWater, _, err := ebitenutil.NewImageFromFile("assets/map/TilesetWater.png")
 	checkErr(err)
 
-	// Text, font
-	textsource, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
-	checkErr(err)
-	mplusFaceSource = textsource
-
-	// Window properties
-	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
-	ebiten.SetWindowTitle("Gopher Mart")
-
 	// load village image
 	village, _, err := ebitenutil.NewImageFromFile("assets/images/village.png")
 	checkErr(err)
@@ -707,6 +723,10 @@ func main() {
 
 	// load coin image
 	coinImg, _, err := ebitenutil.NewImageFromFile("assets/images/coin2.png")
+	checkErr(err)
+
+	// load coin image
+	plantImg, _, err := ebitenutil.NewImageFromFile("assets/images/plants.png")
 	checkErr(err)
 
 	// Game constructor
@@ -750,8 +770,26 @@ func main() {
 			variety: "coin",
 		})
 	}
+	// add 2 plants: weat and tomato
+	g.plants = append(g.plants, &Objects{
+		Sprite: &Sprite{
+			img:     plantImg,
+			pos:     Point{440, 440},
+			rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
+		},
+		variety: "weat",
+	})
 
-	//	g.housePos = Point{300, houseTileSize}
+	g.plants = append(g.plants, &Objects{
+		Sprite: &Sprite{
+			img:     plantImg,
+			pos:     Point{600, 400},
+			rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
+		},
+		variety: "tomato",
+	})
+
+	//	add house objects
 	g.house = append(g.house, &Objects{
 		Sprite: &Sprite{
 			img:     village,
@@ -798,6 +836,7 @@ func main() {
 	g.village = village
 	g.tilemapImg = tilemapImg
 	g.tilemapImgWater = tilemapImgWater
+	g.plantImg = plantImg
 
 	g.tilemapJSON1 = tilemapJSON1
 	g.tilemapJSON2 = tilemapJSON2
