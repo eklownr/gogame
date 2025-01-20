@@ -6,11 +6,14 @@ import (
 	"image"
 	"image/color"
 	_ "image/png"
+	"io/ioutil"
 	"log"
 	"os"
 
 	"time"
 
+	"github.com/hajimehoshi/ebiten/audio"
+	"github.com/hajimehoshi/ebiten/audio/mp3"
 	"github.com/hajimehoshi/ebiten/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -490,9 +493,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for i := 0; i < 10; i++ {
 		g.drawCoin(screen, g.coins[i].pos.x, g.coins[i].pos.y, *g.coins[i], i)
 	}
-	// Draw plants at same as Game constructor g.plants.pos in main() ///
-	g.drawPlanst(screen, g.plants[0].pos.x, g.plants[0].pos.y) // weat
-	g.drawPlanst(screen, g.plants[1].pos.x, g.plants[1].pos.y) // tomato
+
+	///// Draw all plants  ///
+	for i := range g.plants {
+		g.drawPlanst(screen, g.plants[i].pos.x, g.plants[i].pos.y, g.plants[i].variety) // wheat and tomato
+	}
 
 	///////// draw img player ///////////
 	opts := &ebiten.DrawImageOptions{}
@@ -509,31 +514,45 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// vector.StrokeRect(screen,float32(g.housePos.x)+float32(g.house[0].rectPos.Min.X),float32(g.housePos.y)+float32(g.house[0].rectPos.Min.Y),houseTileSize,imgSize,3.0,color.RGBA{222, 122, 0, 100},false)
 }
 
+// TEST plants animation
 func (g *Game) plant_animation() {
 	if g.tick {
-		plant_anim = imgSize
+		plant_anim = 16
 		if time.Since(g.lastUpdate) < gameSpeed/2 {
-			plant_anim = imgSize * 2
+			plant_anim = 16 * 2
 		}
 	} else {
-		plant_anim = imgSize * 3
+		plant_anim = 16 * 3
 		if time.Since(g.lastUpdate) < gameSpeed/2 {
-			plant_anim = imgSize * 4
+			plant_anim = 16 * 4
 		}
 	}
 }
 
-// TEST plants animation
-func (g *Game) drawPlanst(screen *ebiten.Image, x, y float64) {
+func (g *Game) drawPlanst(screen *ebiten.Image, x, y float64, variety string) {
+	g.plant_animation() // activte anim<
 	option := &ebiten.DrawImageOptions{}
 	option.GeoM.Translate(x, y) // coin position x, y
-	screen.DrawImage(
-		g.plantImg.SubImage(
-			image.Rect(plant_anim, 0, plant_anim+imgSize, imgSize),
-		).(*ebiten.Image),
-		option,
-	)
-	option.GeoM.Reset()
+	if variety == "wheat" {
+		screen.DrawImage(
+			g.plantImg.SubImage(
+				//image.Rect(plant_anim, 0, plant_anim+imgSize, imgSize),
+				image.Rect(plant_anim, 0, plant_anim+16, 16),
+			).(*ebiten.Image),
+			option,
+		)
+		option.GeoM.Reset()
+	} else if variety == "tomato" {
+		screen.DrawImage(
+			g.plantImg.SubImage(
+				//image.Rect(plant_anim, 0, plant_anim+imgSize, imgSize),
+				image.Rect(plant_anim, 16, plant_anim+16, 16+16),
+			).(*ebiten.Image),
+			option,
+		)
+		option.GeoM.Reset()
+
+	}
 }
 
 func (g *Game) drawWorker(screen *ebiten.Image, x, y float64, i int) {
@@ -786,25 +805,26 @@ func main() {
 			variety: "coin",
 		})
 	}
-	// add 2 plants: weat and tomato
-	g.plants = append(g.plants, &Objects{
-		Sprite: &Sprite{
-			img:     plantImg,
-			pos:     Point{40, 40},
-			rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
-		},
-		variety: "weat",
-	})
+	// add 2 plants: wheat and tomato
+	for i := 0; i < 4; i++ {
+		g.plants = append(g.plants, &Objects{
+			Sprite: &Sprite{
+				img:     plantImg,
+				pos:     Point{178 + float64(i)*40, 300},
+				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
+			},
+			variety: "wheat",
+		})
 
-	g.plants = append(g.plants, &Objects{
-		Sprite: &Sprite{
-			img:     plantImg,
-			pos:     Point{60, 40},
-			rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
-		},
-		variety: "tomato",
-	})
-
+		g.plants = append(g.plants, &Objects{
+			Sprite: &Sprite{
+				img:     plantImg,
+				pos:     Point{60 + float64(i)*40, 40},
+				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
+			},
+			variety: "tomato",
+		})
+	}
 	//	add house objects
 	g.house = append(g.house, &Objects{
 		Sprite: &Sprite{
@@ -859,8 +879,60 @@ func main() {
 	g.tilemapJSON3 = tilemapJSON3
 	g.scene = 1
 
+	// play sound pick coin
+
+	audioContext, err := audio.NewContext(44100)
+	checkErr(err)
+	file, err := os.Open("assets/sound/Coin.mp3")
+	checkErr(err)
+	defer file.Close()
+	player, err := audioContext.NewPlayerF32(file)
+	checkErr(err)
+
+	err = player.Play()
+	checkErr(err)
+
+	//	src, err := mp3.DecodeF32(bytes.NewReader("assets/sound/Coin.mp3"))
+	//	//src, err := mp3.DecodeWithoutResampling("assets/sound/Coin.mp3")
+	//	checkErr(err)
+	//	Soundplayer, err := audioContext.NewPlayer(src)
+	//	checkErr(err)
+	player.play()
+
 	// Start game
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func playSoundFromAssets() error {
+	// Load the audio file from assets
+	file, err := os.Open("assets/sound/Coin.mp3")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Read the file into a byte slice
+	bytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		return err
+	}
+
+	// Decode the MP3 file to a PCM stream
+	src, err := mp3.Decode(bytes)
+	if err != nil {
+		return err
+	}
+
+	// Create a new player from the decoded stream
+	player, err := audio.NewPlayerF32(src)
+	if err != nil {
+		return err
+	}
+
+	// Play the sound
+	player.Play()
+
+	return nil
 }
