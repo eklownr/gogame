@@ -518,7 +518,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for i := 0; i < 10; i++ {
 		g.drawCoin(screen, g.coins[i].pos.x, g.coins[i].pos.y, *g.coins[i], i)
 	}
-	g.drawPlanst(screen, g.plants[0].pos.x, g.plants[0].pos.y)
+	// Draw plants at same as Game constructor g.plants.pos in main() ///
+	g.drawPlanst(screen, g.plants[0].pos.x, g.plants[0].pos.y) // weat
+	g.drawPlanst(screen, g.plants[1].pos.x, g.plants[1].pos.y) // tomato
 
 	///////// draw img player ///////////
 	opts := &ebiten.DrawImageOptions{}
@@ -535,6 +537,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// vector.StrokeRect(screen,float32(g.housePos.x)+float32(g.house[0].rectPos.Min.X),float32(g.housePos.y)+float32(g.house[0].rectPos.Min.Y),houseTileSize,imgSize,3.0,color.RGBA{222, 122, 0, 100},false)
 }
 
+// TEST plants animation
 func (g *Game) drawPlanst(screen *ebiten.Image, x, y float64) {
 	option := &ebiten.DrawImageOptions{}
 	option.GeoM.Translate(x, y) // coin position x, y
