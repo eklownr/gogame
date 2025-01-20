@@ -518,6 +518,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for i := 0; i < 10; i++ {
 		g.drawCoin(screen, g.coins[i].pos.x, g.coins[i].pos.y, *g.coins[i], i)
 	}
+	g.drawPlanst(screen, g.plants[0].pos.x, g.plants[0].pos.y)
 
 	///////// draw img player ///////////
 	opts := &ebiten.DrawImageOptions{}
@@ -532,6 +533,18 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	/////// TEST Draw player and house collision rect
 	// vector.StrokeRect(screen, float32(g.Player.pos.x+imgSize/4),float32(g.Player.pos.y+imgSize/4),imgSize/2,imgSize/2,3.0,color.RGBA{122, 222, 0, 100},false)
 	// vector.StrokeRect(screen,float32(g.housePos.x)+float32(g.house[0].rectPos.Min.X),float32(g.housePos.y)+float32(g.house[0].rectPos.Min.Y),houseTileSize,imgSize,3.0,color.RGBA{222, 122, 0, 100},false)
+}
+
+func (g *Game) drawPlanst(screen *ebiten.Image, x, y float64) {
+	option := &ebiten.DrawImageOptions{}
+	option.GeoM.Translate(x, y) // coin position x, y
+	screen.DrawImage(
+		g.plantImg.SubImage(
+			image.Rect(coin_anim, 0, coin_anim+10, 10),
+		).(*ebiten.Image),
+		option,
+	)
+	option.GeoM.Reset()
 }
 
 func (g *Game) drawWorker(screen *ebiten.Image, x, y float64, i int) {
@@ -774,7 +787,7 @@ func main() {
 	g.plants = append(g.plants, &Objects{
 		Sprite: &Sprite{
 			img:     plantImg,
-			pos:     Point{440, 440},
+			pos:     Point{40, 40},
 			rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
 		},
 		variety: "weat",
@@ -783,7 +796,7 @@ func main() {
 	g.plants = append(g.plants, &Objects{
 		Sprite: &Sprite{
 			img:     plantImg,
-			pos:     Point{600, 400},
+			pos:     Point{60, 40},
 			rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
 		},
 		variety: "tomato",
