@@ -37,6 +37,9 @@ var audioBGM []byte
 //go:embed assets/sound/Coin.ogg
 var audioCoin []byte
 
+//go:embed assets/sound/Fx.ogg
+var audioFx []byte
+
 var (
 	skyBlue         = color.RGBA{120, 180, 255, 255}
 	red             = color.RGBA{255, 0, 0, 255}
@@ -333,6 +336,8 @@ func (g *Game) Update() error {
 				// Portal Player
 				g.Player.pos.x = 50
 				g.Player.pos.y = 50
+				// playSound
+				playSound(audioFx)
 				// change scene
 				if g.scene < 3 {
 					g.scene++
@@ -348,7 +353,7 @@ func (g *Game) Update() error {
 			if g.Player.coin < g.Player.wallet { // add coins to your wallet
 				g.Player.coin++
 				println("You have: ", g.Player.coin, "coins")
-				playCoinSound()
+				playSound(audioCoin)
 				g.coins[i].picked = true
 				g.coins[i].pos = Point{
 					x: -100,
@@ -902,10 +907,10 @@ func main() {
 	}
 }
 
-func playCoinSound() {
+func playSound(sound []byte) {
 	// Load the audio file from assets
 	//_ = audio.NewContext(SampleRate)
-	stream, err := vorbis.DecodeWithSampleRate(SampleRate, bytes.NewReader(audioCoin))
+	stream, err := vorbis.DecodeWithSampleRate(SampleRate, bytes.NewReader(sound))
 	checkErr(err)
 	audioPlayer, _ := audio.CurrentContext().NewPlayer(stream)
 	// you pass the audio player to your game struct, and just call
