@@ -34,6 +34,9 @@ const (
 //go:embed assets/sound/mystical.ogg
 var audioBGM []byte
 
+//go:embed assets/sound/Coin.ogg
+var audioCoin []byte
+
 var (
 	skyBlue         = color.RGBA{120, 180, 255, 255}
 	red             = color.RGBA{255, 0, 0, 255}
@@ -345,6 +348,7 @@ func (g *Game) Update() error {
 			if g.Player.coin < g.Player.wallet { // add coins to your wallet
 				g.Player.coin++
 				println("You have: ", g.Player.coin, "coins")
+				playCoinSound()
 				g.coins[i].picked = true
 				g.coins[i].pos = Point{
 					x: -100,
@@ -898,26 +902,13 @@ func main() {
 	}
 }
 
-func playSoundFromAssets() error {
+func playCoinSound() {
 	// Load the audio file from assets
-	file, err := os.Open("assets/sound/Coin.mp3")
+	//_ = audio.NewContext(SampleRate)
+	stream, err := vorbis.DecodeWithSampleRate(SampleRate, bytes.NewReader(audioCoin))
 	checkErr(err)
-	defer file.Close()
-
-	//	// Read the file into a byte slice
-	//	bytes, err := ioutil.ReadAll(file)
-	//	checkErr(err)
-
-	//	// Decode the MP3 file to a PCM stream
-	//	src, err := mp3.Decode(bytes)
-	//	checkErr(err)
-	//
-	//	// Create a new player from the decoded stream
-	//	player, err := audio.NewPlayerF32(src)
-	//	checkErr(err)
-
-	// Play the sound
-	//	player.Play()
-
-	return nil
+	audioPlayer, _ := audio.CurrentContext().NewPlayer(stream)
+	// you pass the audio player to your game struct, and just call
+	audioPlayer.Play() //when you want your music to start, and
+	// audioPlayer.Pause() to pause
 }
