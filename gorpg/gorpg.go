@@ -2,20 +2,20 @@ package main
 
 import (
 	"bytes"
+	_ "embed"
 	"gorpg/tilemaps"
 	"image"
 	"image/color"
 	_ "image/png"
-	"io/ioutil"
 	"log"
 	"os"
 
 	"time"
 
-	"github.com/hajimehoshi/ebiten/audio"
-	"github.com/hajimehoshi/ebiten/audio/mp3"
 	"github.com/hajimehoshi/ebiten/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hajimehoshi/ebiten/v2/audio/vorbis"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -28,7 +28,11 @@ const (
 	imgSize       = 48
 	SPEED         = time.Second / 4
 	houseTileSize = 64
+	SampleRate    = 44100
 )
+
+//go:embed assets/sound/mystical.ogg
+var audioBGM []byte
 
 var (
 	skyBlue         = color.RGBA{120, 180, 255, 255}
@@ -879,25 +883,14 @@ func main() {
 	g.tilemapJSON3 = tilemapJSON3
 	g.scene = 1
 
-	// play sound pick coin
-
-	audioContext, err := audio.NewContext(44100)
+	////// play background music //////
+	_ = audio.NewContext(SampleRate)
+	stream, err := vorbis.DecodeWithSampleRate(SampleRate, bytes.NewReader(audioBGM))
 	checkErr(err)
-	file, err := os.Open("assets/sound/Coin.mp3")
-	checkErr(err)
-	defer file.Close()
-	player, err := audioContext.NewPlayerF32(file)
-	checkErr(err)
-
-	err = player.Play()
-	checkErr(err)
-
-	//	src, err := mp3.DecodeF32(bytes.NewReader("assets/sound/Coin.mp3"))
-	//	//src, err := mp3.DecodeWithoutResampling("assets/sound/Coin.mp3")
-	//	checkErr(err)
-	//	Soundplayer, err := audioContext.NewPlayer(src)
-	//	checkErr(err)
-	player.play()
+	audioPlayer, _ := audio.CurrentContext().NewPlayer(stream)
+	// you pass the audio player to your game struct, and just call
+	audioPlayer.Play() //when you want your music to start, and
+	// audioPlayer.Pause() to pause
 
 	// Start game
 	if err := ebiten.RunGame(g); err != nil {
@@ -908,31 +901,23 @@ func main() {
 func playSoundFromAssets() error {
 	// Load the audio file from assets
 	file, err := os.Open("assets/sound/Coin.mp3")
-	if err != nil {
-		return err
-	}
+	checkErr(err)
 	defer file.Close()
 
-	// Read the file into a byte slice
-	bytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		return err
-	}
+	//	// Read the file into a byte slice
+	//	bytes, err := ioutil.ReadAll(file)
+	//	checkErr(err)
 
-	// Decode the MP3 file to a PCM stream
-	src, err := mp3.Decode(bytes)
-	if err != nil {
-		return err
-	}
-
-	// Create a new player from the decoded stream
-	player, err := audio.NewPlayerF32(src)
-	if err != nil {
-		return err
-	}
+	//	// Decode the MP3 file to a PCM stream
+	//	src, err := mp3.Decode(bytes)
+	//	checkErr(err)
+	//
+	//	// Create a new player from the decoded stream
+	//	player, err := audio.NewPlayerF32(src)
+	//	checkErr(err)
 
 	// Play the sound
-	player.Play()
+	//	player.Play()
 
 	return nil
 }
