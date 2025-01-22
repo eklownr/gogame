@@ -65,9 +65,9 @@ var (
 )
 
 type Game struct {
-	Player     *Charakters
-	costomers  []*Charakters
-	workers    []*Charakters
+	Player     *Characters
+	costomers  []*Characters
+	workers    []*Characters
 	coins      []*Objects
 	house      []*Objects
 	plants     []*Objects
@@ -97,7 +97,7 @@ type Sprite struct {
 	rectBot Point // Sprite amination
 	active  bool
 }
-type Charakters struct {
+type Characters struct {
 	*Sprite
 	Dir
 	speed  float64
@@ -241,7 +241,7 @@ func (g *Game) dirRight() {
 }
 
 // check collision Objects with charakter
-func (g *Game) Collision_Object_Caracter(obj Objects, char Charakters) bool {
+func (g *Game) Collision_Object_Caracter(obj Objects, char Characters) bool {
 	// Player....
 	charakter_position := image.Rect(
 		int(char.pos.x+imgSize/4),
@@ -304,13 +304,33 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	return false
 }
 
+func moveCharacters(c *Characters) {
+	if c.pos != c.dest {
+		if c.pos.x < c.dest.x {
+			c.pos.x++
+		}
+		if c.pos.x > c.dest.x {
+			c.pos.x--
+		}
+		if c.pos.y < c.dest.y {
+			c.pos.y++
+		}
+		if c.pos.y > c.dest.y {
+			c.pos.y--
+		}
+
+	}
+}
+
 // ///// Update function
 func (g *Game) Update() error {
 	g.Player.prePos = g.Player.pos // save old position
 	g.readKeys()                   // read keys and move player
 	g.coin_animation()
+
 	for i := range g.workers { // Idle animation for all workers
 		g.idleWorkers(i)
+		moveCharacters(g.workers[i])
 	}
 
 	// Player border collision
@@ -826,7 +846,7 @@ func main() {
 
 	// Game constructor
 	g := &Game{
-		Player: &Charakters{
+		Player: &Characters{
 			Sprite: &Sprite{
 				img: playerImg,
 				pos: Point{screenWidth/2 - (imgSize / 2), screenHeight/2 - (imgSize / 2)},
@@ -841,13 +861,14 @@ func main() {
 
 	// add 10 workers
 	for i := 0; i < 10; i++ {
-		g.workers = append(g.workers, &Charakters{
+		g.workers = append(g.workers, &Characters{
 			Sprite: &Sprite{
 				img:     workerImg,
 				pos:     Point{40, 20*float64(i) + 60},
 				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
 			},
 			speed: 1.5,
+			dest:  Point{screenWidth - imgSize - (float64(i * imgSize)), screenHeight/2 - imgSize - (float64(i * imgSize))},
 		})
 	}
 	for i := range g.workers { //set rectTop and rectBot for animation
