@@ -296,6 +296,13 @@ func (g *Game) Collision_Object_Caracter(obj Objects, char Charakters) bool {
 			int(obj.pos.x+houseTileSize-10),
 			int(obj.pos.y+imgSize-10))
 	}
+	if obj.variety == "small_house" {
+		object_position = image.Rect(
+			int(obj.pos.x),
+			int(obj.pos.y),
+			int(obj.pos.x+imgSize-10),
+			int(obj.pos.y+imgSize-10))
+	}
 
 	if object_position.Overlaps(charakter_position) {
 		g.smokeSprite.active = true
@@ -406,7 +413,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		)
 		op.GeoM.Reset()
 	}
-
 	if g.scene == 1 {
 		/////////// draw bg tile layers ////////////
 		for _, layer := range g.tilemapJSON1.Layers {
@@ -430,7 +436,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 		}
 	}
-
 	if g.scene == 2 {
 		/////////// draw bg tile layers ////////////
 		for _, layer := range g.tilemapJSON2.Layers {
@@ -532,10 +537,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	/////// TEST Draw player and house collision rect
 	// vector.StrokeRect(screen, float32(g.Player.pos.x+imgSize/4),float32(g.Player.pos.y+imgSize/4),imgSize/2,imgSize/2,3.0,color.RGBA{122, 222, 0, 100},false)
 	// vector.StrokeRect(screen,float32(g.housePos.x)+float32(g.house[0].rectPos.Min.X),float32(g.housePos.y)+float32(g.house[0].rectPos.Min.Y),houseTileSize,imgSize,3.0,color.RGBA{222, 122, 0, 100},false)
+
+	// if active
 	g.drawSmoke(screen, g.Player.pos.x, g.Player.pos.y)
 }
 
-// TEST smoke animation
 func (g *Game) smoke_animation() {
 	if g.tick {
 		plant_anim = 32
@@ -549,7 +555,6 @@ func (g *Game) smoke_animation() {
 		}
 	}
 }
-
 func (g *Game) drawSmoke(screen *ebiten.Image, x, y float64) {
 	if g.smokeSprite.active {
 		g.smoke_animation()
@@ -580,7 +585,6 @@ func (g *Game) plant_animation() {
 		}
 	}
 }
-
 func (g *Game) drawPlanst(screen *ebiten.Image, x, y float64, variety string) {
 	g.plant_animation() // activte anim<
 	option := &ebiten.DrawImageOptions{}
@@ -632,7 +636,6 @@ func (g *Game) coin_animation() {
 		}
 	}
 }
-
 func (g *Game) drawCoin(screen *ebiten.Image, x, y float64, coin Objects, index int) {
 	if coin.picked {
 		g.coins[index].pos = Point{-100, -100} // outside of screen
