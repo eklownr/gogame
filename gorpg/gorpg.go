@@ -82,6 +82,7 @@ type Game struct {
 	tilemapImg      *ebiten.Image
 	tilemapImgWater *ebiten.Image
 	plantImg        *ebiten.Image
+	workImg         *ebiten.Image
 	smokeSprite     Sprite
 	tilemapJSON1    *tilemaps.TilemapJSON
 	tilemapJSON2    *tilemaps.TilemapJSON
@@ -304,7 +305,7 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	return false
 }
 
-func moveCharacters(c *Characters) {
+func (g *Game) moveCharacters(c *Characters) {
 	if c.pos != c.dest {
 		if c.pos.x < c.dest.x {
 			c.pos.x++
@@ -318,7 +319,8 @@ func moveCharacters(c *Characters) {
 		if c.pos.y > c.dest.y {
 			c.pos.y--
 		}
-
+	} else {
+		c.img = g.workImg
 	}
 }
 
@@ -330,7 +332,7 @@ func (g *Game) Update() error {
 
 	for i := range g.workers { // Idle animation for all workers
 		g.idleWorkers(i)
-		moveCharacters(g.workers[i])
+		g.moveCharacters(g.workers[i])
 	}
 
 	// Player border collision
@@ -499,7 +501,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	/// Draw Workers at same as Game constructor in main() ///
-	for i := 0; i < 10; i++ {
+	for i := range g.workers {
 		g.drawWorker(screen, g.workers[i].pos.x, g.workers[i].pos.y, i)
 	}
 
@@ -832,6 +834,10 @@ func main() {
 	workerImg, _, err := ebitenutil.NewImageFromFile("assets/images/player.png")
 	checkErr(err)
 
+	// load Work image
+	workImg, _, err := ebitenutil.NewImageFromFile("assets/images/workers.png")
+	checkErr(err)
+
 	// load coin image
 	coinImg, _, err := ebitenutil.NewImageFromFile("assets/images/coin2.png")
 	checkErr(err)
@@ -876,6 +882,16 @@ func main() {
 		g.workers[i].rectBot = Point{imgSize, imgSize}
 	}
 
+	// add one worker with workImg
+	g.workers = append(g.workers, &Characters{
+		Sprite: &Sprite{
+			img:     workImg,
+			pos:     Point{40, 40},
+			rectPos: image.Rect(0, 0, imgSize, imgSize),
+		},
+		speed: 1.5,
+		dest:  Point{screenWidth / 2, screenHeight / 2},
+	})
 	// add 10 coins
 	for i := 1; i < 11; i++ {
 		g.coins = append(g.coins, &Objects{
@@ -955,6 +971,7 @@ func main() {
 	g.tilemapImg = tilemapImg
 	g.tilemapImgWater = tilemapImgWater
 	g.plantImg = plantImg
+	g.workImg = workImg
 
 	g.smokeSprite = Sprite{
 		img:    smokeImg,
@@ -973,7 +990,7 @@ func main() {
 	stream, err := vorbis.DecodeWithSampleRate(SampleRate, bytes.NewReader(audioBG))
 	checkErr(err)
 
-	// infinite loop
+	// infinite loop Bg music
 	audioPlayer, _ := audio.CurrentContext().NewPlayer(
 		audio.NewInfiniteLoop(stream,
 			int64(len(audioBG)*6*SampleRate)))
