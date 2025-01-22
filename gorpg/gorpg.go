@@ -340,8 +340,8 @@ func (g *Game) Update() error {
 			g.Player.pos = g.Player.prePos
 			if g.house[i].variety == "budda" {
 				// Portal Player
-				g.Player.pos.x = 50
-				g.Player.pos.y = 50
+				g.Player.pos.x = screenWidth / 2
+				g.Player.pos.y = screenHeight / 2
 				// playSound
 				playSound(audioFx)
 				// change scene
@@ -901,8 +901,8 @@ func main() {
 	g.house = append(g.house, &Objects{
 		Sprite: &Sprite{
 			img:     village,
-			pos:     Point{300, 200},
-			rectPos: image.Rect(0, imgSize, imgSize*2, imgSize*2),
+			pos:     Point{550, 270},
+			rectPos: image.Rect(0, imgSize, imgSize, imgSize*2),
 		},
 		variety: "budda",
 	})
