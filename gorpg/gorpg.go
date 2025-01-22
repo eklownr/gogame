@@ -31,8 +31,11 @@ const (
 	SampleRate    = 44100
 )
 
-//go:embed assets/sound/mystical.ogg
-var audioBGM []byte
+//go:embed assets/sound/LostVillage.ogg
+var audioBG []byte
+
+//go:embed assets/sound/Village.ogg
+var audioVillage []byte
 
 //go:embed assets/sound/Coin.ogg
 var audioCoin []byte
@@ -79,6 +82,7 @@ type Game struct {
 	tilemapImg      *ebiten.Image
 	tilemapImgWater *ebiten.Image
 	plantImg        *ebiten.Image
+	smokeSprite     Sprite
 	tilemapJSON1    *tilemaps.TilemapJSON
 	tilemapJSON2    *tilemaps.TilemapJSON
 	tilemapJSON3    *tilemaps.TilemapJSON
@@ -91,6 +95,7 @@ type Sprite struct {
 	rectPos image.Rectangle
 	rectTop Point // Sprite amination
 	rectBot Point // Sprite amination
+	active  bool
 }
 type Charakters struct {
 	*Sprite
@@ -293,6 +298,7 @@ func (g *Game) Collision_Object_Caracter(obj Objects, char Charakters) bool {
 	}
 
 	if object_position.Overlaps(charakter_position) {
+		g.smokeSprite.active = true
 		return true
 	}
 	return false
@@ -309,7 +315,7 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	return false
 }
 
-// update function
+// ///// Update function
 func (g *Game) Update() error {
 	g.Player.prePos = g.Player.pos // save old position
 	g.readKeys()                   // read keys and move player
@@ -344,6 +350,7 @@ func (g *Game) Update() error {
 				} else {
 					g.scene = 0
 				}
+				g.smokeSprite.active = true
 			}
 		}
 	}
@@ -377,7 +384,7 @@ func (g *Game) Update() error {
 	return nil
 }
 
-// Draw function
+// ////// Draw function
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(skyBlue) // background collor
 
@@ -525,6 +532,38 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	/////// TEST Draw player and house collision rect
 	// vector.StrokeRect(screen, float32(g.Player.pos.x+imgSize/4),float32(g.Player.pos.y+imgSize/4),imgSize/2,imgSize/2,3.0,color.RGBA{122, 222, 0, 100},false)
 	// vector.StrokeRect(screen,float32(g.housePos.x)+float32(g.house[0].rectPos.Min.X),float32(g.housePos.y)+float32(g.house[0].rectPos.Min.Y),houseTileSize,imgSize,3.0,color.RGBA{222, 122, 0, 100},false)
+	g.drawSmoke(screen, g.Player.pos.x, g.Player.pos.y)
+}
+
+// TEST smoke animation
+func (g *Game) smoke_animation() {
+	if g.tick {
+		plant_anim = 32
+		if time.Since(g.lastUpdate) < gameSpeed/2 {
+			plant_anim = 32 * 2
+		}
+	} else {
+		plant_anim = 32 * 3
+		if time.Since(g.lastUpdate) < gameSpeed/2 {
+			plant_anim = 32 * 4
+		}
+	}
+}
+
+func (g *Game) drawSmoke(screen *ebiten.Image, x, y float64) {
+	if g.smokeSprite.active {
+		g.smoke_animation()
+		option := &ebiten.DrawImageOptions{}
+		option.GeoM.Translate(x, y) // position x, y
+		screen.DrawImage(
+			g.smokeSprite.img.SubImage(
+				image.Rect(plant_anim, 0, plant_anim+32, 32),
+			).(*ebiten.Image),
+			option,
+		)
+		option.GeoM.Reset()
+		g.smokeSprite.active = false
+	}
 }
 
 // TEST plants animation
@@ -777,6 +816,10 @@ func main() {
 	plantImg, _, err := ebitenutil.NewImageFromFile("assets/images/plants.png")
 	checkErr(err)
 
+	// load smoke image
+	smokeImg, _, err := ebitenutil.NewImageFromFile("assets/images/smoke.png")
+	checkErr(err)
+
 	// Game constructor
 	g := &Game{
 		Player: &Charakters{
@@ -887,19 +930,33 @@ func main() {
 	g.tilemapImgWater = tilemapImgWater
 	g.plantImg = plantImg
 
+	g.smokeSprite = Sprite{
+		img:    smokeImg,
+		pos:    Point{50, 50},
+		active: false,
+	}
+
 	g.tilemapJSON1 = tilemapJSON1
 	g.tilemapJSON2 = tilemapJSON2
 	g.tilemapJSON3 = tilemapJSON3
+
 	g.scene = 1
 
 	////// play background music //////
 	_ = audio.NewContext(SampleRate)
-	stream, err := vorbis.DecodeWithSampleRate(SampleRate, bytes.NewReader(audioBGM))
+	stream, err := vorbis.DecodeWithSampleRate(SampleRate, bytes.NewReader(audioBG))
 	checkErr(err)
-	audioPlayer, _ := audio.CurrentContext().NewPlayer(stream)
+
+	// infinite loop
+	audioPlayer, _ := audio.CurrentContext().NewPlayer(
+		audio.NewInfiniteLoop(stream,
+			int64(len(audioBG)*6*SampleRate)))
+
+	//audioPlayer, _ := audio.CurrentContext().NewPlayer(stream)
 	// you pass the audio player to your game struct, and just call
+	audioPlayer.SetVolume(0.3)
 	audioPlayer.Play() //when you want your music to start, and
-	// audioPlayer.Pause() to pause
+	// audioPlayer.Pause()
 
 	// Start game
 	if err := ebiten.RunGame(g); err != nil {
@@ -913,7 +970,6 @@ func playSound(sound []byte) {
 	stream, err := vorbis.DecodeWithSampleRate(SampleRate, bytes.NewReader(sound))
 	checkErr(err)
 	audioPlayer, _ := audio.CurrentContext().NewPlayer(stream)
-	// you pass the audio player to your game struct, and just call
-	audioPlayer.Play() //when you want your music to start, and
-	// audioPlayer.Pause() to pause
+	audioPlayer.Play()
+	// audioPlayer.Pause()
 }
