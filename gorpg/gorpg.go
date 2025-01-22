@@ -240,24 +240,6 @@ func (g *Game) dirRight() {
 	g.Player.speed = PlayerSpeed
 }
 
-// F key for full screen
-func (g *Game) fullScreen() {
-	if !g.fullWindow {
-		ebiten.SetFullscreen(true)
-		g.fullWindow = true
-	} else {
-		g.fullWindow = false
-		ebiten.SetFullscreen(false)
-	}
-}
-
-// Q key for quit
-func (g *Game) quitGame() {
-	println("Warning! Quit the game!")
-	ebiten.SetRunnableOnUnfocused(false)
-	os.Exit(1)
-}
-
 // check collision Objects with charakter
 func (g *Game) Collision_Object_Caracter(obj Objects, char Charakters) bool {
 	// Player....
@@ -664,7 +646,7 @@ func (g *Game) drawCoin(screen *ebiten.Image, x, y float64, coin Objects, index 
 	// )
 }
 
-// vim-keys to move "hjkl" or Arrowkeys
+// Arrowkeys to move or vim-keys "hjkl"
 func (g *Game) readKeys() {
 	if ebiten.IsKeyPressed(ebiten.KeyJ) || ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
 		g.dirDown()
@@ -701,15 +683,22 @@ func (g *Game) readKeys() {
 
 }
 
-func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return screenWidth, screenHeight
+// F key for full screen
+func (g *Game) fullScreen() {
+	if !g.fullWindow {
+		ebiten.SetFullscreen(true)
+		g.fullWindow = true
+	} else {
+		g.fullWindow = false
+		ebiten.SetFullscreen(false)
+	}
 }
 
-// check for errors
-func checkErr(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
+// Q key for quit
+func (g *Game) quitGame() {
+	println("Warning! Quit the game!")
+	ebiten.SetRunnableOnUnfocused(false)
+	os.Exit(1)
 }
 
 // Escape-key to Pause the game
@@ -765,6 +754,18 @@ func addText(screen *ebiten.Image, textSize int, t string, color color.Color, wi
 		op,
 	)
 }
+
+func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
+	return screenWidth, screenHeight
+}
+
+// check for errors
+func checkErr(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func main() {
 	// Window properties
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
@@ -846,6 +847,7 @@ func main() {
 				pos:     Point{40, 20*float64(i) + 60},
 				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
 			},
+			speed: 1.5,
 		})
 	}
 	for i := range g.workers { //set rectTop and rectBot for animation
