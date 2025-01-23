@@ -83,6 +83,7 @@ type Game struct {
 	tilemapImgWater *ebiten.Image
 	plantImg        *ebiten.Image
 	workImg         *ebiten.Image
+	workerIdleImg   *ebiten.Image
 	smokeSprite     Sprite
 	tilemapJSON1    *tilemaps.TilemapJSON
 	tilemapJSON2    *tilemaps.TilemapJSON
@@ -307,6 +308,7 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 
 func (g *Game) moveCharacters(c *Characters) {
 	if c.pos != c.dest {
+		c.img = g.workerIdleImg
 		if c.pos.x < c.dest.x {
 			c.pos.x++
 		}
@@ -330,9 +332,20 @@ func (g *Game) Update() error {
 	g.readKeys()                   // read keys and move player
 	g.coin_animation()
 
+	// Move workers to new dest pos for every new scene
 	for i := range g.workers { // Idle animation for all workers
 		g.idleWorkers(i)
 		g.moveCharacters(g.workers[i])
+		if g.scene == 2 {
+			g.workers[i].dest = Point{180 + (float64(i) * 40), 300}
+		} else if g.scene == 3 {
+			g.workers[i].dest = Point{30 + (float64(i) * 30), 20}
+		} else if g.scene == 1 {
+			g.workers[i].dest = Point{50, 10 + (float64(i) * 30)}
+		} else if g.scene == 0 {
+			g.workers[i].dest = Point{200 + (float64(i) * 20), 90}
+		}
+
 	}
 
 	// Player border collision
@@ -885,12 +898,12 @@ func main() {
 	// add one worker with workImg
 	g.workers = append(g.workers, &Characters{
 		Sprite: &Sprite{
-			img:     workImg,
-			pos:     Point{40, 40},
+			img:     workerImg,
+			pos:     Point{400, 40},
 			rectPos: image.Rect(0, 0, imgSize, imgSize),
 		},
 		speed: 1.5,
-		dest:  Point{screenWidth / 2, screenHeight / 2},
+		dest:  Point{220, 300},
 	})
 	// add 10 coins
 	for i := 1; i < 11; i++ {
@@ -972,6 +985,7 @@ func main() {
 	g.tilemapImgWater = tilemapImgWater
 	g.plantImg = plantImg
 	g.workImg = workImg
+	g.workerIdleImg = workerImg
 
 	g.smokeSprite = Sprite{
 		img:    smokeImg,
