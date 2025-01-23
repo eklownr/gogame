@@ -895,16 +895,6 @@ func main() {
 		g.workers[i].rectBot = Point{imgSize, imgSize}
 	}
 
-	// add one worker with workImg
-	g.workers = append(g.workers, &Characters{
-		Sprite: &Sprite{
-			img:     workerImg,
-			pos:     Point{400, 40},
-			rectPos: image.Rect(0, 0, imgSize, imgSize),
-		},
-		speed: 1.5,
-		dest:  Point{220, 300},
-	})
 	// add 10 coins
 	for i := 1; i < 11; i++ {
 		g.coins = append(g.coins, &Objects{
