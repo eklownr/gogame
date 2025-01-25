@@ -243,6 +243,33 @@ func (g *Game) dirRight() {
 }
 
 // check collision Objects with charakter
+func (g *Game) Collision_Character_Caracter(obj Characters, char Characters) bool {
+	// Player....
+	charakter_position := image.Rect(
+		int(char.pos.x+imgSize/4),
+		int(char.pos.y+imgSize/4),
+		int(char.pos.x+imgSize/2),
+		int(char.pos.y+imgSize/2))
+
+	// Worker
+	object_position := image.Rect(
+		int(obj.pos.x),
+		int(obj.pos.y),
+		int(obj.pos.x+imgSize/2),
+		int(obj.pos.y+imgSize/2))
+
+	if obj.coin > 2 {
+		println("worker has 2 coins")
+	}
+
+	if object_position.Overlaps(charakter_position) {
+		g.smokeSprite.active = true
+		return true
+	}
+	return false
+}
+
+// check collision Objects with charakter
 func (g *Game) Collision_Object_Caracter(obj Objects, char Characters) bool {
 	// Player....
 	charakter_position := image.Rect(
@@ -357,6 +384,17 @@ func (g *Game) Update() error {
 		g.Player.pos.y = screenHeight - imgSize/2
 	} else if g.Player.pos.y > screenHeight {
 		g.Player.pos.y = 0 - imgSize/2
+	}
+	//Player collide with []workers
+	for i := range g.workers {
+		if g.Collision_Character_Caracter(*g.workers[i], *g.Player) {
+			g.Player.pos.x = screenWidth / 2
+			g.Player.pos.y = screenHeight / 2
+			// playSound
+			playSound(audioFx)
+			// play smoke animation
+			g.smokeSprite.active = true
+		}
 	}
 	//Player collide with []house
 	for i := range g.house {
