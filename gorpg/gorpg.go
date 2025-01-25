@@ -112,6 +112,7 @@ type Objects struct {
 	variety string
 	dest    Point
 	picked  bool
+	frame   int
 }
 type Point struct {
 	x, y float64
@@ -363,6 +364,11 @@ func (g *Game) Update() error {
 	for i := range g.workers { // Idle animation for all workers
 		g.idleWorkers(i)
 		g.moveCharacters(g.workers[i])
+
+		//	if g.workers[i].pos == g.plants[i].pos {
+		//		println("collide worker-plant")
+		//	}
+
 		if g.scene == 2 {
 			g.workers[i].dest = Point{180 + (float64(i) * 40), 300}
 		} else if g.scene == 3 {
@@ -627,21 +633,11 @@ func (g *Game) drawSmoke(screen *ebiten.Image, x, y float64) {
 }
 
 // TEST plants animation
-func (g *Game) plant_animation() {
-	if g.tick {
-		plant_anim = 16
-		if time.Since(g.lastUpdate) < gameSpeed/2 {
-			plant_anim = 16 * 2
-		}
-	} else {
-		plant_anim = 16 * 3
-		if time.Since(g.lastUpdate) < gameSpeed/2 {
-			plant_anim = 16 * 4
-		}
-	}
+func (g *Game) plant_animation(frame int) {
+	plant_anim = 16 * frame
 }
 func (g *Game) drawPlanst(screen *ebiten.Image, x, y float64, variety string) {
-	g.plant_animation() // activte anim<
+	g.plant_animation(0) // activte animation
 	option := &ebiten.DrawImageOptions{}
 	option.GeoM.Translate(x, y) // coin position x, y
 	if variety == "wheat" {
