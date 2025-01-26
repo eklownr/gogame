@@ -75,7 +75,6 @@ type Game struct {
 	lastUpdate      time.Time
 	tick            bool
 	lastUpdatePlant time.Time
-	tickPlant       bool
 	fullWindow      bool
 	gameOver        bool
 	gamePause       bool
@@ -92,6 +91,7 @@ type Game struct {
 	tilemapJSON2    *tilemaps.TilemapJSON
 	tilemapJSON3    *tilemaps.TilemapJSON
 	scene           int
+	plantFrame      int
 }
 type Sprite struct {
 	img     *ebiten.Image
@@ -287,7 +287,6 @@ func (g *Game) Collision_worker_plant(worker Objects, plant Objects) bool {
 
 	if worker_position.Overlaps(plant_position) {
 		g.smokeSprite.active = true
-		plant.frame++
 		return true
 	}
 	return false
@@ -377,10 +376,27 @@ func (g *Game) moveCharacters(c *Characters) {
 	}
 }
 
-func (g *Game) plantFramAnim() {
+// check Animation tick every 60 FPS
+func (g *Game) plantFrameAnim() {
+	var speed = 120
+	if frameSpeed < speed*5 {
+		frameSpeed++
+	}
+	if frameSpeed < speed {
+		g.plantFrame = 1
+	} else if frameSpeed < speed*2 {
+		g.plantFrame = 2
+	} else if frameSpeed < speed*3 {
+		g.plantFrame = 3
+	} else if frameSpeed < speed*4 {
+		g.plantFrame = 4
+	} else if frameSpeed < speed*5 {
+		g.plantFrame = 5
+	}
+
 	for _, plant := range g.plants {
-		if plant.active && plant.frame < 5 && g.tickPlant == true {
-			plant.frame++
+		if plant.active && plant.frame < 5 {
+			plant.frame = g.plantFrame
 		}
 	}
 }
@@ -390,7 +406,7 @@ func (g *Game) Update() error {
 	g.Player.prePos = g.Player.pos // save old position
 	g.readKeys()                   // read keys and move player
 	g.coin_animation()
-	g.plantFramAnim()
+	g.plantFrameAnim()
 
 	// Move workers to new dest pos for every new scene
 	for i := range g.workers { // Idle animation for all workers
@@ -479,15 +495,6 @@ func (g *Game) Update() error {
 		g.tick = true
 	}
 	g.lastUpdate = time.Now() // update lastUpdate
-
-	/////////////////////////////////////
-	// check Animation tick every 60 FPS
-	if frameSpeed < 30 {
-		frameSpeed++
-		g.tickPlant = false
-	} else if frameSpeed == 30 {
-		g.tickPlant = true
-	}
 
 	// last in Update()
 	return nil
