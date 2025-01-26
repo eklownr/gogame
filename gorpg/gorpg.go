@@ -84,6 +84,7 @@ type Game struct {
 	plantImg        *ebiten.Image
 	workImg         *ebiten.Image
 	workerIdleImg   *ebiten.Image
+	coinImg         *ebiten.Image
 	smokeSprite     Sprite
 	tilemapJSON1    *tilemaps.TilemapJSON
 	tilemapJSON2    *tilemaps.TilemapJSON
@@ -365,10 +366,6 @@ func (g *Game) Update() error {
 		g.idleWorkers(i)
 		g.moveCharacters(g.workers[i])
 
-		//	if g.workers[i].pos == g.plants[i].pos {
-		//		println("collide worker-plant")
-		//	}
-
 		if g.scene == 2 {
 			g.workers[i].dest = Point{180 + (float64(i) * 40), 300}
 		} else if g.scene == 3 {
@@ -394,8 +391,10 @@ func (g *Game) Update() error {
 	//Player collide with []workers
 	for i := range g.workers {
 		if g.Collision_Character_Caracter(*g.workers[i], *g.Player) {
-			g.Player.pos.x = screenWidth / 2
-			g.Player.pos.y = screenHeight / 2
+			if g.workers[i].coin < 2 && g.Player.coin > 0 {
+				g.workers[i].coin++
+				g.Player.coin--
+			}
 			// playSound
 			playSound(audioFx)
 			// play smoke animation
@@ -560,11 +559,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	/// Draw Workers at same as Game constructor in main() ///
 	for i := range g.workers {
 		g.drawWorker(screen, g.workers[i].pos.x, g.workers[i].pos.y, i)
+		g.carry_objects(screen, g.workers[i].pos.x, g.workers[i].pos.y, g.workers[i].coin, g.coinImg)
 	}
 
 	///////// draw coin player caring on head ////////////
 	optst := &ebiten.DrawImageOptions{}
-	for i := 3; i < 3+g.Player.coin; i++ {
+	for i := 3; i < 3+g.Player.coin; i++ { // i=3 3 pix apart
 		optst.GeoM.Translate(g.Player.pos.x+imgSize/2-3, g.Player.pos.y+float64(2.0*i)-10.0)
 
 		screen.DrawImage(
@@ -601,6 +601,22 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	// if active
 	g.drawSmoke(screen, g.Player.pos.x, g.Player.pos.y)
+}
+
+// /////// draw images caring on the head ////////////
+func (g *Game) carry_objects(screen *ebiten.Image, x, y float64, amount int, img *ebiten.Image) {
+	optst := &ebiten.DrawImageOptions{}
+	for i := 3; i < 3+amount; i++ { // i=3 3 pix apart
+		optst.GeoM.Translate(x+imgSize/2-3, y+float64(2.0*i)-10.0)
+
+		screen.DrawImage(
+			img.SubImage(
+				image.Rect(0, 0, 10, 10),
+			).(*ebiten.Image),
+			optst,
+		)
+		optst.GeoM.Reset()
+	}
 }
 
 func (g *Game) smoke_animation() {
@@ -701,18 +717,6 @@ func (g *Game) drawCoin(screen *ebiten.Image, x, y float64, coin Objects, index 
 		option,
 	)
 	option.GeoM.Reset()
-	// // TEST draw coin rect
-	// vector.DrawFilledRect(
-	//
-	//	screen,
-	//	float32(x-imgSize/4+10),
-	//	float32(y-imgSize/4+10),
-	//	float32(imgSize/4),
-	//	float32(imgSize/4),
-	//	red_rect,
-	//	true,
-	//
-	// )
 }
 
 // Arrowkeys to move or vim-keys "hjkl"
@@ -1002,7 +1006,8 @@ func main() {
 		variety: "small_house",
 	})
 
-	// Add tilemapJSON
+	// Add Images and tilemapJSON
+	g.coinImg = coinImg
 	g.bgImg = bgImg
 	g.village = village
 	g.tilemapImg = tilemapImg
