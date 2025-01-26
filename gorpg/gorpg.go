@@ -556,29 +556,21 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		opt.GeoM.Reset()
 	}
 
-	/// Draw Workers at same as Game constructor in main() ///
-	for i := range g.workers {
-		g.drawWorker(screen, g.workers[i].pos.x, g.workers[i].pos.y, i)
-		g.carry_objects(screen, g.workers[i].pos.x, g.workers[i].pos.y, g.workers[i].coin, g.coinImg)
-	}
-
-	///////// draw coin player caring on head ////////////
-	optst := &ebiten.DrawImageOptions{}
-	for i := 3; i < 3+g.Player.coin; i++ { // i=3 3 pix apart
-		optst.GeoM.Translate(g.Player.pos.x+imgSize/2-3, g.Player.pos.y+float64(2.0*i)-10.0)
-
-		screen.DrawImage(
-			g.coins[0].img.SubImage(
-				image.Rect(0, 0, 10, 10),
-			).(*ebiten.Image),
-			optst,
-		)
-		optst.GeoM.Reset()
-	}
-	/// Draw coin at same as Game constructor g.coins.pos in main() ///
+	/// Draw coin at same pos as Game constructor g.coins.pos in main() ///
 	for i := 0; i < 10; i++ {
 		g.drawCoin(screen, g.coins[i].pos.x, g.coins[i].pos.y, *g.coins[i], i)
 	}
+
+	/// Draw Workers at same pos as Game constructor in main() ///
+	for i := range g.workers {
+		// draw coin carring on workers head
+		g.carry_objects(screen, g.workers[i].pos.x, g.workers[i].pos.y, g.workers[i].coin, g.coinImg)
+		// draw all workers
+		g.drawWorker(screen, g.workers[i].pos.x, g.workers[i].pos.y, i)
+	}
+
+	///////// draw coin player caring on the head ////////////
+	g.carry_objects(screen, g.Player.pos.x, g.Player.pos.y, g.Player.coin, g.coinImg)
 
 	///// Draw all plants  ///
 	for i := range g.plants {
