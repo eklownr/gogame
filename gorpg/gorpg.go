@@ -56,6 +56,7 @@ var (
 	white           = color.RGBA{255, 255, 255, 255}
 	black           = color.RGBA{0, 0, 0, 255}
 	gameSpeed       = SPEED
+	frameSpeed      = 0
 	PlayerSpeed     = 3.0
 	diagonalSpeed   = 0.8
 	tileSize        = 16
@@ -65,18 +66,19 @@ var (
 )
 
 type Game struct {
-	Player     *Characters
-	costomers  []*Characters
-	workers    []*Characters
-	coins      []*Objects
-	house      []*Objects
-	plants     []*Objects
-	lastUpdate time.Time
-	tick       bool
-	fullWindow bool
-	gameOver   bool
-	gamePause  bool
-	// Tilermaps and background imgages
+	Player          *Characters
+	costomers       []*Characters
+	workers         []*Characters
+	coins           []*Objects
+	house           []*Objects
+	plants          []*Objects
+	lastUpdate      time.Time
+	tick            bool
+	lastUpdatePlant time.Time
+	tickPlant       bool
+	fullWindow      bool
+	gameOver        bool
+	gamePause       bool
 	village         *ebiten.Image
 	bgImg           *ebiten.Image
 	tilemapImg      *ebiten.Image
@@ -244,8 +246,8 @@ func (g *Game) dirRight() {
 	g.Player.speed = PlayerSpeed
 }
 
-// check collision Objects with charakter
-func (g *Game) Collision_Character_Caracter(obj Characters, char Characters) bool {
+// check collision Objects with charakter: Player-worker
+func (g *Game) Collision_Character_Character(obj Characters, char Characters) bool {
 	// Player....
 	charakter_position := image.Rect(
 		int(char.pos.x+imgSize/4),
@@ -260,10 +262,6 @@ func (g *Game) Collision_Character_Caracter(obj Characters, char Characters) boo
 		int(obj.pos.x+imgSize/2),
 		int(obj.pos.y+imgSize/2))
 
-	if obj.coin > 2 {
-		println("worker has 2 coins")
-	}
-
 	if object_position.Overlaps(charakter_position) {
 		g.smokeSprite.active = true
 		return true
@@ -271,7 +269,31 @@ func (g *Game) Collision_Character_Caracter(obj Characters, char Characters) boo
 	return false
 }
 
-// check collision Objects with charakter
+// check collision obj-obj: worker-plant
+func (g *Game) Collision_worker_plant(worker Objects, plant Objects) bool {
+	// Player....
+	worker_position := image.Rect(
+		int(worker.pos.x+imgSize/4),
+		int(worker.pos.y+imgSize/4),
+		int(worker.pos.x+imgSize/2),
+		int(worker.pos.y+imgSize/2))
+
+	// Worker
+	plant_position := image.Rect(
+		int(plant.pos.x),
+		int(plant.pos.y),
+		int(plant.pos.x+imgSize/2),
+		int(plant.pos.y+imgSize/2))
+
+	if worker_position.Overlaps(plant_position) {
+		g.smokeSprite.active = true
+		plant.frame++
+		return true
+	}
+	return false
+}
+
+// check collision Objects with charakter: any obj-Player
 func (g *Game) Collision_Object_Caracter(obj Objects, char Characters) bool {
 	// Player....
 	charakter_position := image.Rect(
@@ -355,11 +377,20 @@ func (g *Game) moveCharacters(c *Characters) {
 	}
 }
 
+func (g *Game) plantFramAnim() {
+	for _, plant := range g.plants {
+		if plant.active && plant.frame < 5 && g.tickPlant == true {
+			plant.frame++
+		}
+	}
+}
+
 // ///// Update function
 func (g *Game) Update() error {
 	g.Player.prePos = g.Player.pos // save old position
 	g.readKeys()                   // read keys and move player
 	g.coin_animation()
+	g.plantFramAnim()
 
 	// Move workers to new dest pos for every new scene
 	for i := range g.workers { // Idle animation for all workers
@@ -390,7 +421,7 @@ func (g *Game) Update() error {
 	}
 	//Player collide with []workers
 	for i := range g.workers {
-		if g.Collision_Character_Caracter(*g.workers[i], *g.Player) {
+		if g.Collision_Character_Character(*g.workers[i], *g.Player) {
 			if g.workers[i].coin < 2 && g.Player.coin > 0 {
 				g.workers[i].coin++
 				g.Player.coin--
@@ -448,6 +479,17 @@ func (g *Game) Update() error {
 		g.tick = true
 	}
 	g.lastUpdate = time.Now() // update lastUpdate
+
+	/////////////////////////////////////
+	// check Animation tick every 60 FPS
+	if frameSpeed < 30 {
+		frameSpeed++
+		g.tickPlant = false
+	} else if frameSpeed == 30 {
+		g.tickPlant = true
+	}
+
+	// last in Update()
 	return nil
 }
 
@@ -572,9 +614,14 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	///////// draw coin player caring on the head ////////////
 	g.carry_objects(screen, g.Player.pos.x, g.Player.pos.y, g.Player.coin, g.coinImg)
 
-	///// Draw all plants  ///
+	///// Draw all plants  if active ///
 	for i := range g.plants {
-		g.drawPlanst(screen, g.plants[i].pos.x, g.plants[i].pos.y, g.plants[i].variety) // wheat and tomato
+		if g.plants[i].active {
+			g.drawPlanst(screen, g.plants[i].pos.x, g.plants[i].pos.y, g.plants[i].variety, g.plants[i].frame) // wheat and tomato
+			if g.plants[i].picked {
+				g.plants[i].active = false
+			}
+		}
 	}
 
 	///////// draw img player ///////////
@@ -644,8 +691,8 @@ func (g *Game) drawSmoke(screen *ebiten.Image, x, y float64) {
 func (g *Game) plant_animation(frame int) {
 	plant_anim = 16 * frame
 }
-func (g *Game) drawPlanst(screen *ebiten.Image, x, y float64, variety string) {
-	g.plant_animation(0) // activte animation
+func (g *Game) drawPlanst(screen *ebiten.Image, x, y float64, variety string, frame int) {
+	g.plant_animation(frame) // activte animation
 	option := &ebiten.DrawImageOptions{}
 	option.GeoM.Translate(x, y) // coin position x, y
 	if variety == "wheat" {
@@ -943,6 +990,7 @@ func main() {
 				img:     plantImg,
 				pos:     Point{178 + float64(i)*40, 300},
 				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
+				active:  true,
 			},
 			variety: "wheat",
 		})
@@ -952,6 +1000,7 @@ func main() {
 				img:     plantImg,
 				pos:     Point{60 + float64(i)*40, 40},
 				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
+				active:  true,
 			},
 			variety: "tomato",
 		})
@@ -1043,11 +1092,9 @@ func main() {
 }
 
 func playSound(sound []byte) {
-	// Load the audio file from assets
 	//_ = audio.NewContext(SampleRate)
 	stream, err := vorbis.DecodeWithSampleRate(SampleRate, bytes.NewReader(sound))
 	checkErr(err)
 	audioPlayer, _ := audio.CurrentContext().NewPlayer(stream)
 	audioPlayer.Play()
-	// audioPlayer.Pause()
 }
