@@ -56,7 +56,6 @@ var (
 	white           = color.RGBA{255, 255, 255, 255}
 	black           = color.RGBA{0, 0, 0, 255}
 	gameSpeed       = SPEED
-	frameSpeed      = 0
 	PlayerSpeed     = 3.0
 	diagonalSpeed   = 0.8
 	tileSize        = 16
@@ -74,7 +73,6 @@ type Game struct {
 	plants          []*Objects
 	lastUpdate      time.Time
 	tick            bool
-	lastUpdatePlant time.Time
 	fullWindow      bool
 	gameOver        bool
 	gamePause       bool
@@ -91,16 +89,17 @@ type Game struct {
 	tilemapJSON2    *tilemaps.TilemapJSON
 	tilemapJSON3    *tilemaps.TilemapJSON
 	scene           int
-	plantFrame      int
 }
 type Sprite struct {
-	img     *ebiten.Image
-	pos     Point
-	prePos  Point
-	rectPos image.Rectangle
-	rectTop Point // Sprite amination
-	rectBot Point // Sprite amination
-	active  bool
+	img          *ebiten.Image
+	pos          Point
+	prePos       Point
+	rectPos      image.Rectangle
+	rectTop      Point // Sprite amination
+	rectBot      Point // Sprite amination
+	active       bool
+	frameCounter int
+	frame        int
 }
 type Characters struct {
 	*Sprite
@@ -115,7 +114,7 @@ type Objects struct {
 	variety string
 	dest    Point
 	picked  bool
-	frame   int
+	//frame   int
 }
 type Point struct {
 	x, y float64
@@ -377,27 +376,21 @@ func (g *Game) moveCharacters(c *Characters) {
 }
 
 // check Animation tick every 60 FPS
-func (g *Game) plantFrameAnim() {
+func (g *Game) plantFrameAnim(plant *Objects) {
 	var speed = 120
-	if frameSpeed < speed*5 {
-		frameSpeed++
+	if plant.frame < speed*5 {
+		plant.frameCounter++
 	}
-	if frameSpeed < speed {
-		g.plantFrame = 1
-	} else if frameSpeed < speed*2 {
-		g.plantFrame = 2
-	} else if frameSpeed < speed*3 {
-		g.plantFrame = 3
-	} else if frameSpeed < speed*4 {
-		g.plantFrame = 4
-	} else if frameSpeed < speed*5 {
-		g.plantFrame = 5
-	}
-
-	for _, plant := range g.plants {
-		if plant.active && plant.frame < 5 {
-			plant.frame = g.plantFrame
-		}
+	if plant.frameCounter < speed {
+		plant.frame = 1
+	} else if plant.frameCounter < speed*2 {
+		plant.frame = 2
+	} else if plant.frameCounter < speed*3 {
+		plant.frame = 3
+	} else if plant.frameCounter < speed*4 {
+		plant.frame = 4
+	} else if plant.frameCounter < speed*5 {
+		plant.frame = 5
 	}
 }
 
@@ -406,7 +399,12 @@ func (g *Game) Update() error {
 	g.Player.prePos = g.Player.pos // save old position
 	g.readKeys()                   // read keys and move player
 	g.coin_animation()
-	g.plantFrameAnim()
+
+	for _, plant := range g.plants {
+		if plant.active && plant.frame < 5 {
+			g.plantFrameAnim(plant)
+		}
+	}
 
 	// Move workers to new dest pos for every new scene
 	for i := range g.workers { // Idle animation for all workers
