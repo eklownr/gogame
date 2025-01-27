@@ -355,6 +355,7 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	return false
 }
 
+// Move Workers to dest pos
 func (g *Game) moveCharacters(c *Characters) {
 	if c.pos != c.dest {
 		c.img = g.workerIdleImg
@@ -372,6 +373,7 @@ func (g *Game) moveCharacters(c *Characters) {
 		}
 	} else {
 		c.img = g.workImg
+		g.plants[5].active = true // TEST
 	}
 }
 
@@ -405,7 +407,7 @@ func (g *Game) Update() error {
 			g.plantFrameAnim(plant)
 		}
 	}
-
+	// TEST
 	// Move workers to new dest pos for every new scene
 	for i := range g.workers { // Idle animation for all workers
 		g.idleWorkers(i)
@@ -483,7 +485,7 @@ func (g *Game) Update() error {
 	}
 
 	/////////////////////////////////////
-	// check Animation tick every 60 FPS
+	// check Animation tick every 60 FPS. 2 values On or Off
 	if time.Since(g.lastUpdate) < gameSpeed {
 		return nil
 	}
@@ -1005,7 +1007,7 @@ func main() {
 				img:     plantImg,
 				pos:     Point{60 + float64(i)*40, 40},
 				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
-				active:  true,
+				active:  false,
 			},
 			variety: "tomato",
 		})
@@ -1030,7 +1032,7 @@ func main() {
 	g.house = append(g.house, &Objects{
 		Sprite: &Sprite{
 			img:     village,
-			pos:     Point{550, 270},
+			pos:     Point{screenWidth/2 + houseTileSize, screenHeight/2 + houseTileSize},
 			rectPos: image.Rect(0, imgSize, imgSize, imgSize*2),
 		},
 		variety: "budda",
