@@ -111,10 +111,10 @@ type Characters struct {
 }
 type Objects struct {
 	*Sprite
-	variety string
-	dest    Point
-	picked  bool
-	//frame   int
+	variety  string
+	dest     Point
+	picked   bool
+	pickable bool
 }
 type Point struct {
 	x, y float64
@@ -262,7 +262,6 @@ func (g *Game) Collision_Character_Character(obj Characters, char Characters) bo
 		int(obj.pos.y+imgSize/2))
 
 	if object_position.Overlaps(charakter_position) {
-		g.smokeSprite.active = true
 		return true
 	}
 	return false
@@ -306,14 +305,13 @@ func (g *Game) Collision_Object_Caracter(obj Objects, char Characters) bool {
 		int(obj.pos.x+imgSize/2),
 		int(obj.pos.y+imgSize/2))
 
-	if obj.variety == "coin" {
+	if obj.variety == "coin" || obj.variety == "wheat" || obj.variety == "tomato" {
 		object_position = image.Rect(
 			int(obj.pos.x-imgSize/4+10),
 			int(obj.pos.y-imgSize/4+10),
 			int(obj.pos.x+imgSize/4),
 			int(obj.pos.y+imgSize/4))
 	}
-
 	if obj.variety == "budda" {
 		object_position = image.Rect(
 			int(obj.pos.x),
@@ -321,7 +319,6 @@ func (g *Game) Collision_Object_Caracter(obj Objects, char Characters) bool {
 			int(obj.pos.x+imgSize/2),
 			int(obj.pos.y+imgSize/2))
 	}
-
 	if obj.variety == "house" {
 		object_position = image.Rect(
 			int(obj.pos.x),
@@ -338,7 +335,6 @@ func (g *Game) Collision_Object_Caracter(obj Objects, char Characters) bool {
 	}
 
 	if object_position.Overlaps(charakter_position) {
-		g.smokeSprite.active = true
 		return true
 	}
 	return false
@@ -353,6 +349,21 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 		return true
 	}
 	return false
+}
+
+func (g *Game) buddaCollision() {
+	// Portal Player
+	g.Player.pos.x = screenWidth / 2
+	g.Player.pos.y = screenHeight / 2
+	// playSound
+	playSound(audioFx)
+	//	// change scene
+	//	if g.scene < 3 {
+	//		g.scene++
+	//	} else {
+	//		g.scene = 0
+	//	}
+
 }
 
 // Move Workers to dest pos
@@ -393,12 +404,13 @@ func (g *Game) plantFrameAnim(plant *Objects) {
 		plant.frame = 4
 	} else if plant.frameCounter < speed*5 {
 		plant.frame = 5
+		plant.pickable = true
 	}
 }
 
 // ///// Update function
 func (g *Game) Update() error {
-	g.Player.prePos = g.Player.pos // save old position
+	g.Player.prePos = g.Player.pos // save old position before readKeys()
 	g.readKeys()                   // read keys and move player
 	g.coin_animation()
 
@@ -413,6 +425,7 @@ func (g *Game) Update() error {
 		g.idleWorkers(i)
 		g.moveCharacters(g.workers[i])
 
+		// TEST
 		if g.scene == 2 {
 			g.workers[i].dest = Point{180 + (float64(i) * 40), 300}
 		} else if g.scene == 3 {
@@ -441,29 +454,27 @@ func (g *Game) Update() error {
 			if g.workers[i].coin < 2 && g.Player.coin > 0 {
 				g.workers[i].coin++
 				g.Player.coin--
+				g.smokeSprite.active = true
 			}
 			// playSound
 			playSound(audioFx)
 			// play smoke animation
-			g.smokeSprite.active = true
 		}
 	}
 	//Player collide with []house
 	for i := range g.house {
 		if g.Collision_Object_Caracter(*g.house[i], *g.Player) {
 			g.Player.pos = g.Player.prePos
+			g.smokeSprite.active = true
 			if g.house[i].variety == "budda" {
-				// Portal Player
-				g.Player.pos.x = screenWidth / 2
-				g.Player.pos.y = screenHeight / 2
-				// playSound
-				playSound(audioFx)
-				// change scene
-				if g.scene < 3 {
-					g.scene++
-				} else {
-					g.scene = 0
-				}
+				g.buddaCollision()
+			}
+		}
+	}
+	//Player collide with []plants if active
+	for i := range g.plants {
+		if g.Collision_Object_Caracter(*g.plants[i], *g.Player) {
+			if g.plants[i].variety == "wheat" && g.plants[i].pickable {
 				g.smokeSprite.active = true
 			}
 		}
@@ -955,8 +966,8 @@ func main() {
 				pos: Point{screenWidth/2 - (imgSize / 2), screenHeight/2 - (imgSize / 2)},
 			},
 			speed:  PlayerSpeed,
-			coin:   2,
-			wallet: 8,
+			coin:   0,
+			wallet: 1,
 		},
 	}
 	g.Player.rectTop = Point{g.Player.pos.y + imgSize/4, g.Player.pos.y + imgSize/4}
@@ -984,7 +995,7 @@ func main() {
 		g.coins = append(g.coins, &Objects{
 			Sprite: &Sprite{
 				img:     coinImg,
-				pos:     Point{200, 20*float64(i) + 60},
+				pos:     Point{screenWidth/2 + 30 + float64(i)*10, screenHeight/2 + houseTileSize - 30.0},
 				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
 			},
 			variety: "coin",
