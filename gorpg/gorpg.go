@@ -29,6 +29,8 @@ const (
 	SPEED         = time.Second / 4
 	houseTileSize = 64
 	SampleRate    = 44100
+	wheat         = "wheat"
+	tomato        = "tomato"
 )
 
 //go:embed assets/sound/LostVillage.ogg
@@ -104,10 +106,11 @@ type Sprite struct {
 type Characters struct {
 	*Sprite
 	Dir
-	speed  float64
-	dest   Point
-	coin   int
-	wallet int
+	speed       float64
+	dest        Point
+	coin        int
+	wallet      int
+	plantBasket int
 }
 type Objects struct {
 	*Sprite
@@ -340,7 +343,7 @@ func (g *Game) Collision_Object_Caracter(obj Objects, char Characters) bool {
 	return false
 }
 
-// TEST check buildings collision
+// TEST check buildings collision: Point-Point
 func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	if p1.x >= p2.x-imgSize &&
 		p1.x <= p2.x+imgSize &&
@@ -351,6 +354,7 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	return false
 }
 
+// collide with budda Action: set player pos, span coin,
 func (g *Game) buddaCollision() {
 	// Portal Player
 	g.Player.pos.x = screenWidth / 2
@@ -414,13 +418,13 @@ func (g *Game) Update() error {
 	g.readKeys()                   // read keys and move player
 	g.coin_animation()
 
+	// plants animation
 	for _, plant := range g.plants {
 		if plant.active && plant.frame < 5 {
 			g.plantFrameAnim(plant)
 		}
 	}
-	// TEST
-	// Move workers to new dest pos for every new scene
+	// TEST Move workers to new dest pos for every new scene
 	for i := range g.workers { // Idle animation for all workers
 		g.idleWorkers(i)
 		g.moveCharacters(g.workers[i])
@@ -474,8 +478,12 @@ func (g *Game) Update() error {
 	//Player collide with []plants if active
 	for i := range g.plants {
 		if g.Collision_Object_Caracter(*g.plants[i], *g.Player) {
-			if g.plants[i].variety == "wheat" && g.plants[i].pickable {
+			if g.plants[i].pickable {
 				g.smokeSprite.active = true
+				// pick plant
+				g.plants[i].active = false
+				g.plants[i].pickable = false
+				g.Player.plantBasket++
 			}
 		}
 	}
@@ -484,7 +492,7 @@ func (g *Game) Update() error {
 		if g.Collision_Object_Caracter(*g.coins[i], *g.Player) && g.coins[i].picked == false {
 			if g.Player.coin < g.Player.wallet { // add coins to your wallet
 				g.Player.coin++
-				println("You have: ", g.Player.coin, "coins")
+				println("You have: ", g.Player.coin, "coins") // TEST
 				playSound(audioCoin)
 				g.coins[i].picked = true
 				g.coins[i].pos = Point{
@@ -629,8 +637,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.drawWorker(screen, g.workers[i].pos.x, g.workers[i].pos.y, i)
 	}
 
-	///////// draw coin player caring on the head ////////////
+	///////// draw coin player caring on the head. SubImg 0,0,10,10 /////////
 	g.carry_objects(screen, g.Player.pos.x, g.Player.pos.y, g.Player.coin, g.coinImg)
+	// SubImg 0,0,16,16
+	g.carry_plant(screen, g.Player.pos.x, g.Player.pos.y, g.Player.plantBasket, g.plantImg)
 
 	///// Draw all plants  if active ///
 	for i := range g.plants {
@@ -676,6 +686,22 @@ func (g *Game) carry_objects(screen *ebiten.Image, x, y float64, amount int, img
 	}
 }
 
+// /////// draw images caring on the head ////////////
+func (g *Game) carry_plant(screen *ebiten.Image, x, y float64, amount int, img *ebiten.Image) {
+	optst := &ebiten.DrawImageOptions{}
+	for i := 3; i < 3+amount; i++ { // i=3 3 pix apart
+		optst.GeoM.Translate(x+imgSize/2-3, y+float64(2.0*i)-10.0)
+
+		screen.DrawImage(
+			img.SubImage(
+				image.Rect(0, 0, 16, 16),
+			).(*ebiten.Image),
+			optst,
+		)
+		optst.GeoM.Reset()
+	}
+}
+
 func (g *Game) smoke_animation() {
 	if g.tick {
 		plant_anim = 32
@@ -710,7 +736,7 @@ func (g *Game) plant_animation(frame int) {
 	plant_anim = 16 * frame
 }
 func (g *Game) drawPlanst(screen *ebiten.Image, x, y float64, variety string, frame int) {
-	g.plant_animation(frame) // activte animation
+	g.plant_animation(frame) // activate animation
 	option := &ebiten.DrawImageOptions{}
 	option.GeoM.Translate(x, y) // coin position x, y
 	if variety == "wheat" {
