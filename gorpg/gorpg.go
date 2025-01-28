@@ -696,27 +696,27 @@ func (g *Game) carry_objects(screen *ebiten.Image, x, y float64, amount int, img
 
 // /////// draw images caring on the head ////////////
 func (g *Game) carry_plant(screen *ebiten.Image, x, y float64, amount int, img *ebiten.Image, varity string) {
-	optst := &ebiten.DrawImageOptions{}
+	opt := &ebiten.DrawImageOptions{}
 	for i := 5; i < 5+amount; i++ { // i=5 5 pix apart
 		if varity == wheat {
-			optst.GeoM.Translate(x+imgSize/2-3, y+float64(2.0*i)-10.0)
+			opt.GeoM.Translate(x+imgSize/2, y+float64(2.0*i)-10.0)
 			screen.DrawImage(
 				img.SubImage(
 					image.Rect(16*5, 0, 16*6, 16),
 				).(*ebiten.Image),
-				optst,
+				opt,
 			)
 		}
 		if varity == tomato {
-			optst.GeoM.Translate(x+imgSize/2-6, y+float64(2.0*i)-10.0)
+			opt.GeoM.Translate(x+imgSize/2-16, y+float64(2.0*i)-10.0)
 			screen.DrawImage(
 				img.SubImage(
 					image.Rect(16*5, 16, 16*6, 16*2),
 				).(*ebiten.Image),
-				optst,
+				opt,
 			)
 		}
-		optst.GeoM.Reset()
+		opt.GeoM.Reset()
 	}
 }
 
