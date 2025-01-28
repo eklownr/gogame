@@ -249,7 +249,7 @@ func (g *Game) dirRight() {
 	g.Player.speed = PlayerSpeed
 }
 
-// check collision Objects with charakter: Player-worker
+// check collision character with charakter: Player-worker
 func (g *Game) Collision_Character_Character(obj Characters, char Characters) bool {
 	// Player....
 	charakter_position := image.Rect(
@@ -271,8 +271,8 @@ func (g *Game) Collision_Character_Character(obj Characters, char Characters) bo
 	return false
 }
 
-// check collision obj-obj: worker-plant
-func (g *Game) Collision_worker_plant(worker Objects, plant Objects) bool {
+// check collision char-obj: worker-plant
+func (g *Game) Collision_worker_plant(worker Characters, plant Objects) bool {
 	// Player....
 	worker_position := image.Rect(
 		int(worker.pos.x+imgSize/4),
@@ -388,15 +388,7 @@ func (g *Game) moveCharacters(c *Characters) {
 			c.pos.y--
 		}
 	} else {
-		if c.coin > 0 { // TEST
-			//c.dest = g.plants[2].pos
-			c.img = g.workImg
-			c.coin--
-			g.plants[2].active = true
-		}
-		if g.plants[2].picked {
-			c.img = g.workerIdleImg
-		}
+		c.img = g.workImg
 	}
 }
 
@@ -433,20 +425,32 @@ func (g *Game) Update() error {
 		}
 	}
 	// TEST Move workers to new dest pos for every new scene
-	for i := range g.workers { // Idle animation for all workers
+	for i, w := range g.workers { // Idle animation for all workers
 		g.idleWorkers(i)
 		g.moveCharacters(g.workers[i])
 
-		// TEST
-		if g.scene == 2 {
-			g.workers[i].dest = Point{180 + (float64(i) * 40), 300}
-		} else if g.scene == 3 {
-			g.workers[i].dest = Point{30 + (float64(i) * 30), 20}
-		} else if g.scene == 1 {
-			g.workers[i].dest = Point{50, 10 + (float64(i) * 30)}
-		} else if g.scene == 0 {
-			g.workers[i].dest = Point{200 + (float64(i) * 20), 90}
+		if w.coin > 0 { // TEST
+			w.dest = g.plants[i].pos
+			w.img = g.workImg
+			w.coin--
+			g.plants[i].picked = false
+			g.plants[i].active = true
 		}
+		if g.plants[i].picked {
+			w.img = g.workerIdleImg
+			g.workers[i].dest = Point{200 + (float64(i) * 30), 90}
+		}
+
+		//		// TEST
+		//		if g.scene == 2 {
+		//			g.workers[i].dest = Point{180 + (float64(i) * 40), 300}
+		//		} else if g.scene == 3 {
+		//			g.workers[i].dest = Point{30 + (float64(i) * 30), 20}
+		//		} else if g.scene == 1 {
+		//			g.workers[i].dest = Point{50, 10 + (float64(i) * 30)}
+		//		} else if g.scene == 0 {
+		//			g.workers[i].dest = Point{200 + (float64(i) * 20), 90}
+		//		}
 
 	}
 
@@ -1039,6 +1043,7 @@ func main() {
 	for i := range g.workers { //set rectTop and rectBot for animation
 		g.workers[i].rectTop = Point{0, 0}
 		g.workers[i].rectBot = Point{imgSize, imgSize}
+		g.workers[i].dest = Point{200 + (float64(i) * 30), 90}
 	}
 
 	// add 10 coins
