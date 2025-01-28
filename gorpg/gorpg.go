@@ -389,9 +389,10 @@ func (g *Game) moveCharacters(c *Characters) {
 		}
 	} else {
 		if c.coin > 0 { // TEST
+			c.dest = g.plants[2].pos
 			c.img = g.workImg
-			g.plants[2].active = true // TEST
 			c.coin--
+			g.plants[2].active = true
 		}
 		if g.plants[2].picked {
 			c.img = g.workerIdleImg
@@ -489,6 +490,8 @@ func (g *Game) Update() error {
 				g.plants[i].active = false   // active animation
 				g.plants[i].pickable = false // can be picked
 				g.plants[i].picked = true    // Is picked
+				///// TEST ///// <------- TEST
+				g.plants[2].frame = 1 // set back to first anim-frame
 				if g.plants[i].variety == tomato {
 					g.Player.tomatoBasket++
 				} else if g.plants[i].variety == wheat {
