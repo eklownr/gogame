@@ -388,12 +388,13 @@ func (g *Game) moveCharacters(c *Characters) {
 			c.pos.y--
 		}
 	} else {
-		if c.coin > 0 {
+		if c.coin > 0 { // TEST
 			c.img = g.workImg
 			g.plants[2].active = true // TEST
-			if g.plants[2].pickable {
-				c.coin--
-			}
+			c.coin--
+		}
+		if g.plants[2].picked {
+			c.img = g.workerIdleImg
 		}
 	}
 }
@@ -485,8 +486,9 @@ func (g *Game) Update() error {
 			if g.plants[i].pickable {
 				g.smokeSprite.active = true
 				// pick plant
-				g.plants[i].active = false
-				g.plants[i].pickable = false
+				g.plants[i].active = false   // active animation
+				g.plants[i].pickable = false // can be picked
+				g.plants[i].picked = true    // Is picked
 				if g.plants[i].variety == tomato {
 					g.Player.tomatoBasket++
 				} else if g.plants[i].variety == wheat {
