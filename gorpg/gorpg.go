@@ -106,11 +106,12 @@ type Sprite struct {
 type Characters struct {
 	*Sprite
 	Dir
-	speed       float64
-	dest        Point
-	coin        int
-	wallet      int
-	plantBasket int
+	speed        float64
+	dest         Point
+	coin         int
+	wallet       int
+	tomatoBasket int
+	wheatBasket  int
 }
 type Objects struct {
 	*Sprite
@@ -387,8 +388,13 @@ func (g *Game) moveCharacters(c *Characters) {
 			c.pos.y--
 		}
 	} else {
-		c.img = g.workImg
-		g.plants[5].active = true // TEST
+		if c.coin > 0 {
+			c.img = g.workImg
+			g.plants[2].active = true // TEST
+			if g.plants[2].pickable {
+				c.coin--
+			}
+		}
 	}
 }
 
@@ -459,10 +465,8 @@ func (g *Game) Update() error {
 				g.workers[i].coin++
 				g.Player.coin--
 				g.smokeSprite.active = true
+				playSound(audioCoin)
 			}
-			// playSound
-			playSound(audioFx)
-			// play smoke animation
 		}
 	}
 	//Player collide with []house
@@ -483,7 +487,11 @@ func (g *Game) Update() error {
 				// pick plant
 				g.plants[i].active = false
 				g.plants[i].pickable = false
-				g.Player.plantBasket++
+				if g.plants[i].variety == tomato {
+					g.Player.tomatoBasket++
+				} else if g.plants[i].variety == wheat {
+					g.Player.wheatBasket++
+				}
 			}
 		}
 	}
@@ -611,7 +619,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	}
 
-	//	///////// draw all house big and small  ////////////
+	//	///////// draw all HOUSES big and small  ////////////
 	for i := range g.house {
 		opt := &ebiten.DrawImageOptions{}
 		opt.GeoM.Translate(g.house[i].pos.x, g.house[i].pos.y) // house position x, y
@@ -624,12 +632,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		opt.GeoM.Reset()
 	}
 
-	/// Draw coin at same pos as Game constructor g.coins.pos in main() ///
+	/// Draw COIN at same pos as Game constructor g.coins.pos in main() ///
 	for i := 0; i < 10; i++ {
 		g.drawCoin(screen, g.coins[i].pos.x, g.coins[i].pos.y, *g.coins[i], i)
 	}
 
-	/// Draw Workers at same pos as Game constructor in main() ///
+	/// Draw WORKERS at same pos as Game constructor in main() ///
 	for i := range g.workers {
 		// draw coin carring on workers head
 		g.carry_objects(screen, g.workers[i].pos.x, g.workers[i].pos.y, g.workers[i].coin, g.coinImg)
@@ -637,18 +645,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.drawWorker(screen, g.workers[i].pos.x, g.workers[i].pos.y, i)
 	}
 
-	///////// draw coin player caring on the head. SubImg 0,0,10,10 /////////
+	///////// draw COIN and PLANTS player caring on the head. SubImg 0,0,10,10 /////////
 	g.carry_objects(screen, g.Player.pos.x, g.Player.pos.y, g.Player.coin, g.coinImg)
 	// SubImg 0,0,16,16
-	g.carry_plant(screen, g.Player.pos.x, g.Player.pos.y, g.Player.plantBasket, g.plantImg)
+	g.carry_plant(screen, g.Player.pos.x, g.Player.pos.y, g.Player.tomatoBasket, g.plantImg, tomato)
+	g.carry_plant(screen, g.Player.pos.x, g.Player.pos.y, g.Player.wheatBasket, g.plantImg, wheat)
 
 	///// Draw all plants  if active ///
 	for i := range g.plants {
 		if g.plants[i].active {
 			g.drawPlanst(screen, g.plants[i].pos.x, g.plants[i].pos.y, g.plants[i].variety, g.plants[i].frame) // wheat and tomato
-			if g.plants[i].picked {
-				g.plants[i].active = false
-			}
 		}
 	}
 
@@ -687,17 +693,27 @@ func (g *Game) carry_objects(screen *ebiten.Image, x, y float64, amount int, img
 }
 
 // /////// draw images caring on the head ////////////
-func (g *Game) carry_plant(screen *ebiten.Image, x, y float64, amount int, img *ebiten.Image) {
+func (g *Game) carry_plant(screen *ebiten.Image, x, y float64, amount int, img *ebiten.Image, varity string) {
 	optst := &ebiten.DrawImageOptions{}
-	for i := 3; i < 3+amount; i++ { // i=3 3 pix apart
-		optst.GeoM.Translate(x+imgSize/2-3, y+float64(2.0*i)-10.0)
-
-		screen.DrawImage(
-			img.SubImage(
-				image.Rect(0, 0, 16, 16),
-			).(*ebiten.Image),
-			optst,
-		)
+	for i := 5; i < 5+amount; i++ { // i=5 5 pix apart
+		if varity == wheat {
+			optst.GeoM.Translate(x+imgSize/2-3, y+float64(2.0*i)-10.0)
+			screen.DrawImage(
+				img.SubImage(
+					image.Rect(16*5, 0, 16*6, 16),
+				).(*ebiten.Image),
+				optst,
+			)
+		}
+		if varity == tomato {
+			optst.GeoM.Translate(x+imgSize/2-6, y+float64(2.0*i)-10.0)
+			screen.DrawImage(
+				img.SubImage(
+					image.Rect(16*5, 16, 16*6, 16*2),
+				).(*ebiten.Image),
+				optst,
+			)
+		}
 		optst.GeoM.Reset()
 	}
 }
@@ -1027,14 +1043,14 @@ func main() {
 			variety: "coin",
 		})
 	}
-	// add 2 plants: wheat and tomato
+	// add 8 plants: 4 wheat and 4 tomato
 	for i := 0; i < 4; i++ {
 		g.plants = append(g.plants, &Objects{
 			Sprite: &Sprite{
 				img:     plantImg,
 				pos:     Point{178 + float64(i)*40, 300},
 				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
-				active:  true,
+				active:  false,
 			},
 			variety: "wheat",
 		})
@@ -1044,7 +1060,7 @@ func main() {
 				img:     plantImg,
 				pos:     Point{60 + float64(i)*40, 40},
 				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
-				active:  false,
+				active:  true,
 			},
 			variety: "tomato",
 		})
