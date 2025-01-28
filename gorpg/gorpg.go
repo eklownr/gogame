@@ -389,7 +389,7 @@ func (g *Game) moveCharacters(c *Characters) {
 		}
 	} else {
 		if c.coin > 0 { // TEST
-			c.dest = g.plants[2].pos
+			//c.dest = g.plants[2].pos
 			c.img = g.workImg
 			c.coin--
 			g.plants[2].active = true
@@ -403,7 +403,7 @@ func (g *Game) moveCharacters(c *Characters) {
 // check Animation tick every 60 FPS
 func (g *Game) plantFrameAnim(plant *Objects) {
 	var speed = 120
-	if plant.frame < speed*5 {
+	if plant.frameCounter < speed*5 {
 		plant.frameCounter++
 	}
 	if plant.frameCounter < speed {
@@ -468,9 +468,13 @@ func (g *Game) Update() error {
 				g.Player.coin--
 				g.smokeSprite.active = true
 				playSound(audioCoin)
+				// move workers to new dest
+				g.moveCharacters(g.workers[i])
+				g.workers[i].dest = g.plants[i].pos // set worker.dest to plant.pos
 			}
 		}
 	}
+
 	//Player collide with []house
 	for i := range g.house {
 		if g.Collision_Object_Caracter(*g.house[i], *g.Player) {
@@ -490,8 +494,8 @@ func (g *Game) Update() error {
 				g.plants[i].active = false   // active animation
 				g.plants[i].pickable = false // can be picked
 				g.plants[i].picked = true    // Is picked
-				///// TEST ///// <------- TEST
-				g.plants[2].frame = 1 // set back to first anim-frame
+				g.plants[i].frame = 1        // set back to first anim-frame
+				g.plants[i].frameCounter = 0 // Zero counter
 				if g.plants[i].variety == tomato {
 					g.Player.tomatoBasket++
 				} else if g.plants[i].variety == wheat {
@@ -1048,8 +1052,8 @@ func main() {
 			variety: "coin",
 		})
 	}
-	// add 8 plants: 4 wheat and 4 tomato
-	for i := 0; i < 4; i++ {
+	// add 10 plants: 5 wheat and 5 tomato
+	for i := 0; i < 5; i++ {
 		g.plants = append(g.plants, &Objects{
 			Sprite: &Sprite{
 				img:     plantImg,
@@ -1065,7 +1069,7 @@ func main() {
 				img:     plantImg,
 				pos:     Point{60 + float64(i)*40, 40},
 				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
-				active:  true,
+				active:  false,
 			},
 			variety: "tomato",
 		})
