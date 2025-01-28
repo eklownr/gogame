@@ -359,9 +359,19 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 func (g *Game) buddaCollision() {
 	// Portal Player
 	g.Player.pos.x = screenWidth / 2
-	g.Player.pos.y = screenHeight / 2
+	g.Player.pos.y = screenHeight/2 + 60
 	// playSound
 	playSound(audioFx)
+	if g.Player.tomatoBasket > 0 {
+		g.Player.tomatoBasket--
+		g.Player.coin++
+		playSound(audioCoin)
+	}
+	if g.Player.wheatBasket > 0 {
+		g.Player.wheatBasket--
+		g.Player.coin++
+		playSound(audioCoin)
+	}
 	//	// change scene
 	//	if g.scene < 3 {
 	//		g.scene++
@@ -432,7 +442,6 @@ func (g *Game) Update() error {
 		if w.coin > 0 { // TEST
 			w.dest = g.plants[i].pos
 			w.img = g.workImg
-			w.coin--
 			g.plants[i].picked = false
 			g.plants[i].active = true
 		}
@@ -467,14 +476,16 @@ func (g *Game) Update() error {
 	//Player collide with []workers
 	for i := range g.workers {
 		if g.Collision_Character_Character(*g.workers[i], *g.Player) {
-			if g.workers[i].coin < 2 && g.Player.coin > 0 {
-				g.workers[i].coin++
-				g.Player.coin--
+			if g.Player.coin > 0 {
+				if g.workers[i].coin < 1 { // take only one coin
+					g.workers[i].coin++
+					g.Player.coin--
+					playSound(audioCoin)
+				}
 				g.smokeSprite.active = true
-				playSound(audioCoin)
 				// move workers to new dest
-				g.moveCharacters(g.workers[i])
 				g.workers[i].dest = g.plants[i].pos // set worker.dest to plant.pos
+				g.moveCharacters(g.workers[i])
 			}
 		}
 	}
@@ -495,6 +506,7 @@ func (g *Game) Update() error {
 			if g.plants[i].pickable {
 				g.smokeSprite.active = true
 				// pick plant
+				g.workers[i].coin = 0        // drop coint when plant are picked
 				g.plants[i].active = false   // active animation
 				g.plants[i].pickable = false // can be picked
 				g.plants[i].picked = true    // Is picked
