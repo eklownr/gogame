@@ -525,7 +525,6 @@ func (g *Game) Update() error {
 		if g.Collision_Object_Caracter(*g.coins[i], *g.Player) && g.coins[i].picked == false {
 			if g.Player.coin < g.Player.wallet { // add coins to your wallet
 				g.Player.coin++
-				println("You have: ", g.Player.coin, "coins") // TEST
 				playSound(audioCoin)
 				g.coins[i].picked = true
 				g.coins[i].pos = Point{
@@ -893,7 +892,6 @@ func (g *Game) fullScreen() {
 
 // Q key for quit
 func (g *Game) quitGame() {
-	println("Warning! Quit the game!")
 	ebiten.SetRunnableOnUnfocused(false)
 	os.Exit(1)
 }
