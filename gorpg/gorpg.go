@@ -8,7 +8,6 @@ import (
 	"image/color"
 	_ "image/png"
 	"log"
-	"os"
 
 	"time"
 
@@ -91,6 +90,7 @@ type Game struct {
 	tilemapJSON2    *tilemaps.TilemapJSON
 	tilemapJSON3    *tilemaps.TilemapJSON
 	scene           int
+	exitGame        bool
 }
 type Sprite struct {
 	img          *ebiten.Image
@@ -369,7 +369,7 @@ func (g *Game) buddaCollision() {
 	}
 	if g.Player.wheatBasket > 0 {
 		g.Player.wheatBasket--
-		g.Player.coin++
+		g.Player.coin += 2
 		playSound(audioCoin)
 	}
 	//	// change scene
@@ -424,6 +424,11 @@ func (g *Game) plantFrameAnim(plant *Objects) {
 
 // ///// Update function
 func (g *Game) Update() error {
+	// Exit game with "q" key
+	if g.exitGame {
+		return ebiten.Termination
+	}
+
 	g.Player.prePos = g.Player.pos // save old position before readKeys()
 	g.readKeys()                   // read keys and move player
 	g.coin_animation()
@@ -555,11 +560,13 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(skyBlue) // background collor
 
+	// play pause sceen
 	if g.gamePause {
 		g.pause(screen)
 		return
 	}
 
+	// 4 different sceens
 	op := &ebiten.DrawImageOptions{}
 	if g.scene == 0 {
 		///////// draw background ///////////
@@ -657,11 +664,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	/// Draw COIN at same pos as Game constructor g.coins.pos in main() ///
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 2; i++ {
 		g.drawCoin(screen, g.coins[i].pos.x, g.coins[i].pos.y, *g.coins[i], i)
 	}
 
-	/// Draw WORKERS at same pos as Game constructor in main() ///
+	/// Draw WORKERS ///
 	for i := range g.workers {
 		// draw coin carring on workers head
 		g.carry_objects(screen, g.workers[i].pos.x, g.workers[i].pos.y, g.workers[i].coin, g.coinImg)
@@ -682,7 +689,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	}
 
-	///////// draw img player ///////////
+	// if active
+	g.drawSmoke(screen, g.Player.pos.x, g.Player.pos.y)
+
+	///////// draw Player ///////////
 	opts := &ebiten.DrawImageOptions{}
 	opts.GeoM.Translate(g.Player.pos.x, g.Player.pos.y)
 	// amination position to Player.img.SubImage(image.Rect(0, 0, imgSize, imgSize))
@@ -695,9 +705,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	/////// TEST Draw player and house collision rect
 	// vector.StrokeRect(screen, float32(g.Player.pos.x+imgSize/4),float32(g.Player.pos.y+imgSize/4),imgSize/2,imgSize/2,3.0,color.RGBA{122, 222, 0, 100},false)
 	// vector.StrokeRect(screen,float32(g.housePos.x)+float32(g.house[0].rectPos.Min.X),float32(g.housePos.y)+float32(g.house[0].rectPos.Min.Y),houseTileSize,imgSize,3.0,color.RGBA{222, 122, 0, 100},false)
-
-	// if active
-	g.drawSmoke(screen, g.Player.pos.x, g.Player.pos.y)
 }
 
 // /////// draw images caring on the head ////////////
@@ -876,7 +883,6 @@ func (g *Game) readKeys() {
 	} else if inpututil.IsKeyJustPressed(ebiten.Key3) { // Pause the game
 		g.scene = 3
 	}
-
 }
 
 // F key for full screen
@@ -892,8 +898,8 @@ func (g *Game) fullScreen() {
 
 // Q key for quit
 func (g *Game) quitGame() {
-	ebiten.SetRunnableOnUnfocused(false)
-	os.Exit(1)
+	g.exitGame = true
+	//os.Exit(1)
 }
 
 // Escape-key to Pause the game
