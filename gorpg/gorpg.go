@@ -110,6 +110,7 @@ type Characters struct {
 	dest         Point
 	coin         int
 	wallet       int
+	basketSize   int
 	tomatoBasket int
 	wheatBasket  int
 }
@@ -509,7 +510,7 @@ func (g *Game) Update() error {
 	//Player collide with []plants if active
 	for i := range g.plants {
 		if g.Collision_Object_Caracter(*g.plants[i], *g.Player) {
-			if g.plants[i].pickable {
+			if g.plants[i].pickable && g.Player.tomatoBasket < g.Player.basketSize && g.Player.wheatBasket < g.Player.basketSize {
 				// pick plant
 				playSound(audioFx)
 				g.smokeSprite.active = true
@@ -1038,9 +1039,10 @@ func main() {
 				img: playerImg,
 				pos: Point{screenWidth/2 - (imgSize / 2), screenHeight/2 - (imgSize / 2)},
 			},
-			speed:  PlayerSpeed,
-			coin:   0,
-			wallet: 2,
+			speed:      PlayerSpeed,
+			coin:       0,
+			wallet:     2,
+			basketSize: 2,
 		},
 	}
 	g.Player.rectTop = Point{g.Player.pos.y + imgSize/4, g.Player.pos.y + imgSize/4}
