@@ -357,19 +357,20 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 
 // collide with budda Action: set player pos, span coin,
 func (g *Game) buddaCollision() {
-	// Portal Player
-	g.Player.pos.x = screenWidth / 2
+	// Portal Player to new pos
+	g.Player.pos.x = screenWidth/2 + 20
 	g.Player.pos.y = screenHeight/2 + 60
 	// playSound
 	playSound(audioFx)
-	if g.Player.tomatoBasket > 0 {
+	// Check if player has Tomatos and have a big wallet for the coins
+	if g.Player.tomatoBasket > 0 && g.Player.coin < g.Player.wallet {
 		g.Player.tomatoBasket--
-		g.Player.coin++
+		g.Player.coin += 2
 		playSound(audioCoin)
 	}
-	if g.Player.wheatBasket > 0 {
+	if g.Player.wheatBasket > 0 && g.Player.coin < g.Player.wallet {
 		g.Player.wheatBasket--
-		g.Player.coin += 2
+		g.Player.coin += 1
 		playSound(audioCoin)
 	}
 	//	// change scene
@@ -509,8 +510,9 @@ func (g *Game) Update() error {
 	for i := range g.plants {
 		if g.Collision_Object_Caracter(*g.plants[i], *g.Player) {
 			if g.plants[i].pickable {
-				g.smokeSprite.active = true
 				// pick plant
+				playSound(audioFx)
+				g.smokeSprite.active = true
 				g.workers[i].coin = 0        // drop coint when plant are picked
 				g.plants[i].active = false   // active animation
 				g.plants[i].pickable = false // can be picked
@@ -1038,7 +1040,7 @@ func main() {
 			},
 			speed:  PlayerSpeed,
 			coin:   0,
-			wallet: 1,
+			wallet: 2,
 		},
 	}
 	g.Player.rectTop = Point{g.Player.pos.y + imgSize/4, g.Player.pos.y + imgSize/4}
