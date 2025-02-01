@@ -510,7 +510,7 @@ func (g *Game) Update() error {
 	//Player collide with []plants if active
 	for i := range g.plants {
 		if g.Collision_Object_Caracter(*g.plants[i], *g.Player) {
-			if g.plants[i].pickable && g.Player.tomatoBasket < g.Player.basketSize && g.Player.wheatBasket < g.Player.basketSize {
+			if g.plants[i].pickable && g.Player.tomatoBasket+g.Player.wheatBasket <= g.Player.basketSize {
 				// pick plant
 				playSound(audioFx)
 				g.smokeSprite.active = true
@@ -667,8 +667,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	/// Draw COIN at same pos as Game constructor g.coins.pos in main() ///
-	for i := 0; i < 2; i++ {
-		g.drawCoin(screen, g.coins[i].pos.x, g.coins[i].pos.y, *g.coins[i], i)
+	for i := 0; i < 10; i++ {
+		if i >= 2 {
+			g.coins[i].picked = true
+		}
+		if i < 2 {
+			g.drawCoin(screen, g.coins[i].pos.x, g.coins[i].pos.y, *g.coins[i], i)
+		}
 	}
 
 	/// Draw WORKERS ///
