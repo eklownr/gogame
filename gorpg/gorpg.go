@@ -658,7 +658,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		opt := &ebiten.DrawImageOptions{}
 		opt.GeoM.Translate(g.house[i].pos.x, g.house[i].pos.y) // house position x, y
 		screen.DrawImage(
-			g.village.SubImage(
+			g.house[i].img.SubImage(
 				g.house[i].rectPos,
 			).(*ebiten.Image),
 			opt,
@@ -1009,6 +1009,10 @@ func main() {
 	village, _, err := ebitenutil.NewImageFromFile("assets/images/village.png")
 	checkErr(err)
 
+	// load village house image
+	village_house, _, err := ebitenutil.NewImageFromFile("assets/images/TilesetHouse.png")
+	checkErr(err)
+
 	// load background image
 	bgImg, _, err := ebitenutil.NewImageFromFile("assets/images/grass.png")
 	checkErr(err)
@@ -1144,6 +1148,22 @@ func main() {
 			rectPos: image.Rect(houseTileSize*2+imgSize, imgSize, houseTileSize*2+imgSize*2, imgSize*2),
 		},
 		variety: "small_house",
+	})
+	g.house = append(g.house, &Objects{
+		Sprite: &Sprite{
+			img:     village_house,
+			pos:     Point{50, houseTileSize},
+			rectPos: image.Rect(0, 0, houseTileSize, imgSize),
+		},
+		variety: "house",
+	})
+	g.house = append(g.house, &Objects{
+		Sprite: &Sprite{
+			img:     village_house,
+			pos:     Point{screenWidth/2 + houseTileSize, screenHeight/2 + houseTileSize},
+			rectPos: image.Rect(0, imgSize, imgSize, imgSize*2),
+		},
+		variety: "budda",
 	})
 
 	// Add Images and tilemapJSON
