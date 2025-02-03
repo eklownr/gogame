@@ -1006,7 +1006,7 @@ func main() {
 	checkErr(err)
 
 	// load village image
-	village, _, err := ebitenutil.NewImageFromFile("assets/images/village.png")
+	old_village, _, err := ebitenutil.NewImageFromFile("assets/images/village.png")
 	checkErr(err)
 
 	// load village house image
@@ -1111,7 +1111,7 @@ func main() {
 	//	add house objects
 	g.house = append(g.house, &Objects{
 		Sprite: &Sprite{
-			img:     village,
+			img:     old_village,
 			pos:     Point{250, houseTileSize},
 			rectPos: image.Rect(0, 0, houseTileSize, imgSize),
 		},
@@ -1119,7 +1119,7 @@ func main() {
 	})
 	g.house = append(g.house, &Objects{
 		Sprite: &Sprite{
-			img:     village,
+			img:     old_village,
 			pos:     Point{100, 100},
 			rectPos: image.Rect(houseTileSize, 0, houseTileSize*2, imgSize),
 		},
@@ -1127,7 +1127,7 @@ func main() {
 	})
 	g.house = append(g.house, &Objects{
 		Sprite: &Sprite{
-			img:     village,
+			img:     old_village,
 			pos:     Point{screenWidth/2 + houseTileSize, screenHeight/2 + houseTileSize},
 			rectPos: image.Rect(0, imgSize, imgSize, imgSize*2),
 		},
@@ -1135,7 +1135,7 @@ func main() {
 	})
 	g.house = append(g.house, &Objects{
 		Sprite: &Sprite{
-			img:     village,
+			img:     old_village,
 			pos:     Point{400, imgSize},
 			rectPos: image.Rect(houseTileSize*2+imgSize, 0, houseTileSize*2+imgSize*2, imgSize),
 		},
@@ -1143,7 +1143,7 @@ func main() {
 	})
 	g.house = append(g.house, &Objects{
 		Sprite: &Sprite{
-			img:     village,
+			img:     old_village,
 			pos:     Point{500, imgSize},
 			rectPos: image.Rect(houseTileSize*2+imgSize, imgSize, houseTileSize*2+imgSize*2, imgSize*2),
 		},
@@ -1169,7 +1169,7 @@ func main() {
 	// Add Images and tilemapJSON
 	g.coinImg = coinImg
 	g.bgImg = bgImg
-	g.village = village
+	g.village = old_village
 	g.tilemapImg = tilemapImg
 	g.tilemapImgWater = tilemapImgWater
 	g.plantImg = plantImg
