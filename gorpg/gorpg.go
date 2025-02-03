@@ -907,7 +907,6 @@ func (g *Game) fullScreen() {
 // Q key for quit
 func (g *Game) quitGame() {
 	g.exitGame = true
-	//os.Exit(1)
 }
 
 // Escape-key to Pause the game
@@ -1215,5 +1214,7 @@ func playSound(sound []byte) {
 	stream, err := vorbis.DecodeWithSampleRate(SampleRate, bytes.NewReader(sound))
 	checkErr(err)
 	audioPlayer, _ := audio.CurrentContext().NewPlayer(stream)
+	// TEST add parameter to the func volume float 0.0 - 1.0
+	audioPlayer.SetVolume(0.3)
 	audioPlayer.Play()
 }
