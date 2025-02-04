@@ -505,9 +505,12 @@ func (g *Game) Update() error {
 	} else {
 		g.buddaAnimCounter = 0
 		g.house[6].active = false
+		g.house[7].active = false
+		g.house[8].active = false
+		g.house[9].active = false
 	}
 	if g.buddaAnimCounter < 0 {
-		g.budda_animation(*g.house[6])
+		g.budda_animation()
 	}
 	//Player collide with []house
 	for i := range g.house {
@@ -516,7 +519,7 @@ func (g *Game) Update() error {
 			g.smokeSprite.active = true
 			if g.house[i].variety == "budda" {
 				g.buddaCollision()
-				g.buddaAnimCounter = -35
+				g.buddaAnimCounter = -55
 			}
 		}
 	}
@@ -785,16 +788,20 @@ func (g *Game) smoke_animation() {
 		}
 	}
 }
-func (g *Game) budda_animation(budda Objects) {
+func (g *Game) budda_animation() {
+	g.house[9].active = false
 	if g.tick {
-		budda.active = true
+		g.house[6].active = true
 		if time.Since(g.lastUpdate) < gameSpeed/2 {
-			budda.active = false
+			g.house[6].active = false
+			g.house[7].active = true
 		}
 	} else {
-		budda.active = true
+		g.house[7].active = false
+		g.house[8].active = true
 		if time.Since(g.lastUpdate) < gameSpeed/2 {
-			budda.active = false
+			g.house[8].active = false
+			g.house[9].active = true
 		}
 	}
 }
@@ -1190,11 +1197,38 @@ func main() {
 		},
 		variety: "house",
 	})
-	g.house = append(g.house, &Objects{
+	g.house = append(g.house, &Objects{ // house[6] gray
 		Sprite: &Sprite{
 			img:     village_house,
 			pos:     Point{screenWidth/2 + houseTileSize, screenHeight/2 + houseTileSize},
 			rectPos: image.Rect(imgSize*2-15, imgSize*6+16, imgSize*3-32, imgSize*7),
+			active:  false,
+		},
+		variety: "budda",
+	})
+	g.house = append(g.house, &Objects{ // house[7] gray with pearl
+		Sprite: &Sprite{
+			img:     village_house,
+			pos:     Point{screenWidth/2 + houseTileSize, screenHeight/2 + houseTileSize},
+			rectPos: image.Rect(imgSize*1, imgSize*6+16, imgSize*2-16, imgSize*7),
+			active:  false,
+		},
+		variety: "budda",
+	})
+	g.house = append(g.house, &Objects{ // house[8] orange
+		Sprite: &Sprite{
+			img:     village_house,
+			pos:     Point{screenWidth/2 + houseTileSize, screenHeight/2 + houseTileSize},
+			rectPos: image.Rect(imgSize*2-16, imgSize*5, imgSize*2+16, imgSize*6-16),
+			active:  false,
+		},
+		variety: "budda",
+	})
+	g.house = append(g.house, &Objects{ // house[9] orange with pearl
+		Sprite: &Sprite{
+			img:     village_house,
+			pos:     Point{screenWidth/2 + houseTileSize, screenHeight/2 + houseTileSize},
+			rectPos: image.Rect(imgSize, imgSize*5, imgSize*2-16, imgSize*6-16),
 			active:  false,
 		},
 		variety: "budda",
