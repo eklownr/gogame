@@ -66,31 +66,32 @@ var (
 )
 
 type Game struct {
-	Player          *Characters
-	costomers       []*Characters
-	workers         []*Characters
-	coins           []*Objects
-	house           []*Objects
-	plants          []*Objects
-	lastUpdate      time.Time
-	tick            bool
-	fullWindow      bool
-	gameOver        bool
-	gamePause       bool
-	village         *ebiten.Image
-	bgImg           *ebiten.Image
-	tilemapImg      *ebiten.Image
-	tilemapImgWater *ebiten.Image
-	plantImg        *ebiten.Image
-	workImg         *ebiten.Image
-	workerIdleImg   *ebiten.Image
-	coinImg         *ebiten.Image
-	smokeSprite     Sprite
-	tilemapJSON1    *tilemaps.TilemapJSON
-	tilemapJSON2    *tilemaps.TilemapJSON
-	tilemapJSON3    *tilemaps.TilemapJSON
-	scene           int
-	exitGame        bool
+	Player           *Characters
+	costomers        []*Characters
+	workers          []*Characters
+	coins            []*Objects
+	house            []*Objects
+	plants           []*Objects
+	lastUpdate       time.Time
+	tick             bool
+	fullWindow       bool
+	gameOver         bool
+	gamePause        bool
+	village          *ebiten.Image
+	bgImg            *ebiten.Image
+	tilemapImg       *ebiten.Image
+	tilemapImgWater  *ebiten.Image
+	plantImg         *ebiten.Image
+	workImg          *ebiten.Image
+	workerIdleImg    *ebiten.Image
+	coinImg          *ebiten.Image
+	smokeSprite      Sprite
+	tilemapJSON1     *tilemaps.TilemapJSON
+	tilemapJSON2     *tilemaps.TilemapJSON
+	tilemapJSON3     *tilemaps.TilemapJSON
+	scene            int
+	exitGame         bool
+	buddaAnimCounter int
 }
 type Sprite struct {
 	img          *ebiten.Image
@@ -374,6 +375,9 @@ func (g *Game) buddaCollision() {
 		g.Player.coin += 1
 		playSound(audioCoin)
 	}
+	if g.buddaAnimCounter == 0 {
+	}
+
 	//	// change scene
 	//	if g.scene < 3 {
 	//		g.scene++
@@ -497,6 +501,13 @@ func (g *Game) Update() error {
 		}
 	}
 
+	// TEST set animation length for budda
+	if g.buddaAnimCounter < 10 {
+		g.buddaAnimCounter++
+	} else {
+		g.buddaAnimCounter = 0
+		g.budda_animation(*g.house[6])
+	}
 	//Player collide with []house
 	for i := range g.house {
 		if g.Collision_Object_Caracter(*g.house[i], *g.Player) {
@@ -655,15 +666,17 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	//	///////// draw all HOUSES big and small  ////////////
 	for i := range g.house {
-		opt := &ebiten.DrawImageOptions{}
-		opt.GeoM.Translate(g.house[i].pos.x, g.house[i].pos.y) // house position x, y
-		screen.DrawImage(
-			g.house[i].img.SubImage(
-				g.house[i].rectPos,
-			).(*ebiten.Image),
-			opt,
-		)
-		opt.GeoM.Reset()
+		if g.house[i].active {
+			opt := &ebiten.DrawImageOptions{}
+			opt.GeoM.Translate(g.house[i].pos.x, g.house[i].pos.y) // house position x, y
+			screen.DrawImage(
+				g.house[i].img.SubImage(
+					g.house[i].rectPos,
+				).(*ebiten.Image),
+				opt,
+			)
+			opt.GeoM.Reset()
+		}
 	}
 
 	/// Draw COIN at same pos as Game constructor g.coins.pos in main() ///
@@ -767,6 +780,19 @@ func (g *Game) smoke_animation() {
 		plant_anim = 32 * 3
 		if time.Since(g.lastUpdate) < gameSpeed/2 {
 			plant_anim = 32 * 4
+		}
+	}
+}
+func (g *Game) budda_animation(budda Objects) {
+	if g.tick {
+		budda.active = true
+		if time.Since(g.lastUpdate) < gameSpeed/2 {
+			budda.active = false
+		}
+	} else {
+		budda.active = true
+		if time.Since(g.lastUpdate) < gameSpeed/2 {
+			budda.active = false
 		}
 	}
 }
@@ -1113,6 +1139,7 @@ func main() {
 			img:     old_village,
 			pos:     Point{250, houseTileSize},
 			rectPos: image.Rect(0, 0, houseTileSize, imgSize),
+			active:  true,
 		},
 		variety: "house",
 	})
@@ -1121,6 +1148,7 @@ func main() {
 			img:     old_village,
 			pos:     Point{100, 100},
 			rectPos: image.Rect(houseTileSize, 0, houseTileSize*2, imgSize),
+			active:  true,
 		},
 		variety: "house",
 	})
@@ -1128,7 +1156,8 @@ func main() {
 		Sprite: &Sprite{
 			img:     old_village,
 			pos:     Point{screenWidth/2 + houseTileSize, screenHeight/2 + houseTileSize},
-			rectPos: image.Rect(0, imgSize, imgSize, imgSize*2),
+			rectPos: image.Rect(0, imgSize, imgSize-16, imgSize*2-16),
+			active:  true,
 		},
 		variety: "budda",
 	})
@@ -1137,6 +1166,7 @@ func main() {
 			img:     old_village,
 			pos:     Point{400, imgSize},
 			rectPos: image.Rect(houseTileSize*2+imgSize, 0, houseTileSize*2+imgSize*2, imgSize),
+			active:  true,
 		},
 		variety: "small_house",
 	})
@@ -1145,6 +1175,7 @@ func main() {
 			img:     old_village,
 			pos:     Point{500, imgSize},
 			rectPos: image.Rect(houseTileSize*2+imgSize, imgSize, houseTileSize*2+imgSize*2, imgSize*2),
+			active:  true,
 		},
 		variety: "small_house",
 	})
@@ -1153,6 +1184,7 @@ func main() {
 			img:     village_house,
 			pos:     Point{50, houseTileSize},
 			rectPos: image.Rect(0, 0, houseTileSize, imgSize),
+			active:  true,
 		},
 		variety: "house",
 	})
@@ -1160,7 +1192,8 @@ func main() {
 		Sprite: &Sprite{
 			img:     village_house,
 			pos:     Point{screenWidth/2 + houseTileSize, screenHeight/2 + houseTileSize},
-			rectPos: image.Rect(0, imgSize, imgSize, imgSize*2),
+			rectPos: image.Rect(imgSize*2-15, imgSize*6+16, imgSize*3-32, imgSize*7),
+			active:  false,
 		},
 		variety: "budda",
 	})
