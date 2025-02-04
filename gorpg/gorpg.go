@@ -92,6 +92,7 @@ type Game struct {
 	scene            int
 	exitGame         bool
 	buddaAnimCounter int
+	buddaLevel       uint16
 }
 type Sprite struct {
 	img          *ebiten.Image
@@ -504,10 +505,12 @@ func (g *Game) Update() error {
 		g.buddaAnimCounter++
 	} else {
 		g.buddaAnimCounter = 0
+		g.house[5].active = false
 		g.house[6].active = false
 		g.house[7].active = false
 		g.house[8].active = false
 		g.house[9].active = false
+		g.house[g.buddaLevel].active = true
 	}
 	if g.buddaAnimCounter < 0 {
 		g.budda_animation()
@@ -519,7 +522,7 @@ func (g *Game) Update() error {
 			g.smokeSprite.active = true
 			if g.house[i].variety == "budda" {
 				g.buddaCollision()
-				g.buddaAnimCounter = -55
+				g.buddaAnimCounter = -60
 			}
 		}
 	}
@@ -789,19 +792,19 @@ func (g *Game) smoke_animation() {
 	}
 }
 func (g *Game) budda_animation() {
-	g.house[9].active = false
+	g.house[7].active = false
 	if g.tick {
 		g.house[6].active = true
 		if time.Since(g.lastUpdate) < gameSpeed/2 {
 			g.house[6].active = false
-			g.house[7].active = true
+			g.house[9].active = true
 		}
 	} else {
-		g.house[7].active = false
+		g.house[9].active = false
 		g.house[8].active = true
 		if time.Since(g.lastUpdate) < gameSpeed/2 {
 			g.house[8].active = false
-			g.house[9].active = true
+			g.house[7].active = true
 		}
 	}
 }
@@ -1164,15 +1167,6 @@ func main() {
 	g.house = append(g.house, &Objects{
 		Sprite: &Sprite{
 			img:     old_village,
-			pos:     Point{screenWidth/2 + houseTileSize, screenHeight/2 + houseTileSize},
-			rectPos: image.Rect(0, imgSize, imgSize-16, imgSize*2-16),
-			active:  true,
-		},
-		variety: "budda",
-	})
-	g.house = append(g.house, &Objects{
-		Sprite: &Sprite{
-			img:     old_village,
 			pos:     Point{400, imgSize},
 			rectPos: image.Rect(houseTileSize*2+imgSize, 0, houseTileSize*2+imgSize*2, imgSize),
 			active:  true,
@@ -1196,6 +1190,15 @@ func main() {
 			active:  true,
 		},
 		variety: "house",
+	})
+	g.house = append(g.house, &Objects{ // house[5] old_budda
+		Sprite: &Sprite{
+			img:     old_village,
+			pos:     Point{screenWidth/2 + houseTileSize, screenHeight/2 + houseTileSize},
+			rectPos: image.Rect(0, imgSize, imgSize-16, imgSize*2-16),
+			active:  true,
+		},
+		variety: "budda",
 	})
 	g.house = append(g.house, &Objects{ // house[6] gray
 		Sprite: &Sprite{
@@ -1243,6 +1246,7 @@ func main() {
 	g.plantImg = plantImg
 	g.workImg = workImg
 	g.workerIdleImg = workerImg
+	g.buddaLevel = 8
 
 	g.smokeSprite = Sprite{
 		img:    smokeImg,
