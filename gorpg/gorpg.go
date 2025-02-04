@@ -375,8 +375,6 @@ func (g *Game) buddaCollision() {
 		g.Player.coin += 1
 		playSound(audioCoin)
 	}
-	if g.buddaAnimCounter == 0 {
-	}
 
 	//	// change scene
 	//	if g.scene < 3 {
@@ -502,10 +500,13 @@ func (g *Game) Update() error {
 	}
 
 	// TEST set animation length for budda
-	if g.buddaAnimCounter < 10 {
+	if g.buddaAnimCounter < 1 {
 		g.buddaAnimCounter++
 	} else {
 		g.buddaAnimCounter = 0
+		g.house[6].active = false
+	}
+	if g.buddaAnimCounter < 0 {
 		g.budda_animation(*g.house[6])
 	}
 	//Player collide with []house
@@ -515,6 +516,7 @@ func (g *Game) Update() error {
 			g.smokeSprite.active = true
 			if g.house[i].variety == "budda" {
 				g.buddaCollision()
+				g.buddaAnimCounter = -35
 			}
 		}
 	}
@@ -530,7 +532,7 @@ func (g *Game) Update() error {
 				g.plants[i].pickable = false // can be picked
 				g.plants[i].picked = true    // Is picked
 				g.plants[i].frame = 1        // set back to first anim-frame
-				g.plants[i].frameCounter = 0 // Zero counter
+				g.plants[i].frameCounter = 0 // counter back to zero
 				if g.plants[i].variety == tomato {
 					g.Player.tomatoBasket++
 				} else if g.plants[i].variety == wheat {
