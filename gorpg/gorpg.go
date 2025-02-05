@@ -714,7 +714,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	///// Draw all plants  if active ///
 	for i := range g.plants {
 		if g.plants[i].active {
-			g.drawPlanst(screen, g.plants[i].pos.x, g.plants[i].pos.y, g.plants[i].variety, g.plants[i].frame) // wheat and tomato
+			g.drawPlants(screen, g.plants[i].pos.x, g.plants[i].pos.y, g.plants[i].variety, g.plants[i].frame) // wheat and tomato
 		}
 	}
 
@@ -828,7 +828,7 @@ func (g *Game) drawSmoke(screen *ebiten.Image, x, y float64) {
 func (g *Game) plant_animation(frame int) {
 	plant_anim = 16 * frame
 }
-func (g *Game) drawPlanst(screen *ebiten.Image, x, y float64, variety string, frame int) {
+func (g *Game) drawPlants(screen *ebiten.Image, x, y float64, variety string, frame int) {
 	g.plant_animation(frame) // activate animation
 	option := &ebiten.DrawImageOptions{}
 	option.GeoM.Translate(x, y) // coin position x, y
