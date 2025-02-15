@@ -8,7 +8,10 @@ import (
 )
 
 // Game implements ebiten.Game interface.
-type Game struct{}
+type Game struct {
+	dices    []*ebiten.Image
+	quitGame bool
+}
 
 // Update proceeds the game state. 60Hz
 func (g *Game) Update() error {

@@ -66,33 +66,34 @@ var (
 )
 
 type Game struct {
-	Player           *Characters
-	costomers        []*Characters
-	workers          []*Characters
-	coins            []*Objects
-	house            []*Objects
-	plants           []*Objects
-	lastUpdate       time.Time
-	tick             bool
-	fullWindow       bool
-	gameOver         bool
-	gamePause        bool
-	village          *ebiten.Image
-	bgImg            *ebiten.Image
-	tilemapImg       *ebiten.Image
-	tilemapImgWater  *ebiten.Image
-	plantImg         *ebiten.Image
-	workImg          *ebiten.Image
-	workerIdleImg    *ebiten.Image
-	coinImg          *ebiten.Image
-	smokeSprite      Sprite
-	tilemapJSON1     *tilemaps.TilemapJSON
-	tilemapJSON2     *tilemaps.TilemapJSON
-	tilemapJSON3     *tilemaps.TilemapJSON
-	scene            int
-	exitGame         bool
-	buddaAnimCounter int
-	buddaLevel       uint16
+	Player            *Characters
+	costomers         []*Characters
+	workers           []*Characters
+	coins             []*Objects
+	house             []*Objects
+	plants            []*Objects
+	buddaSpawnItems   []*Objects
+	lastUpdate        time.Time
+	tick              bool
+	fullWindow        bool
+	gameOver          bool
+	gamePause         bool
+	village           *ebiten.Image
+	bgImg             *ebiten.Image
+	tilemapImg        *ebiten.Image
+	tilemapImgWater   *ebiten.Image
+	plantImg          *ebiten.Image
+	workImg           *ebiten.Image
+	workerIdleImg     *ebiten.Image
+	coinImg           *ebiten.Image
+	smokeSprite       Sprite
+	tilemapJSON1      *tilemaps.TilemapJSON
+	tilemapJSON2      *tilemaps.TilemapJSON
+	tilemapJSON3      *tilemaps.TilemapJSON
+	scene             int
+	exitGame          bool
+	buddaAnimCounter  int
+	buddaSpawnCounter int
 }
 type Sprite struct {
 	img          *ebiten.Image
@@ -358,7 +359,7 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	return false
 }
 
-// collide with budda Action: set player pos, span coin,
+// collide with budda Action: set player pos, span workers and Items,
 func (g *Game) buddaCollision() {
 	// Portal Player to new pos
 	g.Player.pos.x = screenWidth/2 + 20
@@ -370,12 +371,48 @@ func (g *Game) buddaCollision() {
 		g.Player.tomatoBasket--
 		g.Player.coin += 2
 		playSound(audioCoin)
+		g.buddaSpawnCounter++ // count upp level
 	}
 	if g.Player.wheatBasket > 0 && g.Player.coin < g.Player.wallet {
 		g.Player.wheatBasket--
 		g.Player.coin += 1
 		playSound(audioCoin)
+		g.buddaSpawnCounter++ // count upp level
 	}
+	if g.buddaSpawnCounter > 3 {
+		// add action: spawn workers
+		g.workers[2].active = true
+		if g.buddaSpawnCounter > 4 {
+			g.workers[3].active = true
+		}
+		if g.buddaSpawnCounter > 5 {
+			g.workers[4].active = true
+		}
+		if g.buddaSpawnCounter > 6 {
+			g.workers[5].active = true
+		}
+		if g.buddaSpawnCounter > 7 {
+			g.workers[6].active = true
+		}
+		if g.buddaSpawnCounter > 8 {
+			g.workers[7].active = true
+		}
+		if g.buddaSpawnCounter > 9 {
+			g.workers[8].active = true
+		}
+		if g.buddaSpawnCounter > 10 {
+			g.scene = 1 // level 2, scene 0 to 1
+			g.workers[9].active = true
+			for i := range g.house {
+				g.house[i].active = false
+				if g.house[i].variety == "new_house" || g.house[i].variety == "new_house_small" {
+					g.house[i].active = true
+				}
+			}
+		}
+	}
+	g.workers[0].active = true // activate 2 workers at start
+	g.workers[1].active = true
 
 	//	// change scene
 	//	if g.scene < 3 {
@@ -486,7 +523,7 @@ func (g *Game) Update() error {
 	//Player collide with []workers
 	for i := range g.workers {
 		if g.Collision_Character_Character(*g.workers[i], *g.Player) {
-			if g.Player.coin > 0 {
+			if g.Player.coin > 0 && g.workers[i].active { // have coin and worker is active
 				if g.workers[i].coin < 1 { // take only one coin
 					g.workers[i].coin++
 					g.Player.coin--
@@ -510,12 +547,17 @@ func (g *Game) Update() error {
 		g.house[7].active = false
 		g.house[8].active = false
 		g.house[9].active = false
-		g.house[g.buddaLevel].active = true
+	}
+	if g.scene == 0 {
+		g.house[5].active = true // old_budda_image
+	}
+	if g.scene == 1 {
+		g.house[9].active = true // gold_budda_image/
 	}
 	if g.buddaAnimCounter < 0 {
 		g.budda_animation()
 	}
-	//Player collide with []house
+	//Player collide with []house or house.budda
 	for i := range g.house {
 		if g.Collision_Object_Caracter(*g.house[i], *g.Player) {
 			g.Player.pos = g.Player.prePos
@@ -697,12 +739,14 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	}
 
-	/// Draw WORKERS ///
+	/// Draw WORKERS /// if active. buddaSpawnLevel diside if active
 	for i := range g.workers {
 		// draw coin carring on workers head
 		g.carry_objects(screen, g.workers[i].pos.x, g.workers[i].pos.y, g.workers[i].coin, g.coinImg)
 		// draw all workers
-		g.drawWorker(screen, g.workers[i].pos.x, g.workers[i].pos.y, i)
+		if g.workers[i].active {
+			g.drawWorker(screen, g.workers[i].pos.x, g.workers[i].pos.y, i)
+		}
 	}
 
 	///////// draw COIN and PLANTS player caring on the head. SubImg 0,0,10,10 /////////
@@ -1043,11 +1087,11 @@ func main() {
 	checkErr(err)
 
 	// load village image
-	old_village, _, err := ebitenutil.NewImageFromFile("assets/images/village.png")
+	old_village, _, err := ebitenutil.NewImageFromFile("assets/images/village_old.png")
 	checkErr(err)
 
 	// load village house image
-	village_house, _, err := ebitenutil.NewImageFromFile("assets/images/TilesetHouse.png")
+	new_village, _, err := ebitenutil.NewImageFromFile("assets/images/TilesetHouse.png")
 	checkErr(err)
 
 	// load background image
@@ -1110,6 +1154,7 @@ func main() {
 		g.workers[i].rectTop = Point{0, 0}
 		g.workers[i].rectBot = Point{imgSize, imgSize}
 		g.workers[i].dest = Point{200 + (float64(i) * 30), 90}
+		g.workers[i].active = false // start with inactive workers. buddaSpawn activate workers
 	}
 
 	// add 10 coins
@@ -1123,7 +1168,7 @@ func main() {
 			variety: "coin",
 		})
 	}
-	// add 10 plants: 5 wheat and 5 tomato
+	// add 5 wheat and 5 tomato. Even plant[0,2,4,...]=wheat, odd plant[1,...]=tomato
 	for i := 0; i < 5; i++ {
 		g.plants = append(g.plants, &Objects{
 			Sprite: &Sprite{
@@ -1145,8 +1190,8 @@ func main() {
 			variety: "tomato",
 		})
 	}
-	//	add house objects
-	g.house = append(g.house, &Objects{
+	//	add house objects 0
+	g.house = append(g.house, &Objects{ // old house with roof
 		Sprite: &Sprite{
 			img:     old_village,
 			pos:     Point{250, houseTileSize},
@@ -1155,7 +1200,7 @@ func main() {
 		},
 		variety: "house",
 	})
-	g.house = append(g.house, &Objects{
+	g.house = append(g.house, &Objects{ // old house without roof 1
 		Sprite: &Sprite{
 			img:     old_village,
 			pos:     Point{100, 100},
@@ -1164,7 +1209,7 @@ func main() {
 		},
 		variety: "house",
 	})
-	g.house = append(g.house, &Objects{
+	g.house = append(g.house, &Objects{ // 2
 		Sprite: &Sprite{
 			img:     old_village,
 			pos:     Point{400, imgSize},
@@ -1173,7 +1218,7 @@ func main() {
 		},
 		variety: "small_house",
 	})
-	g.house = append(g.house, &Objects{
+	g.house = append(g.house, &Objects{ // 3
 		Sprite: &Sprite{
 			img:     old_village,
 			pos:     Point{500, imgSize},
@@ -1182,16 +1227,18 @@ func main() {
 		},
 		variety: "small_house",
 	})
-	g.house = append(g.house, &Objects{
+	////// NEW house //// 4
+	g.house = append(g.house, &Objects{ // New house with roof
 		Sprite: &Sprite{
-			img:     village_house,
-			pos:     Point{50, houseTileSize},
+			img:     new_village,
+			pos:     Point{250, houseTileSize},
 			rectPos: image.Rect(0, 0, houseTileSize, imgSize),
-			active:  true,
+			active:  false,
 		},
-		variety: "house",
+		variety: "new_house",
 	})
-	g.house = append(g.house, &Objects{ // house[5] old_budda
+
+	g.house = append(g.house, &Objects{ // house[5] old_budda //5
 		Sprite: &Sprite{
 			img:     old_village,
 			pos:     Point{screenWidth/2 + houseTileSize, screenHeight/2 + houseTileSize},
@@ -1202,7 +1249,7 @@ func main() {
 	})
 	g.house = append(g.house, &Objects{ // house[6] gray
 		Sprite: &Sprite{
-			img:     village_house,
+			img:     new_village,
 			pos:     Point{screenWidth/2 + houseTileSize, screenHeight/2 + houseTileSize},
 			rectPos: image.Rect(imgSize*2-15, imgSize*6+16, imgSize*3-32, imgSize*7),
 			active:  false,
@@ -1211,7 +1258,7 @@ func main() {
 	})
 	g.house = append(g.house, &Objects{ // house[7] gray with pearl
 		Sprite: &Sprite{
-			img:     village_house,
+			img:     new_village,
 			pos:     Point{screenWidth/2 + houseTileSize, screenHeight/2 + houseTileSize},
 			rectPos: image.Rect(imgSize*1, imgSize*6+16, imgSize*2-16, imgSize*7),
 			active:  false,
@@ -1220,7 +1267,7 @@ func main() {
 	})
 	g.house = append(g.house, &Objects{ // house[8] orange
 		Sprite: &Sprite{
-			img:     village_house,
+			img:     new_village,
 			pos:     Point{screenWidth/2 + houseTileSize, screenHeight/2 + houseTileSize},
 			rectPos: image.Rect(imgSize*2-16, imgSize*5, imgSize*2+16, imgSize*6-16),
 			active:  false,
@@ -1229,12 +1276,54 @@ func main() {
 	})
 	g.house = append(g.house, &Objects{ // house[9] orange with pearl
 		Sprite: &Sprite{
-			img:     village_house,
+			img:     new_village,
 			pos:     Point{screenWidth/2 + houseTileSize, screenHeight/2 + houseTileSize},
 			rectPos: image.Rect(imgSize, imgSize*5, imgSize*2-16, imgSize*6-16),
 			active:  false,
 		},
 		variety: "budda",
+	})
+
+	//	add buddaSpawnItems objects
+	g.buddaSpawnItems = append(g.buddaSpawnItems, &Objects{
+		Sprite: &Sprite{
+			img:     new_village,
+			pos:     Point{screenWidth/2 - 40.0, screenHeight/2 - 40.0},
+			rectPos: image.Rect(imgSize, imgSize*5, imgSize*2-16, imgSize*6-16),
+			active:  true,
+		},
+		variety: "new_house",
+	})
+
+	// NEW house, for Lever 2
+	g.house = append(g.house, &Objects{ // New house without roof
+		Sprite: &Sprite{
+			img:     new_village,
+			pos:     Point{100, 100},
+			rectPos: image.Rect(houseTileSize, 0, houseTileSize*2, imgSize),
+			active:  false,
+		},
+		variety: "new_house",
+	})
+	// NEW house, for Lever 2
+	g.house = append(g.house, &Objects{ // New small_house without roof
+		Sprite: &Sprite{
+			img:     new_village,
+			pos:     Point{400, imgSize},
+			rectPos: image.Rect(houseTileSize*5-16, imgSize*6+16, houseTileSize*5+imgSize-16, imgSize*6+imgSize+16),
+			active:  false,
+		},
+		variety: "new_house_small",
+	})
+	// NEW house, for Lever 2
+	g.house = append(g.house, &Objects{ // New small_house without roof
+		Sprite: &Sprite{
+			img:     new_village,
+			pos:     Point{500, imgSize},
+			rectPos: image.Rect(houseTileSize*5-16, imgSize*6+16, houseTileSize*5+imgSize-16, imgSize*6+imgSize+16),
+			active:  false,
+		},
+		variety: "new_house_small",
 	})
 
 	// Add Images and tilemapJSON
@@ -1246,7 +1335,6 @@ func main() {
 	g.plantImg = plantImg
 	g.workImg = workImg
 	g.workerIdleImg = workerImg
-	g.buddaLevel = 8
 
 	g.smokeSprite = Sprite{
 		img:    smokeImg,
@@ -1258,7 +1346,7 @@ func main() {
 	g.tilemapJSON2 = tilemapJSON2
 	g.tilemapJSON3 = tilemapJSON3
 
-	g.scene = 1
+	g.scene = 0 // scene or level, 4 different backgrounds
 
 	////// play background music //////
 	_ = audio.NewContext(SampleRate)
