@@ -1354,15 +1354,24 @@ func main() {
 	checkErr(err)
 
 	// infinite loop Bg music
-	audioPlayer, _ := audio.CurrentContext().NewPlayer(
+	audioPlayer, err := audio.CurrentContext().NewPlayer(
 		audio.NewInfiniteLoop(stream,
 			int64(len(audioBG)*6*SampleRate)))
+	checkErr(err)
 
 	//audioPlayer, _ := audio.CurrentContext().NewPlayer(stream)
 	// you pass the audio player to your game struct, and just call
 	audioPlayer.SetVolume(0.3)
 	audioPlayer.Play() //when you want your music to start, and
 	// audioPlayer.Pause()
+
+	//	// chose audio file to on scene 0-1
+	//	if g.scene == 1 {
+	//		playSound(audioVillage)
+	//	}
+	//	if g.scene == 0 {
+	//		playSound(audioBG)
+	//	}
 
 	// Start game
 	if err := ebiten.RunGame(g); err != nil {
