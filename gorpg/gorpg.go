@@ -1122,7 +1122,7 @@ func main() {
 	smokeImg, _, err := ebitenutil.NewImageFromFile("assets/images/smoke.png")
 	checkErr(err)
 
-	// Game constructor
+	// Game constructor. add Player
 	g := &Game{
 		Player: &Characters{
 			Sprite: &Sprite{
@@ -1191,7 +1191,7 @@ func main() {
 		})
 	}
 	//	add house objects 0
-	g.house = append(g.house, &Objects{ // old house with roof
+	g.house = append(g.house, &Objects{ // house[0]old house with roof
 		Sprite: &Sprite{
 			img:     old_village,
 			pos:     Point{250, houseTileSize},
@@ -1200,7 +1200,7 @@ func main() {
 		},
 		variety: "house",
 	})
-	g.house = append(g.house, &Objects{ // old house without roof 1
+	g.house = append(g.house, &Objects{ // house[1]old house without roof
 		Sprite: &Sprite{
 			img:     old_village,
 			pos:     Point{100, 100},
@@ -1209,7 +1209,7 @@ func main() {
 		},
 		variety: "house",
 	})
-	g.house = append(g.house, &Objects{ // 2
+	g.house = append(g.house, &Objects{ // house[2]
 		Sprite: &Sprite{
 			img:     old_village,
 			pos:     Point{400, imgSize},
@@ -1218,7 +1218,7 @@ func main() {
 		},
 		variety: "small_house",
 	})
-	g.house = append(g.house, &Objects{ // 3
+	g.house = append(g.house, &Objects{ // house[3]
 		Sprite: &Sprite{
 			img:     old_village,
 			pos:     Point{500, imgSize},
@@ -1228,7 +1228,7 @@ func main() {
 		variety: "small_house",
 	})
 	////// NEW house //// 4
-	g.house = append(g.house, &Objects{ // New house with roof
+	g.house = append(g.house, &Objects{ // house[4]New house with roof
 		Sprite: &Sprite{
 			img:     new_village,
 			pos:     Point{250, houseTileSize},
