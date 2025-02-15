@@ -67,7 +67,6 @@ var (
 
 type Game struct {
 	Player            *Characters
-	costomers         []*Characters
 	workers           []*Characters
 	coins             []*Objects
 	house             []*Objects
@@ -76,7 +75,6 @@ type Game struct {
 	lastUpdate        time.Time
 	tick              bool
 	fullWindow        bool
-	gameOver          bool
 	gamePause         bool
 	village           *ebiten.Image
 	bgImg             *ebiten.Image
@@ -256,7 +254,7 @@ func (g *Game) dirRight() {
 // check collision character with charakter: Player-worker
 func (g *Game) Collision_Character_Character(obj Characters, char Characters) bool {
 	// Player....
-	charakter_position := image.Rect(
+	character_position := image.Rect(
 		int(char.pos.x+imgSize/4),
 		int(char.pos.y+imgSize/4),
 		int(char.pos.x+imgSize/2),
@@ -269,10 +267,7 @@ func (g *Game) Collision_Character_Character(obj Characters, char Characters) bo
 		int(obj.pos.x+imgSize/2),
 		int(obj.pos.y+imgSize/2))
 
-	if object_position.Overlaps(charakter_position) {
-		return true
-	}
-	return false
+	return object_position.Overlaps(character_position)
 }
 
 // check collision char-obj: worker-plant
@@ -348,7 +343,7 @@ func (g *Game) Collision_Object_Caracter(obj Objects, char Characters) bool {
 	return false
 }
 
-// TEST check buildings collision: Point-Point
+// TEST colllision point - point
 func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	if p1.x >= p2.x-imgSize &&
 		p1.x <= p2.x+imgSize &&
