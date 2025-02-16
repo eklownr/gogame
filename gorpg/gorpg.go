@@ -1030,10 +1030,7 @@ func (g *Game) menu(screen *ebiten.Image) {
 	}
 	button := widget.NewButton(
 		// specify the images to use
-		widget.ButtonOpts.Image(g.addBottonImg),
-
-		//Test
-		//face := widget.TextOpts.TextFace(face)
+		//widget.ButtonOpts.Image(g.addBottonImg),
 
 		// specify the button's text, the font face, and the color
 		widget.ButtonOpts.Text("Hello, World!", fontFace, &widget.ButtonTextColor{
@@ -1046,8 +1043,8 @@ func (g *Game) menu(screen *ebiten.Image) {
 			Right: 30,
 		}),
 		// ... click handler, etc. ...
-
 	)
+	button.Update()
 }
 
 func addText(screen *ebiten.Image, textSize int, t string, color color.Color, width, height float64) {
@@ -1149,9 +1146,9 @@ func main() {
 	plantImg, _, err := ebitenutil.NewImageFromFile("assets/images/plants.png")
 	checkErr(err)
 
-	// load add-button image
-	addButton, _, err := ebitenutil.NewImageFromFile("assets/images/add-button64.png")
-	checkErr(err)
+	// 	// load add-button image
+	// 	addButton, _, err := ebitenutil.NewImageFromFile("assets/images/add-button64.png")
+	// 	checkErr(err)
 
 	// load smoke image
 	smokeImg, _, err := ebitenutil.NewImageFromFile("assets/images/smoke.png")
@@ -1371,8 +1368,7 @@ func main() {
 	g.workImg = workImg
 	g.workerIdleImg = workerImg
 	// Convert ebiten.Image to widget.NineSlice
-	idleNineSlice := widget.ButtonImage(addButton)
-	g.addBottonImg = idleNineSlice
+	//g.addBottonImg = addBottonImg
 
 	g.smokeSprite = Sprite{
 		img:    smokeImg,
