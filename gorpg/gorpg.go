@@ -11,6 +11,7 @@ import (
 
 	"time"
 
+	"github.com/ebitenui/ebitenui/widget"
 	"github.com/hajimehoshi/ebiten/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
@@ -19,6 +20,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"golang.org/x/image/font/gofont/goregular"
 )
 
 const (
@@ -84,6 +86,7 @@ type Game struct {
 	workImg           *ebiten.Image
 	workerIdleImg     *ebiten.Image
 	coinImg           *ebiten.Image
+	addBottonImg      *widget.ButtonImage
 	smokeSprite       Sprite
 	tilemapJSON1      *tilemaps.TilemapJSON
 	tilemapJSON2      *tilemaps.TilemapJSON
@@ -1015,12 +1018,25 @@ func (g *Game) pause(screen *ebiten.Image) {
 }
 
 func (g *Game) menu(screen *ebiten.Image) {
+
+	s, err := text.NewGoTextFaceSource(bytes.NewReader(goregular.TTF))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fontFace := &text.GoTextFace{
+		Source: s,
+		Size:   32,
+	}
 	button := widget.NewButton(
 		// specify the images to use
-		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Image(g.addBottonImg),
+
+		//Test
+		//face := widget.TextOpts.TextFace(face)
 
 		// specify the button's text, the font face, and the color
-		widget.ButtonOpts.Text("Hello, World!", face, &widget.ButtonTextColor{
+		widget.ButtonOpts.Text("Hello, World!", fontFace, &widget.ButtonTextColor{
 			Idle: color.RGBA{0xdf, 0xf4, 0xff, 0xff},
 		}),
 
@@ -1029,8 +1045,8 @@ func (g *Game) menu(screen *ebiten.Image) {
 			Left:  30,
 			Right: 30,
 		}),
-
 		// ... click handler, etc. ...
+
 	)
 }
 
@@ -1129,8 +1145,12 @@ func main() {
 	coinImg, _, err := ebitenutil.NewImageFromFile("assets/images/coin2.png")
 	checkErr(err)
 
-	// load coin image
+	// load plants image
 	plantImg, _, err := ebitenutil.NewImageFromFile("assets/images/plants.png")
+	checkErr(err)
+
+	// load add-button image
+	addButton, _, err := ebitenutil.NewImageFromFile("assets/images/add-button64.png")
 	checkErr(err)
 
 	// load smoke image
@@ -1350,6 +1370,9 @@ func main() {
 	g.plantImg = plantImg
 	g.workImg = workImg
 	g.workerIdleImg = workerImg
+	// Convert ebiten.Image to widget.NineSlice
+	idleNineSlice := widget.ButtonImage(addButton)
+	g.addBottonImg = idleNineSlice
 
 	g.smokeSprite = Sprite{
 		img:    smokeImg,
