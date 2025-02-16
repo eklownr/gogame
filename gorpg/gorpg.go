@@ -1014,6 +1014,26 @@ func (g *Game) pause(screen *ebiten.Image) {
 	addText(screen, 20, "*********************", green, screenWidth, screenHeight/3+500)
 }
 
+func (g *Game) menu(screen *ebiten.Image) {
+	button := widget.NewButton(
+		// specify the images to use
+		widget.ButtonOpts.Image(buttonImage),
+
+		// specify the button's text, the font face, and the color
+		widget.ButtonOpts.Text("Hello, World!", face, &widget.ButtonTextColor{
+			Idle: color.RGBA{0xdf, 0xf4, 0xff, 0xff},
+		}),
+
+		// specify that the button's text needs some padding for correct display
+		widget.ButtonOpts.TextPadding(widget.Insets{
+			Left:  30,
+			Right: 30,
+		}),
+
+		// ... click handler, etc. ...
+	)
+}
+
 func addText(screen *ebiten.Image, textSize int, t string, color color.Color, width, height float64) {
 	face := &text.GoTextFace{
 		Source: mplusFaceSource,
