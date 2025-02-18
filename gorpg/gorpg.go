@@ -828,6 +828,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	}
 
+	// draw infoBox
+	g.drawSprite(screen, g.infoBoxSpite.img, g.infoBoxSpite.pos.x, g.infoBoxSpite.pos.y)
+
 	// if active
 	g.drawSmoke(screen, g.Player.pos.x, g.Player.pos.y)
 
@@ -983,20 +986,16 @@ func (g *Game) drawSmoke(screen *ebiten.Image, x, y float64) {
 }
 
 // draw sprite at x,y pos
-func (g *Game) drawSprite(screen *ebiten.Image, x, y float64, sprite Sprite) {
-	if g.smokeSprite.active {
-		//g.smoke_animation()
-		option := &ebiten.DrawImageOptions{}
-		option.GeoM.Translate(x, y) // position x, y
-		screen.DrawImage(
-			sprite.img.SubImage(
-				image.Rect(0, 0, 32, 32),
-			).(*ebiten.Image),
-			option,
-		)
-		option.GeoM.Reset()
-		//g.smokeSprite.active = false
-	}
+func (g *Game) drawSprite(screen, img *ebiten.Image, x, y float64) {
+	option := &ebiten.DrawImageOptions{}
+	option.GeoM.Translate(x, y) // position x, y
+	screen.DrawImage(
+		img.SubImage(
+			image.Rect(0, 0, 400, 64),
+		).(*ebiten.Image),
+		option,
+	)
+	option.GeoM.Reset()
 }
 
 // TEST plants animation
@@ -1301,7 +1300,8 @@ func main() {
 		Player: &Characters{
 			Sprite: &Sprite{
 				img: playerImg,
-				pos: Point{screenWidth/2 - (imgSize / 2), screenHeight/2 - (imgSize / 2)},
+				pos: Point{305, 305},
+				//pos: Point{screenWidth/2 - (imgSize / 2), screenHeight/2 - (imgSize / 2)},
 			},
 			speed:      PlayerSpeed,
 			coin:       0,
@@ -1522,11 +1522,14 @@ func main() {
 	g.coinImg = coinImg
 	g.chickenImg = chickenImg
 
+	// info box background
 	g.infoBoxSpite = &Sprite{
-		img: infoBoxImg,
-		pos: Point{500, 400},
+		img:    infoBoxImg,
+		pos:    Point{300, 300},
+		active: true,
 	}
 
+	// smoke sprite
 	g.smokeSprite = &Sprite{
 		img:    smokeImg,
 		pos:    Point{50, 50},
