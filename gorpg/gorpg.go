@@ -90,8 +90,9 @@ type Game struct {
 	workerIdleImg     *ebiten.Image
 	coinImg           *ebiten.Image
 	chickenImg        *ebiten.Image
+	infoBoxSpite      *Sprite
 	addBottonImg      *widget.ButtonImage
-	smokeSprite       Sprite
+	smokeSprite       *Sprite
 	tilemapJSON1      *tilemaps.TilemapJSON
 	tilemapJSON2      *tilemaps.TilemapJSON
 	tilemapJSON3      *tilemaps.TilemapJSON
@@ -690,7 +691,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.pause(screen)
 		return
 	}
-
 	// 4 different sceens
 	op := &ebiten.DrawImageOptions{}
 	if g.scene == 0 {
@@ -982,6 +982,23 @@ func (g *Game) drawSmoke(screen *ebiten.Image, x, y float64) {
 	}
 }
 
+// draw sprite at x,y pos
+func (g *Game) drawSprite(screen *ebiten.Image, x, y float64, sprite Sprite) {
+	if g.smokeSprite.active {
+		//g.smoke_animation()
+		option := &ebiten.DrawImageOptions{}
+		option.GeoM.Translate(x, y) // position x, y
+		screen.DrawImage(
+			sprite.img.SubImage(
+				image.Rect(0, 0, 32, 32),
+			).(*ebiten.Image),
+			option,
+		)
+		option.GeoM.Reset()
+		//g.smokeSprite.active = false
+	}
+}
+
 // TEST plants animation
 func (g *Game) plant_animation(frame int) {
 	plant_anim = 16 * frame
@@ -1263,6 +1280,10 @@ func main() {
 	chickenImg, _, err := ebitenutil.NewImageFromFile("assets/images/chicken.png")
 	checkErr(err)
 
+	// load chicken image
+	infoBoxImg, _, err := ebitenutil.NewImageFromFile("assets/images/InfoBox.png")
+	checkErr(err)
+
 	// load plants image
 	plantImg, _, err := ebitenutil.NewImageFromFile("assets/images/plants.png")
 	checkErr(err)
@@ -1500,10 +1521,13 @@ func main() {
 	g.workerIdleImg = workerImg
 	g.coinImg = coinImg
 	g.chickenImg = chickenImg
-	// Convert ebiten.Image to widget.NineSlice
-	//g.addBottonImg = addBottonImg
 
-	g.smokeSprite = Sprite{
+	g.infoBoxSpite = &Sprite{
+		img: infoBoxImg,
+		pos: Point{500, 400},
+	}
+
+	g.smokeSprite = &Sprite{
 		img:    smokeImg,
 		pos:    Point{50, 50},
 		active: false,
