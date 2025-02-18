@@ -65,12 +65,14 @@ var (
 	mplusFaceSource *text.GoTextFaceSource
 	coin_anim       = 0
 	plant_anim      = 0
+	chicken_anim    = 0
 )
 
 type Game struct {
 	Player            *Characters
 	workers           []*Characters
 	coins             []*Objects
+	chickens          []*Objects
 	house             []*Objects
 	plants            []*Objects
 	buddaSpawnItems   []*Objects
@@ -86,6 +88,7 @@ type Game struct {
 	workImg           *ebiten.Image
 	workerIdleImg     *ebiten.Image
 	coinImg           *ebiten.Image
+	chickenImg        *ebiten.Image
 	addBottonImg      *widget.ButtonImage
 	smokeSprite       Sprite
 	tilemapJSON1      *tilemaps.TilemapJSON
@@ -594,10 +597,10 @@ func (g *Game) Update() error {
 				g.Player.coin++
 				playSound(audioCoin)
 				g.coins[i].picked = true
-				g.coins[i].pos = Point{
-					x: -100,
-					y: -100,
-				}
+				//				g.coins[i].pos = Point{
+				//					x: -100,
+				//					y: -100,
+				//				}
 			}
 		}
 	}
@@ -833,6 +836,36 @@ func (g *Game) smoke_animation() {
 		}
 	}
 }
+
+// 4 frames to animate. tileSize = image size 64*64 or 16*16 ...
+func (g *Game) animation(frame, tileSize int) int {
+	if g.tick {
+		frame = tileSize
+		if time.Since(g.lastUpdate) < gameSpeed/2 {
+			frame = tileSize * 2
+		}
+	} else {
+		frame = tileSize * 3
+		if time.Since(g.lastUpdate) < gameSpeed/2 {
+			frame = tileSize * 4
+		}
+	}
+	return frame
+}
+
+func (g *Game) drawChicken(screen *ebiten.Image, x, y float64, frame int) {
+	g.animation(0, 64)
+	option := &ebiten.DrawImageOptions{}
+	option.GeoM.Translate(x, y) // position x, y
+	screen.DrawImage(
+		g.chickens.img.SubImage(
+			image.Rect(frame, 0, frame+32, 32),
+		).(*ebiten.Image),
+		option,
+	)
+	option.GeoM.Reset()
+	g.smokeSprite.active = false
+}
 func (g *Game) budda_animation() {
 	g.house[7].active = false
 	if g.tick {
@@ -873,7 +906,7 @@ func (g *Game) plant_animation(frame int) {
 func (g *Game) drawPlants(screen *ebiten.Image, x, y float64, variety string, frame int) {
 	g.plant_animation(frame) // activate animation
 	option := &ebiten.DrawImageOptions{}
-	option.GeoM.Translate(x, y) // coin position x, y
+	option.GeoM.Translate(x, y) // position x, y
 	if variety == "wheat" {
 		screen.DrawImage(
 			g.plantImg.SubImage(
@@ -1017,7 +1050,8 @@ func (g *Game) pause(screen *ebiten.Image) {
 	addText(screen, 20, "*********************", green, screenWidth, screenHeight/3+500)
 }
 
-func (g *Game) menu(screen *ebiten.Image) {
+// TEST add button
+func (g *Game) menu() {
 
 	s, err := text.NewGoTextFaceSource(bytes.NewReader(goregular.TTF))
 	if err != nil {
@@ -1087,7 +1121,7 @@ func checkErr(err error) {
 func main() {
 	// Window properties
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
-	ebiten.SetWindowTitle("Gopher Mart")
+	ebiten.SetWindowTitle("Gopher Land")
 
 	// Text, font
 	textsource, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
@@ -1140,6 +1174,10 @@ func main() {
 
 	// load coin image
 	coinImg, _, err := ebitenutil.NewImageFromFile("assets/images/coin2.png")
+	checkErr(err)
+
+	// load chicken image
+	chickenImg, _, err := ebitenutil.NewImageFromFile("assets/images/chicken.png")
 	checkErr(err)
 
 	// load plants image
@@ -1359,7 +1397,6 @@ func main() {
 	})
 
 	// Add Images and tilemapJSON
-	g.coinImg = coinImg
 	g.bgImg = bgImg
 	g.village = old_village
 	g.tilemapImg = tilemapImg
@@ -1367,6 +1404,8 @@ func main() {
 	g.plantImg = plantImg
 	g.workImg = workImg
 	g.workerIdleImg = workerImg
+	g.coinImg = coinImg
+	g.chickenImg = chickenImg
 	// Convert ebiten.Image to widget.NineSlice
 	//g.addBottonImg = addBottonImg
 
