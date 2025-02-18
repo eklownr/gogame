@@ -530,6 +530,7 @@ func (g *Game) Update() error {
 	for _, chicken := range g.chickens {
 		chicken.frame = g.fourTickAnim(chicken.frame)
 		g.moveObjToDest(chicken)
+		// if chicken reached dest, set new dest
 		if g.checkCollision(chicken.pos, chicken.dest) {
 			chicken.dest = randomPoint()
 		}
