@@ -447,7 +447,7 @@ func (g *Game) moveCharacters(c *Characters) {
 
 // check Animation tick every 60 FPS
 func (g *Game) plantFrameAnim(plant *Objects) {
-	var speed = 120
+	var speed = 120 // wait two sec to next interation
 	if plant.frameCounter < speed*5 {
 		plant.frameCounter++
 	}
@@ -465,6 +465,24 @@ func (g *Game) plantFrameAnim(plant *Objects) {
 	}
 }
 
+// animation run once, when it's dune you can pick it.
+func (g *Game) updateFourFrameAnimOnce(obj *Objects) {
+	var speed = 120 // wait two sec to next interation
+	if obj.frameCounter < speed*5 {
+		obj.frameCounter++
+	}
+	if obj.frameCounter < speed {
+		obj.frame = 1
+	} else if obj.frameCounter < speed*2 {
+		obj.frame = 2
+	} else if obj.frameCounter < speed*3 {
+		obj.frame = 3
+	} else if obj.frameCounter < speed*4 {
+		obj.frame = 4
+		obj.pickable = true
+	}
+}
+
 // ///// Update function
 func (g *Game) Update() error {
 	// Exit game with "q" key
@@ -475,6 +493,11 @@ func (g *Game) Update() error {
 	g.Player.prePos = g.Player.pos // save old position before readKeys()
 	g.readKeys()                   // read keys and move player
 	g.coin_animation()
+
+	// Chicken walk animation
+	for _, chicken := range g.chickens {
+		chicken.frame = g.fourTickAnim(chicken.frame)
+	}
 
 	// plants animation
 	for _, plant := range g.plants {
@@ -715,6 +738,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	}
 
+	//// draw chickens ////
+	for i := range g.chickens {
+		g.drawChicken(screen, g.chickens[i].pos.x, g.chickens[i].pos.y, g.chickens[i].frame)
+	}
+
 	//	///////// draw all HOUSES big and small  ////////////
 	for i := range g.house {
 		if g.house[i].active {
@@ -837,7 +865,25 @@ func (g *Game) smoke_animation() {
 	}
 }
 
-// 4 frames to animate. tileSize = image size 64*64 or 16*16 ...
+// set new sprite.frame 4 times every tick
+func (g *Game) fourTickAnim(spriteFrame int) int {
+	if g.tick {
+		spriteFrame = 16 * 0
+		if time.Since(g.lastUpdate) < gameSpeed/2 {
+			spriteFrame = 16 * 1
+		}
+	} else {
+		spriteFrame = 16 * 2
+		if time.Since(g.lastUpdate) < gameSpeed/2 {
+			spriteFrame = 16 * 3
+		}
+	}
+	return spriteFrame
+}
+
+// set new sprite.frame 4 times every tick
+// frame = sprite.frame
+// tileSize = image size 64*64 or 16*16 ...
 func (g *Game) animation(frame, tileSize int) int {
 	if g.tick {
 		frame = tileSize
@@ -858,8 +904,8 @@ func (g *Game) drawChicken(screen *ebiten.Image, x, y float64, frame int) {
 	option := &ebiten.DrawImageOptions{}
 	option.GeoM.Translate(x, y) // position x, y
 	screen.DrawImage(
-		g.chickens.img.SubImage(
-			image.Rect(frame, 0, frame+32, 32),
+		g.chickenImg.SubImage(
+			image.Rect(frame, 16, frame+16, 32), //row2, first interation: x=0,16 y=16,32
 		).(*ebiten.Image),
 		option,
 	)
@@ -1258,6 +1304,17 @@ func main() {
 				active:  false,
 			},
 			variety: "tomato",
+		})
+	}
+	// add 10 chickens
+	for i := 1; i < 11; i++ {
+		g.chickens = append(g.chickens, &Objects{
+			Sprite: &Sprite{
+				img:     chickenImg,
+				pos:     Point{screenWidth/2 - 40 + float64(i)*10, screenHeight/2 - houseTileSize},
+				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
+			},
+			variety: "coin",
 		})
 	}
 	//	add house objects 0
