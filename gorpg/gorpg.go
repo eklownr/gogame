@@ -155,8 +155,8 @@ func (g *Game) idleWorkers(i int) {
 // return random point position
 func randomPoint() Point {
 	//rand.Seed(time.Now().UnixNano())
-	x := rand.Intn(screenWidth) - 50
-	y := rand.Intn(screenHeight) - 50
+	x := rand.Intn(screenWidth)
+	y := rand.Intn(screenHeight)
 	pos := Point{float64(x), float64(y)}
 	return pos
 }
@@ -457,22 +457,23 @@ func (g *Game) moveCharacters(c *Characters) {
 
 // Move objects to dest pos (chickens ...)
 func (g *Game) moveObjToDest(c *Objects) {
+	speed := 0.5
 	if c.pos != c.dest {
 		c.img = g.workerIdleImg
 		if c.pos.x < c.dest.x {
-			c.pos.x++
+			c.pos.x += speed
 		}
 		if c.pos.x > c.dest.x {
-			c.pos.x--
+			c.pos.x -= speed
 		}
 		if c.pos.y < c.dest.y {
-			c.pos.y++
+			c.pos.y += speed
 		}
 		if c.pos.y > c.dest.y {
-			c.pos.y--
+			c.pos.y -= speed
 		}
 	} else {
-		c.img = g.workImg
+		//c.img = g.workImg
 	}
 }
 
@@ -525,9 +526,13 @@ func (g *Game) Update() error {
 	g.readKeys()                   // read keys and move player
 	g.coin_animation()
 
-	// Chicken walk animation
+	// Chicken walk animation. And move chicken to random destination
 	for _, chicken := range g.chickens {
 		chicken.frame = g.fourTickAnim(chicken.frame)
+		g.moveObjToDest(chicken)
+		if g.checkCollision(chicken.pos, chicken.dest) {
+			chicken.dest = randomPoint()
+		}
 	}
 
 	// plants animation
@@ -1342,7 +1347,7 @@ func main() {
 		g.chickens = append(g.chickens, &Objects{
 			Sprite: &Sprite{
 				img:     chickenImg,
-				pos:     Point{screenWidth/2 - 40 + float64(i)*10, screenHeight/2 - houseTileSize},
+				pos:     randomPoint(), // start at random point
 				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
 			},
 			variety: "coin",
