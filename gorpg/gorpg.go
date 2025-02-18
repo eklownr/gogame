@@ -8,6 +8,7 @@ import (
 	"image/color"
 	_ "image/png"
 	"log"
+	"math/rand"
 
 	"time"
 
@@ -135,7 +136,7 @@ type Dir struct {
 	down, up, right, left bool
 }
 
-// Idle faceing front animation
+// Idle workers faceing front animation
 func (g *Game) idleWorkers(i int) {
 	// show animation subImage
 	if g.tick {
@@ -149,6 +150,15 @@ func (g *Game) idleWorkers(i int) {
 		g.workers[i].rectBot.x = imgSize * 2
 		g.workers[i].rectBot.y = imgSize
 	}
+}
+
+// return random point position
+func randomPoint() Point {
+	//rand.Seed(time.Now().UnixNano())
+	x := rand.Intn(screenWidth) - 50
+	y := rand.Intn(screenHeight) - 50
+	pos := Point{float64(x), float64(y)}
+	return pos
 }
 
 // Idle faceing front animation
@@ -349,7 +359,7 @@ func (g *Game) Collision_Object_Caracter(obj Objects, char Characters) bool {
 	return false
 }
 
-// TEST colllision point - point
+// TEST collision point - point
 func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	if p1.x >= p2.x-imgSize &&
 		p1.x <= p2.x+imgSize &&
@@ -426,6 +436,27 @@ func (g *Game) buddaCollision() {
 
 // Move Workers to dest pos
 func (g *Game) moveCharacters(c *Characters) {
+	if c.pos != c.dest {
+		c.img = g.workerIdleImg
+		if c.pos.x < c.dest.x {
+			c.pos.x++
+		}
+		if c.pos.x > c.dest.x {
+			c.pos.x--
+		}
+		if c.pos.y < c.dest.y {
+			c.pos.y++
+		}
+		if c.pos.y > c.dest.y {
+			c.pos.y--
+		}
+	} else {
+		c.img = g.workImg
+	}
+}
+
+// Move objects to dest pos (chickens ...)
+func (g *Game) moveObjToDest(c *Objects) {
 	if c.pos != c.dest {
 		c.img = g.workerIdleImg
 		if c.pos.x < c.dest.x {
