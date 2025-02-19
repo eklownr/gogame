@@ -123,6 +123,7 @@ type Characters struct {
 	basketSize   int
 	tomatoBasket int
 	wheatBasket  int
+	chicken      int
 }
 type Objects struct {
 	*Sprite
@@ -629,13 +630,17 @@ func (g *Game) Update() error {
 		g.budda_animation()
 	}
 	//Player collide with []house or house.budda
-	for i := range g.house {
-		if g.Collision_Object_Caracter(*g.house[i], *g.Player) {
+	for _, house := range g.house {
+		if g.Collision_Object_Caracter(*house, *g.Player) {
 			g.Player.pos = g.Player.prePos
 			g.smokeSprite.active = true
-			if g.house[i].variety == "budda" {
+			if house.variety == "budda" {
 				g.buddaCollision()
 				g.buddaAnimCounter = -60
+			}
+			if house.variety == "chicken_house" && g.Player.chicken > 0 {
+				println("carry chicken")
+
 			}
 		}
 	}
@@ -671,6 +676,17 @@ func (g *Game) Update() error {
 				//					x: -100,
 				//					y: -100,
 				//				}
+			}
+		}
+	}
+	// Player collide with chicken
+	for _, chicken := range g.chickens {
+		if g.Collision_Object_Caracter(*chicken, *g.Player) && chicken.pickable {
+			g.smokeSprite.active = true
+			chicken.pickable = false
+			chicken.pos = Point{-100, -100}
+			if g.Player.chicken < 1 {
+				g.Player.chicken++
 			}
 		}
 	}
@@ -812,15 +828,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	/// Draw WORKERS /// if active. buddaSpawnLevel diside if active
 	for i := range g.workers {
 		// draw coin carring on workers head
-		g.carry_objects(screen, g.workers[i].pos.x, g.workers[i].pos.y, g.workers[i].coin, g.coinImg)
+		g.carry_objects(screen, g.workers[i].pos.x, g.workers[i].pos.y, g.workers[i].coin, g.coinImg, Point{10, 10})
 		// draw all workers
 		if g.workers[i].active {
 			g.drawWorker(screen, g.workers[i].pos.x, g.workers[i].pos.y, i)
 		}
 	}
 
-	///////// draw COIN and PLANTS player caring on the head. SubImg 0,0,10,10 /////////
-	g.carry_objects(screen, g.Player.pos.x, g.Player.pos.y, g.Player.coin, g.coinImg)
+	///////// draw COINS, CHICKENS and PLANTS player caring on the head. SubImg 0,0,10,10 /////////
+	g.carry_objects(screen, g.Player.pos.x, g.Player.pos.y, g.Player.coin, g.coinImg, Point{10, 10})
+	g.carry_objects(screen, g.Player.pos.x, g.Player.pos.y, g.Player.chicken, g.chickenImg, Point{16, 16})
 	// SubImg 0,0,16,16
 	g.carry_plant(screen, g.Player.pos.x, g.Player.pos.y, g.Player.tomatoBasket, g.plantImg, tomato)
 	g.carry_plant(screen, g.Player.pos.x, g.Player.pos.y, g.Player.wheatBasket, g.plantImg, wheat)
@@ -861,14 +878,14 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 // /////// draw images caring on the head ////////////
-func (g *Game) carry_objects(screen *ebiten.Image, x, y float64, amount int, img *ebiten.Image) {
+func (g *Game) carry_objects(screen *ebiten.Image, x, y float64, amount int, img *ebiten.Image, tile Point) {
 	optst := &ebiten.DrawImageOptions{}
 	for i := 3; i < 3+amount; i++ { // i=3 3 pix apart
 		optst.GeoM.Translate(x+imgSize/2-3, y+float64(2.0*i)-10.0)
 
 		screen.DrawImage(
 			img.SubImage(
-				image.Rect(0, 0, 10, 10),
+				image.Rect(0, 0, int(tile.x), int(tile.y)),
 			).(*ebiten.Image),
 			optst,
 		)
@@ -961,7 +978,6 @@ func (g *Game) drawChicken(screen *ebiten.Image, x, y float64, frame int) {
 		option,
 	)
 	option.GeoM.Reset()
-	g.smokeSprite.active = false
 }
 func (g *Game) budda_animation() {
 	g.house[7].active = false
@@ -1311,7 +1327,11 @@ func main() {
 	chickenImg, _, err := ebitenutil.NewImageFromFile("assets/images/chicken.png")
 	checkErr(err)
 
-	// load chicken image
+	// load chicken_house image
+	chicken_houseImg, _, err := ebitenutil.NewImageFromFile("assets/images/Chicken_House.png")
+	checkErr(err)
+
+	// load info box background image
 	infoBoxImg, _, err := ebitenutil.NewImageFromFile("assets/images/InfoBox.png")
 	checkErr(err)
 
@@ -1404,7 +1424,8 @@ func main() {
 				pos:     randomPoint(), // start at random point
 				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
 			},
-			variety: "coin",
+			variety:  "chicken",
+			pickable: true,
 		})
 	}
 	//	add house objects 0
@@ -1513,7 +1534,7 @@ func main() {
 	})
 
 	// NEW house, for Lever 2
-	g.house = append(g.house, &Objects{ // New house without roof
+	g.house = append(g.house, &Objects{ // New house with roof
 		Sprite: &Sprite{
 			img:     new_village,
 			pos:     Point{100, 100},
@@ -1523,7 +1544,7 @@ func main() {
 		variety: "new_house",
 	})
 	// NEW house, for Lever 2
-	g.house = append(g.house, &Objects{ // New small_house without roof
+	g.house = append(g.house, &Objects{ // New small_house with roof
 		Sprite: &Sprite{
 			img:     new_village,
 			pos:     Point{400, imgSize},
@@ -1533,7 +1554,7 @@ func main() {
 		variety: "new_house_small",
 	})
 	// NEW house, for Lever 2
-	g.house = append(g.house, &Objects{ // New small_house without roof
+	g.house = append(g.house, &Objects{ // New small_house with roof
 		Sprite: &Sprite{
 			img:     new_village,
 			pos:     Point{500, imgSize},
@@ -1541,6 +1562,17 @@ func main() {
 			active:  false,
 		},
 		variety: "new_house_small",
+	})
+
+	// chicken_house loads separat
+	g.house = append(g.house, &Objects{
+		Sprite: &Sprite{
+			img:     chicken_houseImg,
+			pos:     Point{550, screenHeight/2 - houseTileSize},
+			rectPos: image.Rect(0, 0, imgSize, imgSize),
+			active:  true,
+		},
+		variety: "chicken_house",
 	})
 
 	// Add Images and tilemapJSON
