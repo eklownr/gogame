@@ -830,6 +830,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	// draw infoBox
 	g.drawSprite(screen, g.infoBoxSpite.img, g.infoBoxSpite.pos.x, g.infoBoxSpite.pos.y)
+	g.menuText(screen) // add text to infoBoxSprite
 
 	// if active
 	g.drawSmoke(screen, g.Player.pos.x, g.Player.pos.y)
@@ -1148,6 +1149,12 @@ func (g *Game) pause(screen *ebiten.Image) {
 	addText(screen, 20, "Change scene key: 0-3", purple, screenWidth, screenHeight/3+400)
 	addText(screen, 20, "*********************", green, screenWidth, screenHeight/3+500)
 }
+func (g Game) menuText(screen *ebiten.Image) {
+	addText(screen, 10, "Pause the Game - Esc", black, 780, 630)
+	addText(screen, 10, "Quit the game - q", blue, 780, 650)
+	addText(screen, 10, "Full screen - f", purple, 780, 670)
+	addText(screen, 10, "Action key - a", red, 780, 690)
+}
 
 // TEST add button
 func (g *Game) menu() {
@@ -1185,14 +1192,12 @@ func addText(screen *ebiten.Image, textSize int, t string, color color.Color, wi
 		Source: mplusFaceSource,
 		Size:   float64(textSize),
 	}
-
 	// t := "YOURE TEXT"
 	w, h := text.Measure(
 		t,
 		face,
 		face.Size,
 	)
-
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(
 		width/2-w/2, height/2-h/2,
