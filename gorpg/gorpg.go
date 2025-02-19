@@ -200,6 +200,8 @@ func (g *Game) dirDown() {
 	g.Player.Dir.right = false
 	g.Player.Dir.left = false
 	g.Player.speed = PlayerSpeed
+	// if player moving, infoBox is closing
+	g.infoBoxSpite.active = false
 }
 func (g *Game) dirUp() {
 	if g.Player.Dir.right || g.Player.Dir.left {
@@ -222,6 +224,8 @@ func (g *Game) dirUp() {
 	g.Player.Dir.right = false
 	g.Player.Dir.left = false
 	g.Player.speed = PlayerSpeed
+	// if player moving, infoBox is closing
+	g.infoBoxSpite.active = false
 }
 func (g *Game) dirLeft() {
 	if g.Player.Dir.up || g.Player.Dir.down {
@@ -244,6 +248,8 @@ func (g *Game) dirLeft() {
 	g.Player.Dir.up = false
 	g.Player.Dir.down = false
 	g.Player.speed = PlayerSpeed
+	// if player moving, infoBox is closing
+	g.infoBoxSpite.active = false
 }
 func (g *Game) dirRight() {
 	if g.Player.Dir.up || g.Player.Dir.down {
@@ -266,6 +272,8 @@ func (g *Game) dirRight() {
 	g.Player.Dir.up = false
 	g.Player.Dir.down = false
 	g.Player.speed = PlayerSpeed
+	// if player moving, infoBox is closing
+	g.infoBoxSpite.active = false
 }
 
 // check collision character with charakter: Player-worker
@@ -829,7 +837,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	// draw infoBox
-	g.drawSprite(screen, g.infoBoxSpite.img, g.infoBoxSpite.pos.x, g.infoBoxSpite.pos.y)
+	g.drawinfoBox(screen, g.infoBoxSpite.img, g.infoBoxSpite.pos.x, g.infoBoxSpite.pos.y)
 	g.menuText(screen) // add text to infoBoxSprite
 
 	// if active
@@ -986,19 +994,6 @@ func (g *Game) drawSmoke(screen *ebiten.Image, x, y float64) {
 	}
 }
 
-// draw sprite at x,y pos
-func (g *Game) drawSprite(screen, img *ebiten.Image, x, y float64) {
-	option := &ebiten.DrawImageOptions{}
-	option.GeoM.Translate(x, y) // position x, y
-	screen.DrawImage(
-		img.SubImage(
-			image.Rect(0, 0, 400, 64),
-		).(*ebiten.Image),
-		option,
-	)
-	option.GeoM.Reset()
-}
-
 // TEST plants animation
 func (g *Game) plant_animation(frame int) {
 	plant_anim = 16 * frame
@@ -1150,10 +1145,27 @@ func (g *Game) pause(screen *ebiten.Image) {
 	addText(screen, 20, "*********************", green, screenWidth, screenHeight/3+500)
 }
 func (g Game) menuText(screen *ebiten.Image) {
-	addText(screen, 10, "Pause the Game - Esc", black, 780, 630)
-	addText(screen, 10, "Quit the game - q", blue, 780, 650)
-	addText(screen, 10, "Full screen - f", purple, 780, 670)
-	addText(screen, 10, "Action key - a", red, 780, 690)
+	if g.infoBoxSpite.active {
+		addText(screen, 10, "Pause the Game - Esc", black, 780, 630)
+		addText(screen, 10, "Quit the game - q", blue, 780, 650)
+		addText(screen, 10, "Full screen - f", purple, 780, 670)
+		addText(screen, 10, "Move - arrowkey", red, 780, 690)
+	}
+}
+
+// draw infoBox background at x,y pos
+func (g *Game) drawinfoBox(screen, img *ebiten.Image, x, y float64) {
+	if g.infoBoxSpite.active {
+		option := &ebiten.DrawImageOptions{}
+		option.GeoM.Translate(x, y) // position x, y
+		screen.DrawImage(
+			img.SubImage(
+				image.Rect(0, 0, 400, 64),
+			).(*ebiten.Image),
+			option,
+		)
+		option.GeoM.Reset()
+	}
 }
 
 // TEST add button
