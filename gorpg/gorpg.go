@@ -51,7 +51,8 @@ var (
 	skyBlue         = color.RGBA{120, 180, 255, 255}
 	red             = color.RGBA{255, 0, 0, 255}
 	red_rect        = color.RGBA{255, 0, 0, 40}
-	blue            = color.RGBA{0, 20, 120, 255}
+	blue            = color.RGBA{0, 10, 60, 255}
+	blue_transp     = color.RGBA{0, 10, 60, 100}
 	blue_rect       = color.RGBA{0, 20, 120, 40}
 	yellow          = color.RGBA{220, 200, 0, 255}
 	green           = color.RGBA{0, 220, 0, 255}
@@ -694,11 +695,6 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(skyBlue) // background collor
 
-	// play pause sceen
-	if g.gamePause {
-		g.pause(screen)
-		return
-	}
 	// 4 different sceens
 	op := &ebiten.DrawImageOptions{}
 	if g.scene == 0 {
@@ -856,6 +852,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	/////// TEST Draw player and house collision rect
 	// vector.StrokeRect(screen, float32(g.Player.pos.x+imgSize/4),float32(g.Player.pos.y+imgSize/4),imgSize/2,imgSize/2,3.0,color.RGBA{122, 222, 0, 100},false)
 	// vector.StrokeRect(screen,float32(g.housePos.x)+float32(g.house[0].rectPos.Min.X),float32(g.housePos.y)+float32(g.house[0].rectPos.Min.Y),houseTileSize,imgSize,3.0,color.RGBA{222, 122, 0, 100},false)
+
+	// play pause sceen
+	if g.gamePause {
+		g.pause(screen)
+		return
+	}
 }
 
 // /////// draw images caring on the head ////////////
@@ -1090,13 +1092,15 @@ func (g *Game) readKeys() {
 		g.quitGame()
 	} else if inpututil.IsKeyJustPressed(ebiten.KeyEscape) { // Pause the game
 		g.pauseGame()
-	} else if inpututil.IsKeyJustPressed(ebiten.Key0) { // Pause the game
+	} else if inpututil.IsKeyJustPressed(ebiten.KeyA) { // Action key
+		g.actionKey()
+	} else if inpututil.IsKeyJustPressed(ebiten.Key0) { // scene 0
 		g.scene = 0
-	} else if inpututil.IsKeyJustPressed(ebiten.Key1) { // Pause the game
+	} else if inpututil.IsKeyJustPressed(ebiten.Key1) { //  scene 1
 		g.scene = 1
-	} else if inpututil.IsKeyJustPressed(ebiten.Key2) { // Pause the game
+	} else if inpututil.IsKeyJustPressed(ebiten.Key2) { //  scene 2
 		g.scene = 2
-	} else if inpututil.IsKeyJustPressed(ebiten.Key3) { // Pause the game
+	} else if inpututil.IsKeyJustPressed(ebiten.Key3) { //  scene 3
 		g.scene = 3
 	}
 }
@@ -1133,23 +1137,34 @@ func (g *Game) pause(screen *ebiten.Image) {
 		float32(20),     // y position
 		screenWidth-40,  // width size
 		screenHeight-40, // Height size
-		blue,
+		blue_transp,
 		true,
 	)
 	addText(screen, 32, "Pause", black, screenWidth+5, screenHeight/3+4)
 	addText(screen, 32, "Pause", yellow, screenWidth, screenHeight/3)
-	addText(screen, 20, "Pause the Game - Esc", yellow, screenWidth, screenHeight/3+100)
-	addText(screen, 20, "Quit the game - q", yellow, screenWidth, screenHeight/3+200)
-	addText(screen, 20, "Full screen - f", yellow, screenWidth, screenHeight/3+300)
-	addText(screen, 20, "Change scene key: 0-3", purple, screenWidth, screenHeight/3+400)
+	addText(screen, 16, "Pause the Game - Esc", yellow, screenWidth, screenHeight/3+100)
+	addText(screen, 16, "Quit the game - q", yellow, screenWidth, screenHeight/3+150)
+	addText(screen, 16, "Full screen - f", yellow, screenWidth, screenHeight/3+200)
+	addText(screen, 16, "Action key - a", yellow, screenWidth, screenHeight/3+250)
+	addText(screen, 16, "Change scene key: 0-3", purple, screenWidth, screenHeight/3+300)
 	addText(screen, 20, "*********************", green, screenWidth, screenHeight/3+500)
 }
+
 func (g Game) menuText(screen *ebiten.Image) {
 	if g.infoBoxSpite.active {
 		addText(screen, 10, "Pause the Game - Esc", black, 780, 630)
 		addText(screen, 10, "Quit the game - q", blue, 780, 650)
 		addText(screen, 10, "Full screen - f", purple, 780, 670)
 		addText(screen, 10, "Move - arrowkey", red, 780, 690)
+	}
+}
+
+// Action-key "a"
+func (g *Game) actionKey() {
+	if !g.infoBoxSpite.active {
+		g.infoBoxSpite.active = true
+	} else {
+		g.infoBoxSpite.active = false
 	}
 }
 
