@@ -427,7 +427,7 @@ func (g *Game) buddaCollision() {
 			g.workers[9].active = true
 			for i := range g.house {
 				g.house[i].active = false
-				if g.house[i].variety == "new_house" || g.house[i].variety == "new_house_small" {
+				if g.house[i].variety == "new_house" || g.house[i].variety == "new_house_small" || g.house[i].variety == "chicken_house" {
 					g.house[i].active = true
 				}
 			}
