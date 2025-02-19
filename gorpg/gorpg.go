@@ -653,6 +653,7 @@ func (g *Game) Update() error {
 				g.buddaAnimCounter = -60
 			}
 			if house.variety == "chicken_house" && g.Player.chicken > 0 {
+				// TODO TEST g.Player.egg++
 				g.Player.coin++
 				g.Player.chicken--
 			}
