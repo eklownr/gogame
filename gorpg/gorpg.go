@@ -466,8 +466,22 @@ func (g *Game) moveCharacters(c *Characters) {
 	}
 }
 
-// Move objects to dest pos (chickens ...)
-func (g *Game) moveObjToDest(c *Objects) {
+// check before moving chicken
+func (g *Game) checkChickenMovment(c *Objects) {
+	// chicken is running free and Player can pick it up
+	if c.pickable {
+		g.moveChickenToDest(c)
+	}
+	// if chicken in the chicken house. Chicken is picked
+	if c.pickable == false && c.picked {
+		c.pos = Point{300, 300} //TEST
+		// set c.dest to chicken_house.pos
+	}
+	//else  Player is carring chicken. Don't move chicken
+}
+
+// Move chicken to dest pos
+func (g *Game) moveChickenToDest(c *Objects) {
 	speed := 0.5
 	if c.pos != c.dest {
 		c.img = g.workerIdleImg
@@ -540,7 +554,7 @@ func (g *Game) Update() error {
 	// Chicken walk animation. And move chicken to random destination
 	for _, chicken := range g.chickens {
 		chicken.frame = g.fourTickAnim(chicken.frame)
-		g.moveObjToDest(chicken)
+		g.checkChickenMovment(chicken)
 		// if chicken reached dest, set new dest
 		if g.checkCollision(chicken.pos, chicken.dest) {
 			chicken.dest = randomPoint()
@@ -639,8 +653,8 @@ func (g *Game) Update() error {
 				g.buddaAnimCounter = -60
 			}
 			if house.variety == "chicken_house" && g.Player.chicken > 0 {
-				println("carry chicken")
-
+				g.Player.coin++
+				g.Player.chicken--
 			}
 		}
 	}
@@ -683,10 +697,10 @@ func (g *Game) Update() error {
 	for _, chicken := range g.chickens {
 		if g.Collision_Object_Caracter(*chicken, *g.Player) && chicken.pickable {
 			g.smokeSprite.active = true
-			chicken.pickable = false
-			chicken.pos = Point{-100, -100}
 			if g.Player.chicken < 1 {
 				g.Player.chicken++
+				chicken.pickable = false
+				chicken.pos = Point{550, 150}
 			}
 		}
 	}
