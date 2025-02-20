@@ -47,6 +47,9 @@ var audioCoin []byte
 //go:embed assets/sound/Fx.ogg
 var audioFx []byte
 
+//go:embed assets/sound/chickens.ogg
+var audiochickens []byte
+
 var (
 	skyBlue         = color.RGBA{120, 180, 255, 255}
 	red             = color.RGBA{255, 0, 0, 255}
@@ -92,7 +95,6 @@ type Game struct {
 	coinImg           *ebiten.Image
 	chickenImg        *ebiten.Image
 	infoBoxSpite      *Sprite
-	addBottonImg      *widget.ButtonImage
 	smokeSprite       *Sprite
 	tilemapJSON1      *tilemaps.TilemapJSON
 	tilemapJSON2      *tilemaps.TilemapJSON
@@ -473,7 +475,7 @@ func (g *Game) checkChickenMovment(c *Objects) {
 		g.moveChickenToDest(c)
 	}
 	// if chicken in the chicken house. Chicken is picked
-	if c.pickable == false && c.picked {
+	if !c.pickable && c.picked {
 		c.pos = Point{300, 300} //TEST
 		// set c.dest to chicken_house.pos
 	}
@@ -1645,6 +1647,18 @@ func main() {
 	//	if g.scene == 0 {
 	//		playSound(audioBG)
 	//	}
+	// audio chiskens bg
+	//_ = audio.NewContext(SampleRate)
+	stream2, err := vorbis.DecodeWithSampleRate(SampleRate, bytes.NewReader(audiochickens))
+	checkErr(err)
+
+	// infinite loop Bg music
+	audioPlayer2, err := audio.CurrentContext().NewPlayer(
+		audio.NewInfiniteLoop(stream2,
+			int64(len(audioBG)*6*SampleRate)))
+	checkErr(err)
+	audioPlayer2.SetVolume(0.7)
+	audioPlayer2.Play() //when you want your music to start, and
 
 	// Start game
 	if err := ebiten.RunGame(g); err != nil {
