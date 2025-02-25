@@ -47,9 +47,6 @@ var audioCoin []byte
 //go:embed assets/sound/Fx.ogg
 var audioFx []byte
 
-//go:embed assets/sound/chickens.ogg
-var audiochickens []byte
-
 var (
 	skyBlue         = color.RGBA{120, 180, 255, 255}
 	red             = color.RGBA{255, 0, 0, 255}
@@ -59,6 +56,7 @@ var (
 	blue_rect       = color.RGBA{0, 20, 120, 40}
 	yellow          = color.RGBA{220, 200, 0, 255}
 	green           = color.RGBA{0, 220, 0, 255}
+	dark_green      = color.RGBA{0, 140, 20, 255}
 	purple          = color.RGBA{200, 0, 200, 255}
 	orange          = color.RGBA{180, 160, 0, 255}
 	white           = color.RGBA{255, 255, 255, 255}
@@ -95,6 +93,7 @@ type Game struct {
 	coinImg           *ebiten.Image
 	chickenImg        *ebiten.Image
 	infoBoxSpite      *Sprite
+	addBottonImg      *widget.ButtonImage
 	smokeSprite       *Sprite
 	tilemapJSON1      *tilemaps.TilemapJSON
 	tilemapJSON2      *tilemaps.TilemapJSON
@@ -429,7 +428,7 @@ func (g *Game) buddaCollision() {
 			g.workers[9].active = true
 			for i := range g.house {
 				g.house[i].active = false
-				if g.house[i].variety == "new_house" || g.house[i].variety == "new_house_small" || g.house[i].variety == "chicken_house" {
+				if g.house[i].variety == "new_house" || g.house[i].variety == "new_house_small" {
 					g.house[i].active = true
 				}
 			}
@@ -475,7 +474,7 @@ func (g *Game) checkChickenMovment(c *Objects) {
 		g.moveChickenToDest(c)
 	}
 	// if chicken in the chicken house. Chicken is picked
-	if !c.pickable && c.picked {
+	if c.pickable == false && c.picked {
 		c.pos = Point{300, 300} //TEST
 		// set c.dest to chicken_house.pos
 	}
@@ -552,6 +551,15 @@ func (g *Game) Update() error {
 	g.Player.prePos = g.Player.pos // save old position before readKeys()
 	g.readKeys()                   // read keys and move player
 	g.coin_animation()
+
+	////////////////////////////////////r
+	// check Animation tick every 60 FPS. 2 values On or Off
+	g.animTick()
+
+	// pause all Update()
+	if g.gamePause {
+		return nil
+	}
 
 	// Chicken walk animation. And move chicken to random destination
 	for _, chicken := range g.chickens {
@@ -708,25 +716,13 @@ func (g *Game) Update() error {
 		}
 	}
 
-	/////////////////////////////////////
-	// check Animation tick every 60 FPS. 2 values On or Off
-	if time.Since(g.lastUpdate) < gameSpeed {
-		return nil
-	}
-	if g.tick {
-		g.tick = false
-	} else {
-		g.tick = true
-	}
-	g.lastUpdate = time.Now() // update lastUpdate
-
 	// last in Update()
 	return nil
 }
 
 // ////// Draw function
 func (g *Game) Draw(screen *ebiten.Image) {
-	screen.Fill(skyBlue) // background collor
+	screen.Fill(dark_green) // background collor
 
 	// 4 different sceens
 	op := &ebiten.DrawImageOptions{}
@@ -934,6 +930,20 @@ func (g *Game) carry_plant(screen *ebiten.Image, x, y float64, amount int, img *
 		}
 		opt.GeoM.Reset()
 	}
+}
+
+// Main Animation Tick. Check every 60 FPS. 2 values On or Off
+func (g *Game) animTick() error {
+	if time.Since(g.lastUpdate) < gameSpeed {
+		return nil
+	}
+	if g.tick {
+		g.tick = false
+	} else {
+		g.tick = true
+	}
+	g.lastUpdate = time.Now() // update lastUpdate
+	return nil
 }
 
 func (g *Game) smoke_animation() {
@@ -1647,18 +1657,6 @@ func main() {
 	//	if g.scene == 0 {
 	//		playSound(audioBG)
 	//	}
-	// audio chiskens bg
-	//_ = audio.NewContext(SampleRate)
-	stream2, err := vorbis.DecodeWithSampleRate(SampleRate, bytes.NewReader(audiochickens))
-	checkErr(err)
-
-	// infinite loop Bg music
-	audioPlayer2, err := audio.CurrentContext().NewPlayer(
-		audio.NewInfiniteLoop(stream2,
-			int64(len(audioBG)*6*SampleRate)))
-	checkErr(err)
-	audioPlayer2.SetVolume(0.7)
-	audioPlayer2.Play() //when you want your music to start, and
 
 	// Start game
 	if err := ebiten.RunGame(g); err != nil {
