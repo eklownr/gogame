@@ -383,7 +383,7 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	return false
 }
 
-// collide with budda Action: set player pos, span workers and Items,
+// collide with budda Action: set player pos, span workers and Items, chose sceens ...
 func (g *Game) buddaCollision() {
 	// Portal Player to new pos
 	g.Player.pos.x = screenWidth/2 + 20
@@ -425,12 +425,14 @@ func (g *Game) buddaCollision() {
 			g.workers[8].active = true
 		}
 		if g.buddaSpawnCounter > 10 {
-			g.scene = 1 // level 2, scene 0 to 1
+			g.scene = 1 // from scene 0 to 1
 			g.workers[9].active = true
-			for i := range g.house {
-				g.house[i].active = false
-				if g.house[i].variety == "new_house" || g.house[i].variety == "new_house_small" {
-					g.house[i].active = true
+			for _, house := range g.house {
+				house.active = false
+				if house.variety == "new_house" ||
+					house.variety == "new_house_small" ||
+					house.variety == "chicken_house" {
+					house.active = true
 				}
 			}
 		}
@@ -725,7 +727,7 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(dark_green) // background collor
 
-	// 4 different sceens
+	// 4 different sceens. Sceen 0 only a background img. 1-3 tilemaps
 	op := &ebiten.DrawImageOptions{}
 	if g.scene == 0 {
 		///////// draw background ///////////
@@ -820,13 +822,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	//	///////// draw all HOUSES big and small  ////////////
-	for i := range g.house {
-		if g.house[i].active {
+	for _, house := range g.house {
+		if house.active {
 			opt := &ebiten.DrawImageOptions{}
-			opt.GeoM.Translate(g.house[i].pos.x, g.house[i].pos.y) // house position x, y
+			opt.GeoM.Translate(house.pos.x, house.pos.y) // house position x, y
 			screen.DrawImage(
-				g.house[i].img.SubImage(
-					g.house[i].rectPos,
+				house.img.SubImage(
+					house.rectPos,
 				).(*ebiten.Image),
 				opt,
 			)
