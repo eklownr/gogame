@@ -76,6 +76,7 @@ type Game struct {
 	workers           []*Characters
 	coins             []*Objects
 	chickens          []*Objects
+	eggs              []*Objects
 	house             []*Objects
 	plants            []*Objects
 	buddaSpawnItems   []*Objects
@@ -541,7 +542,7 @@ func (g *Game) updateFourFrameAnimOnce(obj *Objects) {
 	}
 }
 
-// ///// Update function
+// ////////// Update  ////////// //
 func (g *Game) Update() error {
 	// Exit game with "q" key
 	if g.exitGame {
@@ -720,7 +721,7 @@ func (g *Game) Update() error {
 	return nil
 }
 
-// ////// Draw function
+// ////////// Draw function Draw all item at 60 fps ////////// //
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(dark_green) // background collor
 
@@ -810,7 +811,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	//// draw chickens ////
 	for i := range g.chickens {
-		g.drawChicken(screen, g.chickens[i].pos.x, g.chickens[i].pos.y, g.chickens[i].frame)
+		g.drawChicken(screen, g.chickens[i].pos, g.chickens[i].frame)
+	}
+
+	//// draw eggs ////
+	for i := range g.eggs {
+		g.drawEggs(screen, g.eggs[i].pos, g.eggs[i].img)
 	}
 
 	//	///////// draw all HOUSES big and small  ////////////
@@ -862,7 +868,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	}
 
-	// draw infoBox
+	// draw infoBox. Active with key: a
 	g.drawinfoBox(screen, g.infoBoxSpite.img, g.infoBoxSpite.pos.x, g.infoBoxSpite.pos.y)
 	g.menuText(screen) // add text to infoBoxSprite
 
@@ -890,7 +896,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 }
 
-// /////// draw images caring on the head ////////////
+// draw images caring on the head //
 func (g *Game) carry_objects(screen *ebiten.Image, x, y float64, amount int, img *ebiten.Image, tile Point) {
 	optst := &ebiten.DrawImageOptions{}
 	for i := 3; i < 3+amount; i++ { // i=3 3 pix apart
@@ -906,7 +912,7 @@ func (g *Game) carry_objects(screen *ebiten.Image, x, y float64, amount int, img
 	}
 }
 
-// /////// draw images caring on the head ////////////
+// draw images caring on the head //
 func (g *Game) carry_plant(screen *ebiten.Image, x, y float64, amount int, img *ebiten.Image, varity string) {
 	opt := &ebiten.DrawImageOptions{}
 	for i := 5; i < 5+amount; i++ { // i=5 5 pix apart
@@ -994,10 +1000,22 @@ func (g *Game) animation(frame, tileSize int) int {
 	return frame
 }
 
-func (g *Game) drawChicken(screen *ebiten.Image, x, y float64, frame int) {
+func (g *Game) drawEggs(screen *ebiten.Image, pos Point, img *ebiten.Image) {
 	g.animation(0, 64)
 	option := &ebiten.DrawImageOptions{}
-	option.GeoM.Translate(x, y) // position x, y
+	option.GeoM.Translate(pos.x, pos.y) // position x, y on the screen
+	screen.DrawImage(
+		img.SubImage(
+			image.Rect(0, 0, 16, 16), // top and bottom position of the image
+		).(*ebiten.Image),
+		option,
+	)
+	option.GeoM.Reset()
+}
+func (g *Game) drawChicken(screen *ebiten.Image, pos Point, frame int) {
+	g.animation(0, 64)
+	option := &ebiten.DrawImageOptions{}
+	option.GeoM.Translate(pos.x, pos.y) // position x, y
 	screen.DrawImage(
 		g.chickenImg.SubImage(
 			image.Rect(frame, 16, frame+16, 32), //row2, first interation: x=0,16 y=16,32
@@ -1354,6 +1372,10 @@ func main() {
 	chickenImg, _, err := ebitenutil.NewImageFromFile("assets/images/chicken.png")
 	checkErr(err)
 
+	// load chicken image
+	eggImg, _, err := ebitenutil.NewImageFromFile("assets/images/Egg.png")
+	checkErr(err)
+
 	// load chicken_house image
 	chicken_houseImg, _, err := ebitenutil.NewImageFromFile("assets/images/Chicken_House.png")
 	checkErr(err)
@@ -1452,6 +1474,19 @@ func main() {
 				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
 			},
 			variety:  "chicken",
+			pickable: true,
+		})
+	}
+	// add 10 eggs
+	for i := 1; i < 11; i++ {
+		g.eggs = append(g.chickens, &Objects{
+			Sprite: &Sprite{
+				active:  true,
+				img:     eggImg,
+				pos:     Point{550, screenHeight/2 + float64(i)*10.0}, // start point
+				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
+			},
+			variety:  "egg",
 			pickable: true,
 		})
 	}
