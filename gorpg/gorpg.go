@@ -383,13 +383,14 @@ func (g *Game) checkCollision(p1 Point, p2 Point) bool {
 	return false
 }
 
-// collide with budda Action: set player pos, span workers and Items, chose sceens ...
+// collide with budda Action: set new player pos, span workers and Items, chose sceens ...
 func (g *Game) buddaCollision() {
 	// Portal Player to new pos
 	g.Player.pos.x = screenWidth/2 + 20
 	g.Player.pos.y = screenHeight/2 + 60
 	// playSound
 	playSound(audioFx)
+	g.buddaSpawnItems[0].active = true // show chest TEST
 	// Check if player has Tomatos and have a big wallet for the coins
 	if g.Player.tomatoBasket > 0 && g.Player.coin < g.Player.wallet {
 		g.Player.tomatoBasket--
@@ -544,7 +545,7 @@ func (g *Game) updateFourFrameAnimOnce(obj *Objects) {
 	}
 }
 
-// ////////// Update  ////////// //
+// ////////// Update:  Collision, Movement, Anim_frame, Anim_tick. ////////// //
 func (g *Game) Update() error {
 	// Exit game with "q" key
 	if g.exitGame {
@@ -815,13 +816,20 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for i := range g.chickens {
 		g.drawChicken(screen, g.chickens[i].pos, g.chickens[i].frame)
 	}
-
 	//// draw eggs ////
-	for i := range g.eggs {
-		g.drawEggs(screen, g.eggs[i].pos, g.eggs[i].img)
+	for _, egg := range g.eggs {
+		if egg.active == true {
+			g.drawItem(screen, egg.pos, egg.img, Point{16, 16})
+		}
+	}
+	// draw budda_spawn_item
+	for _, buddaItem := range g.buddaSpawnItems {
+		if buddaItem.active == true {
+			g.drawItem(screen, buddaItem.pos, buddaItem.img, Point{32, 32})
+		}
 	}
 
-	//	///////// draw all HOUSES big and small  ////////////
+	/////////// draw all HOUSES big and small  ////////////
 	for _, house := range g.house {
 		if house.active {
 			opt := &ebiten.DrawImageOptions{}
@@ -1002,13 +1010,13 @@ func (g *Game) animation(frame, tileSize int) int {
 	return frame
 }
 
-func (g *Game) drawEggs(screen *ebiten.Image, pos Point, img *ebiten.Image) {
+func (g *Game) drawItem(screen *ebiten.Image, pos Point, img *ebiten.Image, botPos Point) {
 	g.animation(0, 64)
 	option := &ebiten.DrawImageOptions{}
 	option.GeoM.Translate(pos.x, pos.y) // position x, y on the screen
 	screen.DrawImage(
 		img.SubImage(
-			image.Rect(0, 0, 16, 16), // top and bottom position of the image
+			image.Rect(0, 0, int(botPos.x), int(botPos.y)), // top and bottom position of the image
 		).(*ebiten.Image),
 		option,
 	)
@@ -1390,6 +1398,10 @@ func main() {
 	plantImg, _, err := ebitenutil.NewImageFromFile("assets/images/plants.png")
 	checkErr(err)
 
+	// load plants image
+	chestImg, _, err := ebitenutil.NewImageFromFile("assets/images/Chest.png")
+	checkErr(err)
+
 	// 	// load add-button image
 	// 	addButton, _, err := ebitenutil.NewImageFromFile("assets/images/add-button64.png")
 	// 	checkErr(err)
@@ -1485,11 +1497,11 @@ func main() {
 			Sprite: &Sprite{
 				active:  true,
 				img:     eggImg,
-				pos:     Point{550, screenHeight/2 + float64(i)*10.0}, // start point
+				pos:     Point{550, screenHeight/2 + (float64(i) * 10.0)}, // start point
 				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
 			},
 			variety:  "egg",
-			pickable: true,
+			pickable: false,
 		})
 	}
 	//	add house objects 0
@@ -1585,18 +1597,6 @@ func main() {
 		},
 		variety: "budda",
 	})
-
-	//	add buddaSpawnItems objects
-	g.buddaSpawnItems = append(g.buddaSpawnItems, &Objects{
-		Sprite: &Sprite{
-			img:     new_village,
-			pos:     Point{screenWidth/2 - 40.0, screenHeight/2 - 40.0},
-			rectPos: image.Rect(imgSize, imgSize*5, imgSize*2-16, imgSize*6-16),
-			active:  true,
-		},
-		variety: "new_house",
-	})
-
 	// NEW house, for Lever 2
 	g.house = append(g.house, &Objects{ // New house with roof
 		Sprite: &Sprite{
@@ -1637,6 +1637,18 @@ func main() {
 			active:  true,
 		},
 		variety: "chicken_house",
+	})
+
+	// add buddaSpawnItems objects
+	g.buddaSpawnItems = append(g.buddaSpawnItems, &Objects{
+		Sprite: &Sprite{
+			img:     chestImg,
+			pos:     Point{imgSize, imgSize},
+			rectPos: image.Rect(0, 0, 32, 32),
+			active:  false,
+		},
+		variety:  "chest",
+		pickable: true,
 	})
 
 	// Add Images and tilemapJSON
