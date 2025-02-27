@@ -826,7 +826,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for _, buddaItem := range g.buddaSpawnItems {
 		if buddaItem.active == true {
 			tileSize = 16
-			g.drawItem2xAnim(screen, buddaItem.pos, buddaItem.img, tileSize)
+			g.drawChestAnim(screen, buddaItem.pos, buddaItem.img, tileSize)
 		}
 	}
 
@@ -1024,7 +1024,7 @@ func (g *Game) drawItem(screen *ebiten.Image, pos Point, img *ebiten.Image, botP
 	option.GeoM.Reset()
 }
 
-func (g *Game) drawItem2xAnim(screen *ebiten.Image, pos Point, img *ebiten.Image, tileSize int) {
+func (g *Game) drawChestAnim(screen *ebiten.Image, pos Point, img *ebiten.Image, tileSize int) {
 	topx, topy := tileSize, tileSize     // top start pos
 	botx, boty := tileSize*2, tileSize*2 // botstart pos
 	if g.tick {                          // img 2. the animation
@@ -1663,7 +1663,7 @@ func main() {
 	g.buddaSpawnItems = append(g.buddaSpawnItems, &Objects{
 		Sprite: &Sprite{
 			img:     chestImg,
-			pos:     Point{imgSize, imgSize},
+			pos:     Point{screenWidth / 2, screenHeight / 2},
 			rectPos: image.Rect(0, 0, 32, 32),
 			active:  false,
 		},
