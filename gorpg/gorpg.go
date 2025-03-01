@@ -93,6 +93,7 @@ type Game struct {
 	workerIdleImg     *ebiten.Image
 	coinImg           *ebiten.Image
 	chickenImg        *ebiten.Image
+	eggImg            *ebiten.Image
 	infoBoxSpite      *Sprite
 	addBottonImg      *widget.ButtonImage
 	smokeSprite       *Sprite
@@ -126,6 +127,7 @@ type Characters struct {
 	tomatoBasket int
 	wheatBasket  int
 	chicken      int
+	egg          int
 }
 type Objects struct {
 	*Sprite
@@ -477,9 +479,9 @@ func (g *Game) checkChickenMovment(c *Objects) {
 	if c.pickable {
 		g.moveChickenToDest(c)
 	}
-	// if chicken in the chicken house. Chicken is picked
+	// if chicken is in the chicken house. Chicken is picked
 	if c.pickable == false && c.picked {
-		c.pos = Point{300, 300} //TEST
+		g.moveChickenToDest(c)
 		// set c.dest to chicken_house.pos
 	}
 	//else  Player is carring chicken. Don't move chicken
@@ -565,13 +567,29 @@ func (g *Game) Update() error {
 		return nil
 	}
 
-	// Chicken walk animation. And move chicken to random destination
+	// Chicken walk animation. And move chicken to random destination, Collision
 	for _, chicken := range g.chickens {
 		chicken.frame = g.fourTickAnim(chicken.frame)
 		g.checkChickenMovment(chicken)
 		// if chicken reached dest, set new dest
-		if g.checkCollision(chicken.pos, chicken.dest) {
+		if g.checkCollision(chicken.pos, chicken.dest) && chicken.pickable {
 			chicken.dest = randomPoint()
+		}
+		// chicken in the chickenhouse. Set new dest
+		if g.checkCollision(chicken.pos, chicken.dest) && !chicken.pickable && chicken.picked {
+			// set random pos around the chickenhouse
+			pos := randomPoint()
+			if pos.x <= 500 {
+				pos.x = 500
+			} else if pos.x >= screenWidth-20 {
+				pos.x = screenWidth - 20
+			}
+			if pos.y <= screenHeight/2-50 {
+				pos.y = screenHeight/2 - 50
+			} else if pos.y >= screenHeight-100 {
+				pos.y = screenHeight - 100
+			}
+			chicken.dest = pos
 		}
 	}
 
@@ -610,11 +628,17 @@ func (g *Game) Update() error {
 
 	}
 
-	// Player border collision
+	// Player border collision - Go to next sceen
 	if g.Player.pos.x < 0-imgSize/2 {
 		g.Player.pos.x = screenWidth - imgSize/2
+		if g.scene > 0 {
+			g.scene--
+		}
 	} else if g.Player.pos.x > screenWidth-imgSize/2 {
 		g.Player.pos.x = 0 - imgSize/2
+		if g.scene < 3 {
+			g.scene++
+		}
 	} else if g.Player.pos.y < 0-imgSize/2 {
 		g.Player.pos.y = screenHeight - imgSize/2
 	} else if g.Player.pos.y > screenHeight {
@@ -667,9 +691,12 @@ func (g *Game) Update() error {
 				g.buddaAnimCounter = -60
 			}
 			if house.variety == "chicken_house" && g.Player.chicken > 0 {
-				// TODO TEST g.Player.egg++
-				g.Player.coin++
+				g.Player.egg++
 				g.Player.chicken--
+				if g.Player.egg > 1 {
+					g.eggs[10].active = true
+					g.eggs[10].pickable = true
+				}
 			}
 		}
 	}
@@ -712,10 +739,12 @@ func (g *Game) Update() error {
 	for _, chicken := range g.chickens {
 		if g.Collision_Object_Caracter(*chicken, *g.Player) && chicken.pickable {
 			g.smokeSprite.active = true
-			if g.Player.chicken < 1 {
+			if g.Player.chicken < 1 { // pick one at a time
 				g.Player.chicken++
 				chicken.pickable = false
+				chicken.picked = true
 				chicken.pos = Point{550, 150}
+				chicken.dest = Point{570, 250}
 			}
 		}
 	}
@@ -818,7 +847,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 	//// draw eggs ////
 	for _, egg := range g.eggs {
-		if egg.active == true {
+		if egg.active {
 			g.drawItem(screen, egg.pos, egg.img, Point{16, 16})
 		}
 	}
@@ -868,6 +897,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	///////// draw COINS, CHICKENS and PLANTS player caring on the head. SubImg 0,0,10,10 /////////
 	g.carry_objects(screen, g.Player.pos.x, g.Player.pos.y, g.Player.coin, g.coinImg, Point{10, 10})
 	g.carry_objects(screen, g.Player.pos.x, g.Player.pos.y, g.Player.chicken, g.chickenImg, Point{16, 16})
+	g.carry_objects(screen, g.Player.pos.x, g.Player.pos.y, g.Player.egg, g.eggImg, Point{16, 16})
 	// SubImg 0,0,16,16
 	g.carry_plant(screen, g.Player.pos.x, g.Player.pos.y, g.Player.tomatoBasket, g.plantImg, tomato)
 	g.carry_plant(screen, g.Player.pos.x, g.Player.pos.y, g.Player.wheatBasket, g.plantImg, wheat)
@@ -1012,7 +1042,7 @@ func (g *Game) animation(frame, tileSize int) int {
 }
 
 func (g *Game) drawItem(screen *ebiten.Image, pos Point, img *ebiten.Image, botPos Point) {
-	g.animation(0, 64)
+	//g.animation(0, 64)
 	option := &ebiten.DrawImageOptions{}
 	option.GeoM.Translate(pos.x, pos.y) // position x, y on the screen
 	screen.DrawImage(
@@ -1515,9 +1545,9 @@ func main() {
 	for i := 1; i < 11; i++ {
 		g.eggs = append(g.chickens, &Objects{
 			Sprite: &Sprite{
-				active:  true,
+				active:  false,
 				img:     eggImg,
-				pos:     Point{550, screenHeight/2 + (float64(i) * 10.0)}, // start point
+				pos:     Point{560, screenHeight / 2}, // start point
 				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
 			},
 			variety:  "egg",
@@ -1681,6 +1711,7 @@ func main() {
 	g.workerIdleImg = workerImg
 	g.coinImg = coinImg
 	g.chickenImg = chickenImg
+	g.eggImg = eggImg
 
 	// info box background
 	g.infoBoxSpite = &Sprite{
