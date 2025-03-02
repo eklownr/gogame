@@ -51,6 +51,12 @@ var audioCoin []byte
 //go:embed assets/sound/Fx.ogg
 var audioFx []byte
 
+//go:embed assets/sound/Chest.ogg
+var audioChest []byte
+
+//go:embed assets/sound/Secret.ogg
+var audioSecret []byte
+
 var (
 	skyBlue         = color.RGBA{120, 180, 255, 255}
 	red             = color.RGBA{255, 0, 0, 255}
@@ -704,7 +710,7 @@ func (g *Game) Update() error {
 			if house.variety == "chicken_house" && g.Player.chicken > 0 {
 				g.Player.chicken_count++
 				g.Player.chicken--
-				if g.Player.chicken_count > 2 { // 10 chicken in the chicken_house
+				if g.Player.chicken_count > 9 { // 10 chicken in the chicken_house
 					g.eggs[1].active = true
 					g.eggs[1].pickable = true
 					g.Player.chicken_count = 0 // reset counter
@@ -775,6 +781,7 @@ func (g *Game) Update() error {
 				egg.pickable = false
 				egg.picked = true
 				egg.active = false
+				playSound(audioSecret)
 			}
 		}
 	}
@@ -786,6 +793,7 @@ func (g *Game) Update() error {
 			c.pickable = false
 			c.picked = true
 			c.active = false
+			playSound(audioChest)
 			if g.Player.wallet < 7 { // max 6 item at a time
 				g.Player.wallet++
 			}
