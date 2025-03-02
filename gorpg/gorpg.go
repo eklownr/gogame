@@ -419,9 +419,11 @@ func (g *Game) buddaCollision() {
 	if g.Player.egg > 0 {
 		g.Player.egg--
 		g.eggs[0].active = false
-		g.buddaSpawnItems[chest].active = true   // show chest TEST
-		g.buddaSpawnItems[chest].pickable = true // show chest TEST
-		g.buddaSpawnItems[chest].picked = false  // show chest TEST
+		g.buddaSpawnItems[chest].active = true // show chest TEST
+		g.buddaSpawnItems[chest].pickable = true
+		g.buddaSpawnItems[chest].picked = false
+		g.coins[0].active = true
+		g.coins[0].picked = false
 	}
 	if g.buddaSpawnCounter > 3 {
 		// add action: spawn workers
@@ -460,13 +462,12 @@ func (g *Game) buddaCollision() {
 	g.workers[0].active = true // activate 2 workers at start
 	g.workers[1].active = true
 
-	//	// change scene
-	//	if g.scene < 3 {
-	//		g.scene++
-	//	} else {
-	//		g.scene = 0
-	//	}
-
+	// dopp all item if to greedy
+	if g.Player.tomatoBasket == 5 || g.Player.wheatBasket == 5 || g.Player.coin == 5 {
+		g.Player.tomatoBasket = 0
+		g.Player.wheatBasket = 0
+		g.Player.coin = 0
+	}
 }
 
 // Move Workers to dest pos
@@ -801,12 +802,6 @@ func (g *Game) Update() error {
 			}
 			if g.Player.basketSize < 5 { // max 6 item at a time
 				g.Player.basketSize++
-			}
-			// dopp all item if to greedy
-			if g.Player.tomatoBasket == 5 || g.Player.wheatBasket == 5 || g.Player.coin == 5 {
-				g.Player.tomatoBasket = 0
-				g.Player.wheatBasket = 0
-				g.Player.coin = 0
 			}
 		}
 	}
@@ -1808,7 +1803,7 @@ func main() {
 
 	//audioPlayer, _ := audio.CurrentContext().NewPlayer(stream)
 	// you pass the audio player to your game struct, and just call
-	audioPlayer.SetVolume(0.1)
+	audioPlayer.SetVolume(0.2)
 	audioPlayer.Play() //when you want your music to start, and
 	// audioPlayer.Pause()
 
