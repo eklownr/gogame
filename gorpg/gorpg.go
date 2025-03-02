@@ -895,9 +895,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	///////// draw COINS, CHICKENS and PLANTS player caring on the head. SubImg 0,0,10,10 /////////
+	g.carry_objects(screen, g.Player.pos.x, g.Player.pos.y, g.Player.egg, g.eggImg, Point{16, 16})
 	g.carry_objects(screen, g.Player.pos.x, g.Player.pos.y, g.Player.coin, g.coinImg, Point{10, 10})
 	g.carry_objects(screen, g.Player.pos.x, g.Player.pos.y, g.Player.chicken, g.chickenImg, Point{16, 16})
-	g.carry_objects(screen, g.Player.pos.x, g.Player.pos.y, g.Player.egg, g.eggImg, Point{16, 16})
 	// SubImg 0,0,16,16
 	g.carry_plant(screen, g.Player.pos.x, g.Player.pos.y, g.Player.tomatoBasket, g.plantImg, tomato)
 	g.carry_plant(screen, g.Player.pos.x, g.Player.pos.y, g.Player.wheatBasket, g.plantImg, wheat)
