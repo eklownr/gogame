@@ -119,15 +119,16 @@ type Sprite struct {
 type Characters struct {
 	*Sprite
 	Dir
-	speed        float64
-	dest         Point
-	coin         int
-	wallet       int
-	basketSize   int
-	tomatoBasket int
-	wheatBasket  int
-	chicken      int
-	egg          int
+	speed         float64
+	dest          Point
+	coin          int
+	wallet        int
+	basketSize    int
+	tomatoBasket  int
+	wheatBasket   int
+	chicken       int
+	chicken_count int
+	egg           int
 }
 type Objects struct {
 	*Sprite
@@ -691,11 +692,17 @@ func (g *Game) Update() error {
 				g.buddaAnimCounter = -60
 			}
 			if house.variety == "chicken_house" && g.Player.chicken > 0 {
-				g.Player.egg++
+				g.Player.chicken_count++
 				g.Player.chicken--
-				if g.Player.egg > 1 {
+				if g.Player.chicken_count > 2 { // 10 chicken in the checken_house
 					g.eggs[10].active = true
 					g.eggs[10].pickable = true
+					// set all checken free
+					for _, c := range g.chickens {
+						c.active = true
+						c.pickable = true
+						c.picked = false
+					}
 				}
 			}
 		}
