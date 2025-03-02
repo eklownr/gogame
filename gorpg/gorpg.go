@@ -33,6 +33,10 @@ const (
 	SampleRate    = 44100
 	wheat         = "wheat"
 	tomato        = "tomato"
+	chicken       = "chicken"
+	egg           = "egg"
+	chest         = 0
+	fire          = 1
 )
 
 //go:embed assets/sound/LostVillage.ogg
@@ -393,7 +397,6 @@ func (g *Game) buddaCollision() {
 	g.Player.pos.y = screenHeight/2 + 60
 	// playSound
 	playSound(audioFx)
-	g.buddaSpawnItems[0].active = true // show chest TEST
 	// Check if player has Tomatos and have a big wallet for the coins
 	if g.Player.tomatoBasket > 0 && g.Player.coin < g.Player.wallet {
 		g.Player.tomatoBasket--
@@ -406,6 +409,13 @@ func (g *Game) buddaCollision() {
 		g.Player.coin += 1
 		playSound(audioCoin)
 		g.buddaSpawnCounter++ // count upp level
+	}
+	if g.Player.egg > 0 {
+		g.Player.egg--
+		g.eggs[0].active = false
+		g.buddaSpawnItems[chest].active = true   // show chest TEST
+		g.buddaSpawnItems[chest].pickable = true // show chest TEST
+		g.buddaSpawnItems[chest].picked = false  // show chest TEST
 	}
 	if g.buddaSpawnCounter > 3 {
 		// add action: spawn workers
@@ -682,7 +692,7 @@ func (g *Game) Update() error {
 	if g.buddaAnimCounter < 0 {
 		g.budda_animation()
 	}
-	//Player collide with []house or house.budda
+	//Player collide with []house or budda_house or chicken_house
 	for _, house := range g.house {
 		if g.Collision_Object_Caracter(*house, *g.Player) {
 			g.Player.pos = g.Player.prePos
@@ -694,10 +704,11 @@ func (g *Game) Update() error {
 			if house.variety == "chicken_house" && g.Player.chicken > 0 {
 				g.Player.chicken_count++
 				g.Player.chicken--
-				if g.Player.chicken_count > 2 { // 10 chicken in the checken_house
-					g.eggs[10].active = true
-					g.eggs[10].pickable = true
-					// set all checken free
+				if g.Player.chicken_count > 2 { // 10 chicken in the chicken_house
+					g.eggs[1].active = true
+					g.eggs[1].pickable = true
+					g.Player.chicken_count = 0 // reset counter
+					// set all chicken free
 					for _, c := range g.chickens {
 						c.active = true
 						c.pickable = true
@@ -752,6 +763,34 @@ func (g *Game) Update() error {
 				chicken.picked = true
 				chicken.pos = Point{550, 150}
 				chicken.dest = Point{570, 250}
+			}
+		}
+	}
+	// Player collide with Eggs
+	for _, egg := range g.eggs {
+		if g.Collision_Object_Caracter(*egg, *g.Player) && egg.pickable && egg.active {
+			g.smokeSprite.active = true
+			if g.Player.egg < 1 { // pick one at a time
+				g.Player.egg++
+				egg.pickable = false
+				egg.picked = true
+				egg.active = false
+			}
+		}
+	}
+
+	// Player collide with Chest
+	for _, c := range g.buddaSpawnItems {
+		if g.Collision_Object_Caracter(*c, *g.Player) && c.pickable && c.active {
+			g.smokeSprite.active = true
+			c.pickable = false
+			c.picked = true
+			c.active = false
+			if g.Player.wallet < 7 { // max 6 item at a time
+				g.Player.wallet++
+			}
+			if g.Player.basketSize < 7 { // max 6 item at a time
+				g.Player.basketSize++
 			}
 		}
 	}
@@ -1550,15 +1589,15 @@ func main() {
 	}
 	// add 10 eggs
 	for i := 1; i < 11; i++ {
-		g.eggs = append(g.chickens, &Objects{
+		g.eggs = append(g.eggs, &Objects{
 			Sprite: &Sprite{
 				active:  false,
 				img:     eggImg,
-				pos:     Point{560, screenHeight / 2}, // start point
+				pos:     Point{560, screenHeight/2 + float64(i)*10}, // start point
 				rectPos: image.Rect(0, 0, imgSize/2, imgSize/2),
 			},
 			variety:  "egg",
-			pickable: false,
+			pickable: true,
 		})
 	}
 	//	add house objects 0
