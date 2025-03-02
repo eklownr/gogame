@@ -710,10 +710,12 @@ func (g *Game) Update() error {
 			if house.variety == "chicken_house" && g.Player.chicken > 0 {
 				g.Player.chicken_count++
 				g.Player.chicken--
+				playSound(audioFx)
 				if g.Player.chicken_count > 9 { // 10 chicken in the chicken_house
 					g.eggs[1].active = true
 					g.eggs[1].pickable = true
 					g.Player.chicken_count = 0 // reset counter
+					playSound(audioSecret)
 					// set all chicken free
 					for _, c := range g.chickens {
 						c.active = true
@@ -794,11 +796,17 @@ func (g *Game) Update() error {
 			c.picked = true
 			c.active = false
 			playSound(audioChest)
-			if g.Player.wallet < 7 { // max 6 item at a time
+			if g.Player.wallet < 5 { // max 6 item at a time
 				g.Player.wallet++
 			}
-			if g.Player.basketSize < 7 { // max 6 item at a time
+			if g.Player.basketSize < 5 { // max 6 item at a time
 				g.Player.basketSize++
+			}
+			// dopp all item if to greedy
+			if g.Player.tomatoBasket == 5 || g.Player.wheatBasket == 5 || g.Player.coin == 5 {
+				g.Player.tomatoBasket = 0
+				g.Player.wheatBasket = 0
+				g.Player.coin = 0
 			}
 		}
 	}
@@ -1800,7 +1808,7 @@ func main() {
 
 	//audioPlayer, _ := audio.CurrentContext().NewPlayer(stream)
 	// you pass the audio player to your game struct, and just call
-	audioPlayer.SetVolume(0.3)
+	audioPlayer.SetVolume(0.1)
 	audioPlayer.Play() //when you want your music to start, and
 	// audioPlayer.Pause()
 
