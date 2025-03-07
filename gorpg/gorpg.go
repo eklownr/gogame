@@ -39,8 +39,11 @@ const (
 	fire          = 1
 )
 
-//go:embed assets/sound/LostVillage.ogg
+//go:embed assets/sound/We-are-one-piece-piano.ogg
 var audioBG []byte
+
+//go:embed assets/sound/Chickens.ogg
+var audioChickens []byte
 
 //go:embed assets/sound/Village.ogg
 var audioVillage []byte
@@ -424,6 +427,7 @@ func (g *Game) buddaCollision() {
 		g.buddaSpawnItems[chest].picked = false
 		g.coins[0].active = true
 		g.coins[0].picked = false
+		g.coins[0].pos = Point{screenWidth / 2, screenHeight / 2}
 	}
 	if g.buddaSpawnCounter > 3 {
 		// add action: spawn workers
@@ -463,10 +467,10 @@ func (g *Game) buddaCollision() {
 	g.workers[1].active = true
 
 	// dopp all item if to greedy
-	if g.Player.tomatoBasket == 5 || g.Player.wheatBasket == 5 || g.Player.coin == 5 {
+	if g.Player.tomatoBasket == 4 || g.Player.wheatBasket == 4 {
 		g.Player.tomatoBasket = 0
 		g.Player.wheatBasket = 0
-		g.Player.coin = 0
+		g.Player.coin = 1
 	}
 }
 
@@ -574,6 +578,7 @@ func (g *Game) Update() error {
 
 	g.Player.prePos = g.Player.pos // save old position before readKeys()
 	g.readKeys()                   // read keys and move player
+	g.readMous()                   // read mouse klick
 	g.coin_animation()
 
 	////////////////////////////////////r
@@ -717,6 +722,7 @@ func (g *Game) Update() error {
 					g.eggs[1].pickable = true
 					g.Player.chicken_count = 0 // reset counter
 					playSound(audioSecret)
+					playSound(audioChickens) // TEST
 					// set all chicken free
 					for _, c := range g.chickens {
 						c.active = true
@@ -1283,6 +1289,15 @@ func (g *Game) readKeys() {
 	}
 }
 
+// Mouse handling
+func (g *Game) readMous() {
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		x, y := ebiten.CursorPosition()
+		println("Pressed at x: %d and y at: %d", x, y)
+		g.actionKey()
+	}
+}
+
 // F key for full screen
 func (g *Game) fullScreen() {
 	if !g.fullWindow {
@@ -1337,7 +1352,7 @@ func (g Game) menuText(screen *ebiten.Image) {
 	}
 }
 
-// Action-key "a"
+// Action-key "a" or klick left mousebutton
 func (g *Game) actionKey() {
 	if !g.infoBoxSpite.active {
 		g.infoBoxSpite.active = true
@@ -1790,6 +1805,8 @@ func main() {
 
 	g.scene = 0 // scene or level, 4 different backgrounds
 
+	playSound(audioChickens) // TEST
+
 	////// play background music //////
 	_ = audio.NewContext(SampleRate)
 	stream, err := vorbis.DecodeWithSampleRate(SampleRate, bytes.NewReader(audioBG))
@@ -1803,7 +1820,7 @@ func main() {
 
 	//audioPlayer, _ := audio.CurrentContext().NewPlayer(stream)
 	// you pass the audio player to your game struct, and just call
-	audioPlayer.SetVolume(0.2)
+	audioPlayer.SetVolume(0.1)
 	audioPlayer.Play() //when you want your music to start, and
 	// audioPlayer.Pause()
 
