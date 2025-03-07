@@ -1805,8 +1805,6 @@ func main() {
 
 	g.scene = 0 // scene or level, 4 different backgrounds
 
-	playSound(audioChickens) // TEST
-
 	////// play background music //////
 	_ = audio.NewContext(SampleRate)
 	stream, err := vorbis.DecodeWithSampleRate(SampleRate, bytes.NewReader(audioBG))
@@ -1831,6 +1829,7 @@ func main() {
 	//	if g.scene == 0 {
 	//		playSound(audioBG)
 	//	}
+	playSound(audioChickens) // TEST
 
 	// Start game
 	if err := ebiten.RunGame(g); err != nil {
