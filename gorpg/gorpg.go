@@ -97,6 +97,7 @@ type Game struct {
 	tick              bool
 	fullWindow        bool
 	gamePause         bool
+	exitGame          bool
 	village           *ebiten.Image
 	bgImg             *ebiten.Image
 	tilemapImg        *ebiten.Image
@@ -108,13 +109,12 @@ type Game struct {
 	chickenImg        *ebiten.Image
 	eggImg            *ebiten.Image
 	infoBoxSpite      *Sprite
-	addBottonImg      *widget.ButtonImage
 	smokeSprite       *Sprite
+	addBottonImg      *widget.ButtonImage
 	tilemapJSON1      *tilemaps.TilemapJSON
 	tilemapJSON2      *tilemaps.TilemapJSON
 	tilemapJSON3      *tilemaps.TilemapJSON
 	scene             int
-	exitGame          bool
 	buddaAnimCounter  int
 	buddaSpawnCounter int
 }
@@ -405,18 +405,18 @@ func (g *Game) buddaCollision() {
 	g.Player.pos.x = screenWidth/2 + 20
 	g.Player.pos.y = screenHeight/2 + 60
 	// playSound
-	playSound(audioFx)
+	playSound(audioFx, 0.3)
 	// Check if player has Tomatos and have a big wallet for the coins
 	if g.Player.tomatoBasket > 0 && g.Player.coin < g.Player.wallet {
 		g.Player.tomatoBasket--
 		g.Player.coin += 2
-		playSound(audioCoin)
+		playSound(audioCoin, 0.3)
 		g.buddaSpawnCounter++ // count upp level
 	}
 	if g.Player.wheatBasket > 0 && g.Player.coin < g.Player.wallet {
 		g.Player.wheatBasket--
 		g.Player.coin += 1
-		playSound(audioCoin)
+		playSound(audioCoin, 0.2)
 		g.buddaSpawnCounter++ // count upp level
 	}
 	if g.Player.egg > 0 {
@@ -674,7 +674,7 @@ func (g *Game) Update() error {
 				if g.workers[i].coin < 1 { // take only one coin
 					g.workers[i].coin++
 					g.Player.coin--
-					playSound(audioCoin)
+					playSound(audioCoin, 0.3)
 				}
 				g.smokeSprite.active = true
 				// move workers to new dest
@@ -716,13 +716,13 @@ func (g *Game) Update() error {
 			if house.variety == "chicken_house" && g.Player.chicken > 0 {
 				g.Player.chicken_count++
 				g.Player.chicken--
-				playSound(audioFx)
+				playSound(audioFx, 0.3)
 				if g.Player.chicken_count > 9 { // 10 chicken in the chicken_house
 					g.eggs[1].active = true
 					g.eggs[1].pickable = true
 					g.Player.chicken_count = 0 // reset counter
-					playSound(audioSecret)
-					playSound(audioChickens) // TEST
+					playSound(audioSecret, 0.1)
+					playSound(audioChickens, 0.8) // TEST
 					// set all chicken free
 					for _, c := range g.chickens {
 						c.active = true
@@ -738,7 +738,7 @@ func (g *Game) Update() error {
 		if g.Collision_Object_Caracter(*g.plants[i], *g.Player) {
 			if g.plants[i].pickable && g.Player.tomatoBasket+g.Player.wheatBasket <= g.Player.basketSize {
 				// pick plant
-				playSound(audioFx)
+				playSound(audioFx, 0.3)
 				g.smokeSprite.active = true
 				g.workers[i].coin = 0        // drop coint when plant are picked
 				g.plants[i].active = false   // active animation
@@ -759,7 +759,7 @@ func (g *Game) Update() error {
 		if g.Collision_Object_Caracter(*g.coins[i], *g.Player) && g.coins[i].picked == false {
 			if g.Player.coin < g.Player.wallet { // add coins to your wallet
 				g.Player.coin++
-				playSound(audioCoin)
+				playSound(audioCoin, 0.2)
 				g.coins[i].picked = true
 				//				g.coins[i].pos = Point{
 				//					x: -100,
@@ -790,7 +790,7 @@ func (g *Game) Update() error {
 				egg.pickable = false
 				egg.picked = true
 				egg.active = false
-				playSound(audioSecret)
+				playSound(audioSecret, 0.2)
 			}
 		}
 	}
@@ -802,7 +802,7 @@ func (g *Game) Update() error {
 			c.pickable = false
 			c.picked = true
 			c.active = false
-			playSound(audioChest)
+			playSound(audioChest, 0.8)
 			if g.Player.wallet < 5 { // max 6 item at a time
 				g.Player.wallet++
 			}
@@ -1815,21 +1815,12 @@ func main() {
 		audio.NewInfiniteLoop(stream,
 			int64(len(audioBG)*6*SampleRate)))
 	checkErr(err)
-
-	//audioPlayer, _ := audio.CurrentContext().NewPlayer(stream)
 	// you pass the audio player to your game struct, and just call
 	audioPlayer.SetVolume(0.1)
 	audioPlayer.Play() //when you want your music to start, and
 	// audioPlayer.Pause()
 
-	//	// chose audio file to on scene 0-1
-	//	if g.scene == 1 {
-	//		playSound(audioVillage)
-	//	}
-	//	if g.scene == 0 {
-	//		playSound(audioBG)
-	//	}
-	playSound(audioChickens) // TEST
+	playSound(audioChickens, 0.8) // TEST
 
 	// Start game
 	if err := ebiten.RunGame(g); err != nil {
@@ -1837,12 +1828,12 @@ func main() {
 	}
 }
 
-func playSound(sound []byte) {
+func playSound(sound []byte, vol float64) {
 	//_ = audio.NewContext(SampleRate)
 	stream, err := vorbis.DecodeWithSampleRate(SampleRate, bytes.NewReader(sound))
 	checkErr(err)
 	audioPlayer, _ := audio.CurrentContext().NewPlayer(stream)
 	// TEST add parameter to the func volume float 0.0 - 1.0
-	audioPlayer.SetVolume(0.3)
+	audioPlayer.SetVolume(vol)
 	audioPlayer.Play()
 }
